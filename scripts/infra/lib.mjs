@@ -126,11 +126,23 @@ export function isPlaceholderDatabaseId(id) {
 
 /** @returns {{ uuid: string, name: string }[]} */
 export function listD1Databases() {
-  const out = run("npx", ["wrangler", "d1", "list", "--json"], { capture: true });
-  try {
-    const parsed = JSON.parse(out);
-    return Array.isArray(parsed) ? parsed : parsed?.result ?? [];
-  } catch {
-    return [];
+  const out = run("npx", ["wrangler", "d1", "list"], { capture: true });
+  const rows = [];
+  for (const line of out.split("\n")) {
+    const m = line.match(
+      /│\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\s*│\s*([^\s│]+)\s*│/i,
+    );
+    if (m) rows.push({ uuid: m[1], name: m[2], database_name: m[2] });
   }
+  return rows;
+}
+
+/** @param {string} text */
+export function parseDatabaseIdFromCreate(text) {
+  const jsonMatch = text.match(/"database_id":\s*"([^"]+)"/);
+  if (jsonMatch) return jsonMatch[1];
+  const uuidMatch = text.match(
+    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+  );
+  return uuidMatch?.[0] ?? null;
 }

@@ -11,6 +11,7 @@ import {
   setWranglerDatabaseId,
   isPlaceholderDatabaseId,
   listD1Databases,
+  parseDatabaseIdFromCreate,
 } from "./lib.mjs";
 
 const DB_NAME = "livetrack-db";
@@ -36,9 +37,8 @@ let databaseId = existing?.uuid ?? existing?.database_id;
 
 if (!databaseId) {
   console.log(`==> Creating D1 database "${DB_NAME}"`);
-  const out = run("npx", ["wrangler", "d1", "create", DB_NAME, "--json"], { capture: true });
-  const created = JSON.parse(out);
-  databaseId = created?.uuid ?? created?.database_id ?? created?.result?.uuid;
+  const out = run("npx", ["wrangler", "d1", "create", DB_NAME], { capture: true });
+  databaseId = parseDatabaseIdFromCreate(out);
   if (!databaseId) {
     console.error("Could not parse database id from wrangler d1 create output:", out);
     process.exit(1);

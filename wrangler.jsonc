@@ -17,7 +17,7 @@
       "binding": "DB",
       "database_name": "livetrack-db",
       // Replace with the id printed by `wrangler d1 create livetrack-db`.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "d3a47ed8-2fd7-4854-8f26-d3452559ed3b",
       "migrations_dir": "database/migrations"
     }
   ],

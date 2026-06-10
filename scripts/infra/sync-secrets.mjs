@@ -3,7 +3,7 @@
  * Push app secrets to Cloudflare Worker (remote).
  * Reads from process env / .env.infra — never commit real values.
  */
-import { loadInfraEnv, run } from "./lib.mjs";
+import { loadInfraEnv, ensureCloudflareCredentials, run } from "./lib.mjs";
 
 const SECRET_NAMES = [
   "AUTH_SECRET",
@@ -19,8 +19,10 @@ const SECRET_NAMES = [
 const remote = process.argv.includes("--remote");
 loadInfraEnv();
 
-if (!process.env.CLOUDFLARE_API_TOKEN || !process.env.CLOUDFLARE_ACCOUNT_ID) {
-  console.error("Missing CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID.");
+try {
+  ensureCloudflareCredentials();
+} catch (e) {
+  console.error(e.message);
   process.exit(1);
 }
 

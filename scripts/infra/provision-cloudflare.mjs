@@ -5,7 +5,7 @@
  */
 import {
   ROOT,
-  loadInfraEnv,
+  ensureCloudflareCredentials,
   run,
   getWranglerDatabaseId,
   setWranglerDatabaseId,
@@ -15,11 +15,11 @@ import {
 
 const DB_NAME = "livetrack-db";
 
-loadInfraEnv();
-
-if (!process.env.CLOUDFLARE_API_TOKEN || !process.env.CLOUDFLARE_ACCOUNT_ID) {
-  console.error("Missing CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID.");
-  console.error("Add them to .env.infra (see .env.infra.example) or export in shell.");
+try {
+  const { accountId } = ensureCloudflareCredentials();
+  console.log(`Cloudflare account: ${accountId}`);
+} catch (e) {
+  console.error(e.message);
   process.exit(1);
 }
 

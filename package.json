@@ -23,7 +23,10 @@
     "infra:bootstrap": "node scripts/infra/bootstrap.mjs",
     "infra:provision": "node scripts/infra/provision-cloudflare.mjs",
     "infra:secrets": "node scripts/infra/sync-secrets.mjs --remote",
-    "infra:push": "node scripts/infra/push-github.mjs"
+    "infra:push": "node scripts/infra/push-github.mjs",
+    "infra:doctor": "node scripts/infra/doctor.mjs",
+    "infra:auto": "bash scripts/infra/auto-setup.sh",
+    "infra:run": "node scripts/infra/run-all.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.12",

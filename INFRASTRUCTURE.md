@@ -57,14 +57,21 @@ Repo → **Settings → Secrets and variables → Actions**
 
 Create **environment** `production` (optional) to protect deploy workflows.
 
-### 3. Local bootstrap (optional)
+### 3. Local bootstrap — fully automatic (recommended)
 
-Automates everything from your machine in one command:
+One command does everything (opens browser **once** for GitHub + Cloudflare OAuth if needed):
+
+```bash
+npm run infra:run
+```
+
+Uses `wrangler login` OAuth locally — **no API token required** for first deploy. Add `CLOUDFLARE_API_TOKEN` to GitHub Secrets later for CI-only automation.
+
+Manual token path (optional):
 
 ```bash
 cp .env.infra.example .env.infra
 # fill CLOUDFLARE_*, AUTH_*, GITHUB_TOKEN (repo scope PAT)
-
 npm run infra:bootstrap
 ```
 

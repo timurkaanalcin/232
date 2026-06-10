@@ -32,6 +32,51 @@ export function loadInfraEnv() {
   loadEnvFile(resolve(ROOT, ".env.infra"));
 }
 
+/** @returns {boolean} */
+export function isWranglerAuthenticated() {
+  const res = spawnSync("npx", ["wrangler", "whoami"], {
+    cwd: ROOT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  return res.status === 0 && !res.stdout?.includes("not authenticated");
+}
+
+/** @returns {string | null} */
+export function getCloudflareAccountId() {
+  if (process.env.CLOUDFLARE_ACCOUNT_ID?.trim()) {
+    return process.env.CLOUDFLARE_ACCOUNT_ID.trim();
+  }
+  const res = spawnSync("npx", ["wrangler", "whoami"], {
+    cwd: ROOT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (res.status !== 0) return null;
+  const match = res.stdout?.match(/Account ID:\s*([a-f0-9]+)/i);
+  return match?.[1] ?? null;
+}
+
+/** Wrangler OAuth OR API token — CI uses token, local uses login. */
+export function ensureCloudflareCredentials() {
+  loadInfraEnv();
+  const accountId = getCloudflareAccountId();
+  if (accountId) process.env.CLOUDFLARE_ACCOUNT_ID = accountId;
+
+  const hasToken = Boolean(process.env.CLOUDFLARE_API_TOKEN?.trim());
+  const hasOAuth = isWranglerAuthenticated();
+
+  if (!hasToken && !hasOAuth) {
+    throw new Error(
+      "Cloudflare kimlik doğrulaması yok. Çalıştırın: npx wrangler login  (veya .env.infra içine CLOUDFLARE_API_TOKEN ekleyin)",
+    );
+  }
+  if (!accountId) {
+    throw new Error("CLOUDFLARE_ACCOUNT_ID bulunamadı. wrangler login sonrası tekrar deneyin.");
+  }
+  return { accountId, hasToken, hasOAuth };
+}
+
 /**
  * @param {string} cmd
  * @param {string[]} args

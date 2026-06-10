@@ -1,0 +1,41 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "livetrack",
+  "main": "worker.ts",
+  "compatibility_date": "2026-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "livetrack-db",
+      // Replace with the id printed by `wrangler d1 create livetrack-db`.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "database/migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "LOCATION_HUB", "class_name": "LocationHub" },
+      { "name": "RATE_LIMITER", "class_name": "RateLimiterDO" }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["LocationHub", "RateLimiterDO"]
+    }
+  ],
+  "vars": {
+    // Non-secret variables. Secrets (AUTH_SECRET, GOOGLE_CLIENT_SECRET, ...)
+    // must be set with `wrangler secret put <NAME>` - never here.
+    "AUTH_TRUST_HOST": "true"
+  }
+}

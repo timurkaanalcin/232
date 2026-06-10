@@ -1,0 +1,226 @@
+// ----------------------------------------------------------------------------
+// Domain types shared between server, client and the realtime layer.
+// ----------------------------------------------------------------------------
+
+export type RoleId = "super_admin" | "admin" | "operator" | "viewer" | "user";
+
+export type UserStatus = "active" | "disabled";
+
+export type LocationSessionStatus = "active" | "ended";
+
+export type SessionEndReason = "user" | "admin" | "timeout" | "account_deleted";
+
+export type Permission =
+  | "admin.access"
+  | "stats.view"
+  | "map.live_view"
+  | "sessions.view"
+  | "sessions.manage"
+  | "users.view"
+  | "users.create"
+  | "users.manage"
+  | "roles.assign"
+  | "audit.view";
+
+// ----------------------------------------------------------------------------
+// Database rows
+// ----------------------------------------------------------------------------
+
+export interface UserRow {
+  id: string;
+  email: string;
+  email_verified: number;
+  name: string;
+  image: string | null;
+  password_hash: string | null;
+  role_id: RoleId;
+  status: UserStatus;
+  created_at: number;
+  updated_at: number;
+  last_login_at: number | null;
+}
+
+export interface DeviceSessionRow {
+  id: string;
+  user_id: string;
+  user_agent: string;
+  ip: string;
+  device_name: string;
+  created_at: number;
+  last_seen_at: number;
+  expires_at: number;
+  revoked_at: number | null;
+}
+
+export interface LocationSessionRow {
+  id: string;
+  user_id: string;
+  device_session_id: string | null;
+  status: LocationSessionStatus;
+  label: string;
+  consent_granted_at: number;
+  started_at: number;
+  ended_at: number | null;
+  end_reason: SessionEndReason | null;
+  last_lat: number | null;
+  last_lng: number | null;
+  last_accuracy: number | null;
+  last_update_at: number | null;
+  points_count: number;
+}
+
+export interface LocationRow {
+  id: number;
+  session_id: string;
+  user_id: string;
+  lat: number;
+  lng: number;
+  accuracy: number;
+  altitude: number | null;
+  speed: number | null;
+  heading: number | null;
+  recorded_at: number;
+  created_at: number;
+}
+
+export interface AuditLogRow {
+  id: number;
+  actor_id: string | null;
+  actor_email: string;
+  action: string;
+  target_type: string;
+  target_id: string;
+  ip: string;
+  user_agent: string;
+  metadata: string;
+  created_at: number;
+}
+
+// ----------------------------------------------------------------------------
+// API DTOs
+// ----------------------------------------------------------------------------
+
+export interface UserDTO {
+  id: string;
+  email: string;
+  name: string;
+  image: string | null;
+  role: RoleId;
+  status: UserStatus;
+  emailVerified: boolean;
+  createdAt: number;
+  lastLoginAt: number | null;
+}
+
+export interface DeviceSessionDTO {
+  id: string;
+  deviceName: string;
+  userAgent: string;
+  ip: string;
+  createdAt: number;
+  lastSeenAt: number;
+  current: boolean;
+}
+
+export interface LocationSessionDTO {
+  id: string;
+  userId: string;
+  status: LocationSessionStatus;
+  label: string;
+  consentGrantedAt: number;
+  startedAt: number;
+  endedAt: number | null;
+  endReason: SessionEndReason | null;
+  lastLat: number | null;
+  lastLng: number | null;
+  lastAccuracy: number | null;
+  lastUpdateAt: number | null;
+  pointsCount: number;
+  // joined fields (admin views)
+  userName?: string;
+  userEmail?: string;
+}
+
+export interface LocationPointDTO {
+  lat: number;
+  lng: number;
+  accuracy: number;
+  altitude: number | null;
+  speed: number | null;
+  heading: number | null;
+  recordedAt: number;
+}
+
+export interface AuditLogDTO {
+  id: number;
+  actorId: string | null;
+  actorEmail: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  ip: string;
+  metadata: Record<string, unknown>;
+  createdAt: number;
+}
+
+export interface AdminStatsDTO {
+  totalUsers: number;
+  activeUsers: number;
+  activeSessions: number;
+  sessionsToday: number;
+  pointsToday: number;
+  loginsToday: number;
+  newUsersToday: number;
+  realtimeConnections: number;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+// ----------------------------------------------------------------------------
+// Realtime protocol
+// ----------------------------------------------------------------------------
+
+/** Client -> server (publisher sockets only) */
+export type RealtimeClientMessage = {
+  t: "pos";
+  lat: number;
+  lng: number;
+  acc: number;
+  alt?: number | null;
+  spd?: number | null;
+  hdg?: number | null;
+  ts: number;
+};
+
+/** Server -> client */
+export type RealtimeServerEvent =
+  | { t: "hello"; now: number; viewers: number }
+  | {
+      t: "pos";
+      sid: string; // location session id
+      uid: string;
+      lat: number;
+      lng: number;
+      acc: number;
+      spd?: number | null;
+      hdg?: number | null;
+      ts: number;
+    }
+  | { t: "session_started"; session: LocationSessionDTO }
+  | { t: "session_ended"; sid: string; reason: SessionEndReason }
+  | { t: "error"; code: string; message: string };
+
+export interface RealtimeTicketPayload {
+  sub: string; // user id
+  role: RoleId;
+  sid: string; // device session id
+  scope: "publish" | "view";
+  lsid?: string; // location session id (publish scope)
+  name: string;
+  exp: number; // unix ms
+}

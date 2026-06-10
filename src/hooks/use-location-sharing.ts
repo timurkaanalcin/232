@@ -1,0 +1,247 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { apiGet, apiPost } from "@/lib/client-api";
+import type { LocationSessionDTO, RealtimeClientMessage } from "@/types";
+
+export type SharingState = "idle" | "starting" | "sharing" | "stopping";
+
+export interface CurrentPosition {
+  lat: number;
+  lng: number;
+  accuracy: number;
+  heading: number | null;
+  speed: number | null;
+  timestamp: number;
+}
+
+interface UseLocationSharingResult {
+  state: SharingState;
+  session: LocationSessionDTO | null;
+  position: CurrentPosition | null;
+  error: string | null;
+  connectionMode: "websocket" | "rest" | null;
+  start: (label?: string) => Promise<void>;
+  stop: () => Promise<void>;
+  /** Adopt an already-active session (e.g. after a page reload). */
+  resume: (session: LocationSessionDTO) => void;
+}
+
+const SEND_INTERVAL_MS = 2_000;
+const REST_FALLBACK_INTERVAL_MS = 10_000;
+
+/**
+ * Full lifecycle of a location sharing session on the client:
+ * consent (handled by the caller) -> session creation -> geolocation watch ->
+ * realtime transmission over WebSocket with REST fallback -> explicit stop.
+ */
+export function useLocationSharing(): UseLocationSharingResult {
+  const [state, setState] = useState<SharingState>("idle");
+  const [session, setSession] = useState<LocationSessionDTO | null>(null);
+  const [position, setPosition] = useState<CurrentPosition | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [connectionMode, setConnectionMode] = useState<"websocket" | "rest" | null>(null);
+
+  const wsRef = useRef<WebSocket | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const lastSentAtRef = useRef(0);
+  const lastRestSentAtRef = useRef(0);
+  const sessionRef = useRef<LocationSessionDTO | null>(null);
+  const stateRef = useRef<SharingState>("idle");
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  stateRef.current = state;
+  sessionRef.current = session;
+
+  const cleanup = useCallback(() => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    if (wsRef.current) {
+      wsRef.current.onclose = null;
+      wsRef.current.close(1000, "client_stopped");
+      wsRef.current = null;
+    }
+    setConnectionMode(null);
+  }, []);
+
+  const connectWebSocket = useCallback(async () => {
+    try {
+      const { ticket } = await apiGet<{ ticket: string }>("/api/realtime/token?scope=publish");
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const ws = new WebSocket(`${protocol}//${window.location.host}/realtime/ws?ticket=${encodeURIComponent(ticket)}`);
+
+      ws.onopen = () => {
+        wsRef.current = ws;
+        setConnectionMode("websocket");
+      };
+      ws.onclose = (event) => {
+        wsRef.current = null;
+        if (stateRef.current !== "sharing") return;
+        if (event.reason === "session_ended" || event.reason === "session_timeout") {
+          // Server terminated the session (admin stop or timeout).
+          cleanup();
+          setSession(null);
+          setState("idle");
+          setError(event.reason === "session_timeout" ? "Session timed out due to inactivity" : "Session was ended");
+          return;
+        }
+        // Transient drop: fall back to REST and retry the socket.
+        setConnectionMode("rest");
+        reconnectTimerRef.current = setTimeout(() => {
+          if (stateRef.current === "sharing") void connectWebSocket();
+        }, 5_000);
+      };
+      ws.onerror = () => ws.close();
+    } catch {
+      setConnectionMode("rest");
+      reconnectTimerRef.current = setTimeout(() => {
+        if (stateRef.current === "sharing") void connectWebSocket();
+      }, 10_000);
+    }
+  }, [cleanup]);
+
+  const transmit = useCallback((pos: GeolocationPosition) => {
+    const current: CurrentPosition = {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      accuracy: pos.coords.accuracy,
+      heading: pos.coords.heading,
+      speed: pos.coords.speed,
+      timestamp: pos.timestamp,
+    };
+    setPosition(current);
+
+    const now = Date.now();
+    const message: RealtimeClientMessage = {
+      t: "pos",
+      lat: current.lat,
+      lng: current.lng,
+      acc: Math.min(current.accuracy, 100_000),
+      hdg: current.heading,
+      spd: current.speed,
+      ts: current.timestamp,
+    };
+
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      if (now - lastSentAtRef.current >= SEND_INTERVAL_MS) {
+        lastSentAtRef.current = now;
+        ws.send(JSON.stringify(message));
+      }
+      return;
+    }
+
+    // REST fallback, heavily throttled.
+    const activeSession = sessionRef.current;
+    if (activeSession && now - lastRestSentAtRef.current >= REST_FALLBACK_INTERVAL_MS) {
+      lastRestSentAtRef.current = now;
+      void apiPost("/api/location/update", { sessionId: activeSession.id, position: message }).catch(() => {
+        // swallowed - next tick retries
+      });
+    }
+  }, []);
+
+  const startWatching = useCallback(() => {
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      transmit,
+      (geoError) => {
+        if (geoError.code === geoError.PERMISSION_DENIED) {
+          setError("Location permission was denied. Sharing stopped.");
+          void stopInternal("permission_denied");
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 1_000, timeout: 20_000 },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transmit]);
+
+  const stopInternal = useCallback(
+    async (reason: string) => {
+      const activeSession = sessionRef.current;
+      cleanup();
+      if (activeSession) {
+        try {
+          await apiPost(`/api/location/sessions/${activeSession.id}/stop`);
+        } catch {
+          // The server-side stale sweep will end the session if this fails.
+        }
+      }
+      setSession(null);
+      setState("idle");
+      if (reason === "permission_denied") {
+        setError("Location permission was denied. Sharing stopped.");
+      }
+    },
+    [cleanup],
+  );
+
+  const start = useCallback(
+    async (label?: string) => {
+      setError(null);
+      setState("starting");
+      try {
+        // 1. Browser geolocation permission - must succeed before any data flows.
+        const granted = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 20_000,
+          });
+        });
+
+        // 2. Create the consented session server-side.
+        const { session: created } = await apiPost<{ session: LocationSessionDTO }>(
+          "/api/location/sessions",
+          { consent: true, label: label ?? "" },
+        );
+        setSession(created);
+        sessionRef.current = created;
+
+        // 3. Open the realtime channel and start streaming.
+        await connectWebSocket();
+        transmit(granted);
+        startWatching();
+        setState("sharing");
+      } catch (startError) {
+        cleanup();
+        setState("idle");
+        if (startError instanceof GeolocationPositionError) {
+          setError(
+            startError.code === startError.PERMISSION_DENIED
+              ? "Location permission denied. Allow location access in your browser to share."
+              : "Could not determine your location. Check your device settings.",
+          );
+        } else {
+          setError(startError instanceof Error ? startError.message : "Failed to start sharing");
+        }
+      }
+    },
+    [cleanup, connectWebSocket, startWatching, transmit],
+  );
+
+  const stop = useCallback(async () => {
+    setState("stopping");
+    await stopInternal("user");
+  }, [stopInternal]);
+
+  const resume = useCallback(
+    (activeSession: LocationSessionDTO) => {
+      if (stateRef.current !== "idle") return;
+      setSession(activeSession);
+      sessionRef.current = activeSession;
+      setState("sharing");
+      void connectWebSocket();
+      startWatching();
+    },
+    [connectWebSocket, startWatching],
+  );
+
+  useEffect(() => () => cleanup(), [cleanup]);
+
+  return { state, session, position, error, connectionMode, start, stop, resume };
+}

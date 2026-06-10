@@ -1,0 +1,17 @@
+# Local development secrets for `wrangler dev` / `npm run preview`.
+# Copy to `.dev.vars` (git-ignored) and fill in real values.
+
+# Required - generate with: openssl rand -base64 32
+AUTH_SECRET=
+
+# The canonical URL of the app (http://localhost:8787 for wrangler dev)
+AUTH_URL=http://localhost:8787
+
+# Google OAuth (optional - email/password login works without it)
+# https://console.cloud.google.com/apis/credentials
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# Transactional email for password resets (optional - https://resend.com)
+RESEND_API_KEY=
+EMAIL_FROM="LiveTrack <noreply@yourdomain.com>"

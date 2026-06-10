@@ -1,0 +1,21 @@
+# Local development environment for LiveTrack.
+#
+# Production deploys to Cloudflare Workers + D1 + Durable Objects (DEPLOYMENT.md).
+# This compose file runs the Next.js dev server with hot reload for local work.
+
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev

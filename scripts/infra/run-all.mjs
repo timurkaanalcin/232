@@ -92,7 +92,8 @@ try {
   ensureWrangler();
   ensureGithub();
 
-  log("4/7", "D1 provision");
+  log("4/7", "workers.dev subdomain + D1");
+  step("ensure-subdomain.mjs");
   step("provision-cloudflare.mjs");
 
   log("5/7", "Secret sync + migration");

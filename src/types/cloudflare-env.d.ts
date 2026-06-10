@@ -24,6 +24,8 @@ declare global {
     GOOGLE_CLIENT_SECRET?: string;
     RESEND_API_KEY?: string;
     EMAIL_FROM?: string;
+    TELEGRAM_BOT_TOKEN?: string;
+    TELEGRAM_ADMIN_CHAT_ID?: string;
   }
 }
 

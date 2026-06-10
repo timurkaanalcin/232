@@ -5,9 +5,12 @@ import Link from "next/link";
 import {
   ActivityIcon,
   GaugeIcon,
+  GlobeIcon,
+  LaptopIcon,
   MapIcon,
   RadioIcon,
   ServerIcon,
+  TimerIcon,
   UserPlusIcon,
   UsersIcon,
   WifiIcon,
@@ -19,7 +22,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiGet } from "@/lib/client-api";
 import { formatRelative } from "@/lib/utils";
 import { ACTION_LABELS } from "@/modules/admin/action-labels";
-import type { AdminStatsDTO, AuditLogDTO } from "@/types";
+import { formatDuration } from "@/lib/utils";
+import type { AdminAnalyticsDTO, AdminStatsDTO, AuditLogDTO } from "@/types";
 
 export function AdminDashboard() {
   const statsQuery = useQuery({
@@ -40,7 +44,14 @@ export function AdminDashboard() {
     refetchInterval: 30_000,
   });
 
+  const analyticsQuery = useQuery({
+    queryKey: ["admin", "analytics"],
+    queryFn: () => apiGet<{ analytics: AdminAnalyticsDTO }>("/api/admin/analytics"),
+    refetchInterval: 15_000,
+  });
+
   const stats = statsQuery.data?.stats;
+  const analytics = analyticsQuery.data?.analytics;
 
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-4">
@@ -124,6 +135,68 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Analytics widgets */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <BreakdownCard
+          title="Browsers"
+          icon={GlobeIcon}
+          items={analytics?.browserBreakdown}
+          loading={analyticsQuery.isLoading}
+        />
+        <BreakdownCard
+          title="Devices (OS)"
+          icon={LaptopIcon}
+          items={analytics?.deviceBreakdown}
+          loading={analyticsQuery.isLoading}
+        />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TimerIcon className="size-4" /> Session metrics
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 text-sm">
+            {analyticsQuery.isLoading ? (
+              <Skeleton className="h-16" />
+            ) : (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Avg. duration today</span>
+                  <span className="font-medium tabular-nums">
+                    {analytics?.avgSessionDurationMs
+                      ? formatDuration(0, analytics.avgSessionDurationMs)
+                      : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Active now</span>
+                  <span className="font-medium tabular-nums">{analytics?.activeSessionCount ?? 0}</span>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {analytics && analytics.geoRegions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Geographic distribution (active)</CardTitle>
+            <CardDescription>Grouped by approximate coordinates of live sessions.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {analytics.geoRegions.map((region) => (
+              <Badge key={region.label} variant="secondary" className="gap-1.5 px-3 py-1">
+                {region.label}
+                <span className="rounded-full bg-primary/15 px-1.5 text-xs font-semibold text-primary">
+                  {region.count}
+                </span>
+              </Badge>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent activity feed */}
       <Card>
@@ -215,6 +288,42 @@ function MiniStat({
       )}
       <p className="text-xs text-muted-foreground">{label}</p>
     </div>
+  );
+}
+
+function BreakdownCard({
+  title,
+  icon: Icon,
+  items,
+  loading,
+}: {
+  title: string;
+  icon: typeof GlobeIcon;
+  items?: { label: string; count: number }[];
+  loading: boolean;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Icon className="size-4" /> {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-2">
+        {loading ? (
+          <Skeleton className="h-20" />
+        ) : items && items.length > 0 ? (
+          items.map((item) => (
+            <div key={item.label} className="flex items-center justify-between text-sm">
+              <span className="truncate text-muted-foreground">{item.label}</span>
+              <span className="font-medium tabular-nums">{item.count}</span>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No data yet.</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

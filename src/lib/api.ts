@@ -7,7 +7,8 @@ import { headers } from "next/headers";
 import { auth } from "@/auth";
 import { getEnv } from "@/lib/db";
 import { rateLimit, type RateLimitOptions } from "@/lib/rate-limit";
-import { ROLE_PERMISSIONS } from "@/lib/constants";
+import { ROLE_PERMISSIONS, SECURITY_EVENT_TYPES } from "@/lib/constants";
+import { logSecurityEvent } from "@/services/security-events";
 import type { Permission, RoleId } from "@/types";
 
 export class ApiError extends Error {
@@ -167,9 +168,20 @@ export async function enforceRateLimit(
   key: string,
   options: RateLimitOptions,
   env?: CloudflareEnv,
+  meta?: RequestMeta,
 ): Promise<void> {
-  const result = await rateLimit(env ?? getEnv(), key, options);
-  if (!result.allowed) throw tooManyRequests();
+  const resolvedEnv = env ?? getEnv();
+  const result = await rateLimit(resolvedEnv, key, options);
+  if (!result.allowed) {
+    void logSecurityEvent(resolvedEnv.DB, {
+      eventType: SECURITY_EVENT_TYPES.RATE_LIMITED,
+      severity: "warning",
+      ip: meta?.ip,
+      userAgent: meta?.userAgent,
+      metadata: { key, retryAfterMs: result.retryAfterMs },
+    });
+    throw tooManyRequests();
+  }
 }
 
 export function jsonOk<T>(data: T, init?: ResponseInit): NextResponse {

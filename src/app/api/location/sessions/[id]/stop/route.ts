@@ -8,7 +8,8 @@ import {
   requireUser,
 } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { AUDIT_ACTIONS, REALTIME } from "@/lib/constants";
+import { AUDIT_ACTIONS, NOTIFICATION_TYPES, REALTIME } from "@/lib/constants";
+import { createNotification } from "@/services/notifications";
 import { endLocationSession, getLocationSession } from "@/services/location-sessions";
 
 /**
@@ -54,6 +55,23 @@ export const POST = apiHandler(
           targetId: id,
           ip: meta.ip,
           userAgent: meta.userAgent,
+        });
+      }
+
+      await createNotification(db, {
+        userId: row.user_id,
+        type: NOTIFICATION_TYPES.SESSION_STOPPED,
+        title: "Location sharing stopped",
+        body: isOwner ? "You stopped sharing your location." : "An administrator ended your session.",
+        metadata: { sessionId: id, reason },
+      });
+      if (isOwner) {
+        await createNotification(db, {
+          userId: row.user_id,
+          type: NOTIFICATION_TYPES.CONSENT_REVOKED,
+          title: "Consent revoked",
+          body: "Location transmission has ended.",
+          metadata: { sessionId: id },
         });
       }
 

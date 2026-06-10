@@ -15,3 +15,8 @@ GOOGLE_CLIENT_SECRET=
 # Transactional email for password resets (optional - https://resend.com)
 RESEND_API_KEY=
 EMAIL_FROM="LiveTrack <noreply@yourdomain.com>"
+
+# Optional — consent-based admin alerts when a user starts sharing (Telegram Bot API)
+# Create a bot via @BotFather, get chat id from @userinfobot or group admin
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_ADMIN_CHAT_ID=

@@ -54,8 +54,8 @@ tests/                # unit (vitest) + e2e (playwright)
 ## Quick start
 
 ```bash
-# 1. Install
-npm install
+# One-command local bootstrap
+./scripts/setup.sh
 
 # 2. Configure secrets
 cp .dev.vars.example .dev.vars   # for wrangler dev / preview
@@ -92,6 +92,11 @@ See [INSTALLATION.md](./INSTALLATION.md) for the detailed walk-through and [DEPL
 | `npm run test:e2e` | Playwright E2E tests |
 | `npm run db:migrate:local` / `:remote` | Apply D1 migrations |
 | `npm run db:seed:local` / `:remote` | Seed roles & permissions |
+| `./scripts/setup.sh` | Install + migrate + seed (local) |
+
+### Optional: Telegram admin alerts
+
+When a user **explicitly starts** location sharing, admins can receive a Telegram message with a Google Maps link. Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ADMIN_CHAT_ID` in `.dev.vars` / `wrangler secret put`. This only fires on consented session start — never on page visit or silent tracking.
 
 ## Documentation
 

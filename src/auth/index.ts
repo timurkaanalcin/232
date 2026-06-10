@@ -7,9 +7,11 @@ import { verifyPassword } from "@/lib/crypto";
 import { loginSchema } from "@/lib/validators";
 import { logAudit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rate-limit";
-import { AUDIT_ACTIONS, RATE_LIMITS, SECURITY } from "@/lib/constants";
+import { AUDIT_ACTIONS, NOTIFICATION_TYPES, RATE_LIMITS, SECURITY, SECURITY_EVENT_TYPES } from "@/lib/constants";
 import { createUser, findUserByEmail, findUserById, touchLastLogin } from "@/services/users";
 import { createDeviceSession } from "@/services/device-sessions";
+import { createNotification } from "@/services/notifications";
+import { logSecurityEvent } from "@/services/security-events";
 import type { RoleId, UserRow } from "@/types";
 
 function getAuthEnv(): CloudflareEnv {
@@ -57,12 +59,30 @@ function buildConfig(): NextAuthConfig {
         const meta = await getRequestMetaSafe();
 
         const rl = await rateLimit(env, `login:${meta.ip || "unknown"}`, RATE_LIMITS.LOGIN);
-        if (!rl.allowed) return null;
+        if (!rl.allowed) {
+          await logSecurityEvent(db, {
+            eventType: SECURITY_EVENT_TYPES.RATE_LIMITED,
+            severity: "warning",
+            actorEmail: parsed.data.email,
+            ip: meta.ip,
+            userAgent: meta.userAgent,
+            metadata: { scope: "login" },
+          });
+          return null;
+        }
 
         const user = await findUserByEmail(db, parsed.data.email);
         if (!user || !user.password_hash) {
           await logAudit(db, {
             action: AUDIT_ACTIONS.LOGIN_FAILED,
+            actorEmail: parsed.data.email,
+            ip: meta.ip,
+            userAgent: meta.userAgent,
+            metadata: { reason: "unknown_user_or_no_password" },
+          });
+          await logSecurityEvent(db, {
+            eventType: SECURITY_EVENT_TYPES.LOGIN_FAILED,
+            severity: "warning",
             actorEmail: parsed.data.email,
             ip: meta.ip,
             userAgent: meta.userAgent,
@@ -75,6 +95,15 @@ function buildConfig(): NextAuthConfig {
         if (!valid || user.status !== "active") {
           await logAudit(db, {
             action: AUDIT_ACTIONS.LOGIN_FAILED,
+            actorId: user.id,
+            actorEmail: user.email,
+            ip: meta.ip,
+            userAgent: meta.userAgent,
+            metadata: { reason: valid ? "account_disabled" : "invalid_password" },
+          });
+          await logSecurityEvent(db, {
+            eventType: SECURITY_EVENT_TYPES.LOGIN_FAILED,
+            severity: valid ? "info" : "warning",
             actorId: user.id,
             actorEmail: user.email,
             ip: meta.ip,
@@ -170,6 +199,13 @@ function buildConfig(): NextAuthConfig {
           ip: meta.ip,
           userAgent: meta.userAgent,
           metadata: { provider: account?.provider ?? "credentials" },
+        });
+        await createNotification(db, {
+          userId: dbUser.id,
+          type: NOTIFICATION_TYPES.LOGIN,
+          title: "Signed in",
+          body: `New sign-in from ${meta.ip || "unknown IP"}.`,
+          metadata: { sessionId: sid, provider: account?.provider ?? "credentials" },
         });
 
         return token;

@@ -1,6 +1,8 @@
 import { apiHandler, assertSameOrigin, badRequest, jsonOk, requireUser } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { AUDIT_ACTIONS, REALTIME } from "@/lib/constants";
+import { AUDIT_ACTIONS, NOTIFICATION_TYPES, REALTIME } from "@/lib/constants";
+import { notifyAdminsSessionStarted } from "@/lib/telegram";
+import { createNotification } from "@/services/notifications";
 import { paginationSchema, startLocationSessionSchema } from "@/lib/validators";
 import {
   getActiveSessionForUser,
@@ -67,6 +69,30 @@ export const POST = apiHandler(async (request: Request) => {
     ip: meta.ip,
     userAgent: meta.userAgent,
     metadata: { label: parsed.data.label },
+  });
+
+  await createNotification(db, {
+    userId: user.id,
+    type: NOTIFICATION_TYPES.SESSION_STARTED,
+    title: "Location sharing started",
+    body: parsed.data.label ? `Session "${parsed.data.label}" is now live.` : "Your live location is being shared.",
+    metadata: { sessionId: session.id },
+  });
+  await createNotification(db, {
+    userId: user.id,
+    type: NOTIFICATION_TYPES.CONSENT_GRANTED,
+    title: "Consent recorded",
+    body: "You granted permission to share your location.",
+    metadata: { sessionId: session.id, consentGrantedAt: row.consent_granted_at },
+  });
+
+  void notifyAdminsSessionStarted(env, {
+    userName: user.name,
+    userEmail: user.email,
+    sessionId: session.id,
+    label: parsed.data.label,
+    lat: row.last_lat,
+    lng: row.last_lng,
   });
 
   const hub = env.LOCATION_HUB.getByName(REALTIME.HUB_NAME);

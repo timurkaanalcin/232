@@ -37,6 +37,26 @@ export const AUDIT_ACTIONS = {
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
 
+export const NOTIFICATION_TYPES = {
+  LOGIN: "auth.login",
+  LOGOUT: "auth.logout",
+  SESSION_STARTED: "location.session_started",
+  SESSION_STOPPED: "location.session_stopped",
+  CONSENT_GRANTED: "consent.granted",
+  CONSENT_REVOKED: "consent.revoked",
+  SECURITY_ALERT: "security.alert",
+  DEVICE_REVOKED: "device.revoked",
+} as const;
+
+export const SECURITY_EVENT_TYPES = {
+  LOGIN_FAILED: "auth.login_failed",
+  RATE_LIMITED: "rate_limit.exceeded",
+  SESSION_EXPIRED: "session.expired",
+  DEVICE_CHANGED: "device.changed",
+  PASSWORD_CHANGED: "auth.password_changed",
+  SUSPICIOUS_ACTIVITY: "security.suspicious",
+} as const;
+
 export const SECURITY = {
   PBKDF2_ITERATIONS: 100_000,
   SESSION_MAX_AGE_S: 30 * 24 * 60 * 60, // 30 days

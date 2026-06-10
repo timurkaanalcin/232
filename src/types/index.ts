@@ -174,11 +174,62 @@ export interface AdminStatsDTO {
   realtimeConnections: number;
 }
 
+export interface AnalyticsBreakdownItem {
+  label: string;
+  count: number;
+}
+
+export interface GeoRegionItem extends AnalyticsBreakdownItem {
+  lat: number;
+  lng: number;
+}
+
+export interface AdminAnalyticsDTO {
+  deviceBreakdown: AnalyticsBreakdownItem[];
+  browserBreakdown: AnalyticsBreakdownItem[];
+  geoRegions: GeoRegionItem[];
+  avgSessionDurationMs: number;
+  activeSessionCount: number;
+}
+
 export interface Paginated<T> {
   items: T[];
   total: number;
   page: number;
   pageSize: number;
+}
+
+export type NotificationType =
+  | "auth.login"
+  | "auth.logout"
+  | "location.session_started"
+  | "location.session_stopped"
+  | "consent.granted"
+  | "consent.revoked"
+  | "security.alert"
+  | "device.revoked";
+
+export interface NotificationDTO {
+  id: number;
+  type: NotificationType;
+  title: string;
+  body: string;
+  metadata: Record<string, unknown>;
+  readAt: number | null;
+  createdAt: number;
+}
+
+export type SecuritySeverity = "info" | "warning" | "critical";
+
+export interface SecurityEventDTO {
+  id: number;
+  eventType: string;
+  severity: SecuritySeverity;
+  actorId: string | null;
+  actorEmail: string;
+  ip: string;
+  metadata: Record<string, unknown>;
+  createdAt: number;
 }
 
 // ----------------------------------------------------------------------------

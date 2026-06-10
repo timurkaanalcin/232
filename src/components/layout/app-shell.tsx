@@ -13,11 +13,13 @@ import {
   MenuIcon,
   ScrollTextIcon,
   SettingsIcon,
+  ShieldAlertIcon,
   ShieldIcon,
   UsersIcon,
   XIcon,
 } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
+import { NotificationCenter } from "@/components/layout/notification-center";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +62,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin/map", label: "Live Map", icon: MapIcon, permission: "map.live_view" },
   { href: "/admin/users", label: "Users", icon: UsersIcon, permission: "users.view" },
   { href: "/admin/audit", label: "Audit Logs", icon: ScrollTextIcon, permission: "audit.view" },
+  { href: "/admin/security", label: "Security", icon: ShieldAlertIcon, permission: "audit.view" },
 ];
 
 function NavLinks({ user, onNavigate }: { user: ShellUser; onNavigate?: () => void }) {
@@ -196,6 +199,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: ReactN
             <Logo />
           </Link>
           <div className="ml-auto flex items-center gap-2">
+            <NotificationCenter />
             <ThemeToggle />
             <UserMenu user={user} />
           </div>

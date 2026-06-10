@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { MapPinnedIcon, RadioIcon, SearchIcon, UserIcon } from "lucide-react";
+import { ExpandIcon, MapPinnedIcon, RadioIcon, SearchIcon, ShrinkIcon, UserIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +26,20 @@ export function LiveMapModule() {
   const { sessions, status, snapshotLoading } = useLiveMap(true);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  const toggleFullscreen = async () => {
+    const el = mapContainerRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      await el.requestFullscreen();
+      setFullscreen(true);
+    } else {
+      await document.exitFullscreen();
+      setFullscreen(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -112,8 +127,17 @@ export function LiveMapModule() {
 
       {/* Map + detail */}
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <Card className="min-h-0 flex-1 overflow-hidden">
-          <div className="h-full min-h-[320px]">
+        <Card className="relative min-h-0 flex-1 overflow-hidden">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="absolute right-3 top-3 z-[1000] size-8 shadow-md"
+            onClick={() => void toggleFullscreen()}
+            aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {fullscreen ? <ShrinkIcon className="size-4" /> : <ExpandIcon className="size-4" />}
+          </Button>
+          <div ref={mapContainerRef} className="h-full min-h-[320px] bg-muted">
             <LiveMapCanvas sessions={filtered} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
         </Card>

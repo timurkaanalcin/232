@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeftIcon, ChevronRightIcon, MapPinnedIcon } from "lucide-react";
@@ -37,6 +37,11 @@ const END_REASON_LABEL: Record<string, string> = {
 export function HistoryModule({ initialSessionId }: { initialSessionId: string | null }) {
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(initialSessionId);
+  const [playbackIndex, setPlaybackIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    setPlaybackIndex(null);
+  }, [selectedId]);
 
   const listQuery = useQuery({
     queryKey: ["location-sessions", "history", page],
@@ -149,9 +154,30 @@ export function HistoryModule({ initialSessionId }: { initialSessionId: string |
                   </div>
                 )}
               </div>
+              {detail.points.length > 1 && (
+                <div className="border-b px-4 py-3">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Route playback</span>
+                    <span>
+                      {playbackIndex != null
+                        ? formatDateTime(detail.points[playbackIndex]?.recordedAt ?? null)
+                        : "Full route"}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={detail.points.length - 1}
+                    value={playbackIndex ?? detail.points.length - 1}
+                    onChange={(e) => setPlaybackIndex(Number.parseInt(e.target.value, 10))}
+                    className="mt-2 w-full accent-[var(--color-primary)]"
+                    aria-label="Session playback timeline"
+                  />
+                </div>
+              )}
               <div className="min-h-0 flex-1">
                 {detail.points.length > 0 ? (
-                  <TrackMap points={detail.points} />
+                  <TrackMap points={detail.points} playbackIndex={playbackIndex} />
                 ) : (
                   <EmptyDetail text="No location points were recorded in this session." />
                 )}

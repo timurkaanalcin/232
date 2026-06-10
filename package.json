@@ -19,7 +19,11 @@
     "db:migrate:local": "wrangler d1 migrations apply livetrack-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply livetrack-db --remote",
     "db:seed:local": "wrangler d1 execute livetrack-db --local --file=./database/seed.sql",
-    "db:seed:remote": "wrangler d1 execute livetrack-db --remote --file=./database/seed.sql"
+    "db:seed:remote": "wrangler d1 execute livetrack-db --remote --file=./database/seed.sql",
+    "infra:bootstrap": "node scripts/infra/bootstrap.mjs",
+    "infra:provision": "node scripts/infra/provision-cloudflare.mjs",
+    "infra:secrets": "node scripts/infra/sync-secrets.mjs --remote",
+    "infra:push": "node scripts/infra/push-github.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.12",

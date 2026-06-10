@@ -77,7 +77,7 @@ npm run preview      # builds with OpenNext + runs wrangler dev (http://localhos
 npm run dev          # http://localhost:3000
 ```
 
-See [INSTALLATION.md](./INSTALLATION.md) for the detailed walk-through and [DEPLOYMENT.md](./DEPLOYMENT.md) for production deployment (including connecting a custom domain).
+See [INSTALLATION.md](./INSTALLATION.md) for the detailed walk-through, [INFRASTRUCTURE.md](./INFRASTRUCTURE.md) for **fully automated** CI/CD bootstrap, and [DEPLOYMENT.md](./DEPLOYMENT.md) for production deployment (including connecting a custom domain).
 
 ## Scripts
 
@@ -93,6 +93,7 @@ See [INSTALLATION.md](./INSTALLATION.md) for the detailed walk-through and [DEPL
 | `npm run db:migrate:local` / `:remote` | Apply D1 migrations |
 | `npm run db:seed:local` / `:remote` | Seed roles & permissions |
 | `./scripts/setup.sh` | Install + migrate + seed (local) |
+| `npm run infra:bootstrap` | One-shot: D1 + secrets + deploy + GitHub push |
 
 ### Optional: Telegram admin alerts
 

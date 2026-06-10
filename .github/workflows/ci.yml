@@ -1,8 +1,7 @@
 name: CI
 
+# PR quality gate. Push to main runs full pipeline in deploy.yml.
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 

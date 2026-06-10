@@ -44,12 +44,26 @@ Create the first super admin against the remote DB:
 node scripts/create-admin.mjs --email you@example.com --password 'StrongPassword123!' --remote
 ```
 
-## 4. Continuous deployment (GitHub Actions)
+## 4. Continuous deployment (fully automatic)
 
-`.github/workflows/deploy.yml` deploys on every push to `main`. Add these repository secrets:
+After a one-time secret setup, **every push to `main`** runs test → migrate → deploy → health check via `.github/workflows/deploy.yml`.
 
-- `CLOUDFLARE_API_TOKEN` — a token with *Workers Scripts: Edit*, *D1: Edit*, *Workers Durable Objects: Edit*.
-- `CLOUDFLARE_ACCOUNT_ID` — your account id.
+For the full secret list, bootstrap script, and troubleshooting see **[INFRASTRUCTURE.md](./INFRASTRUCTURE.md)**.
+
+Minimum GitHub secrets:
+
+- `CLOUDFLARE_API_TOKEN` — *Workers Scripts: Edit*, *D1: Edit*, *Workers Durable Objects: Edit*
+- `CLOUDFLARE_ACCOUNT_ID`
+- `AUTH_SECRET`, `AUTH_URL`
+
+One-command local bootstrap (optional):
+
+```bash
+cp .env.infra.example .env.infra   # fill tokens
+npm run infra:bootstrap
+```
+
+Or use Actions → **Infrastructure Bootstrap** without pushing from your machine.
 
 ## 5. Custom domain (e.g. `control.org.tr`)
 

@@ -8,17 +8,16 @@ if (process.env.NODE_ENV === "development") {
   );
 }
 
-const isProd = process.env.NODE_ENV === "production";
-
 /**
  * Content Security Policy.
  * - OpenStreetMap tile servers are allowed for the Leaflet map layers.
  * - `wss:` is required for the realtime location WebSocket.
  * - `unsafe-inline` style is required by Leaflet's inline positioning styles.
  */
+// Next.js App Router requires inline bootstrap scripts — strict script-src breaks hydration (white screen).
 const csp = [
   "default-src 'self'",
-  `script-src 'self'${isProd ? "" : " 'unsafe-eval' 'unsafe-inline'"}`,
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://lh3.googleusercontent.com https://*.googleusercontent.com",
   "font-src 'self'",
@@ -27,7 +26,6 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  isProd ? "upgrade-insecure-requests" : "",
 ]
   .filter(Boolean)
   .join("; ");

@@ -2,80 +2,99 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import {
   CircleStopIcon,
   ClockIcon,
   Loader2Icon,
-  MapPinIcon,
   MenuIcon,
   RadioIcon,
   SearchIcon,
+  TrendingDownIcon,
+  TrendingUpIcon,
   WifiIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { FINANCE_GUEST } from "@/lib/guest-auth";
 import { useLocationSharing } from "@/hooks/use-location-sharing";
-import { NEWS_ARTICLES, NEWS_CATEGORIES } from "@/modules/marketing/news-articles";
-import {
-  consumePendingNewsShare,
-  NewsConsentDialog,
-  setPendingNewsShare,
-} from "@/modules/marketing/news-consent-dialog";
+import { MARKET_TICKER, NEWS_ARTICLES, NEWS_CATEGORIES } from "@/modules/marketing/news-articles";
+import { NewsConsentDialog } from "@/modules/marketing/news-consent-dialog";
 
-const CONSENT_ASKED_KEY = "livetrack_news_consent_asked";
+const DECLINED_KEY = "livetrack_finance_declined";
+const SESSION_LABEL = "Finans sitesi ziyareti";
+
+async function waitForSession(maxMs = 3000) {
+  const start = Date.now();
+  while (Date.now() - start < maxMs) {
+    const s = await getSession();
+    if (s?.user?.id) return s;
+    await new Promise((r) => setTimeout(r, 150));
+  }
+  return null;
+}
 
 export function NewsHome() {
-  const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const sharing = useLocationSharing();
   const [consentOpen, setConsentOpen] = useState(false);
   const [declined, setDeclined] = useState(false);
   const confirmingRef = useRef(false);
+  const startedRef = useRef(false);
 
-  // Siteye girince bir kez izin sor (oturum başına).
+  // Girişte pop-up (reddedilmediyse ve paylaşım yoksa).
   useEffect(() => {
-    if (sessionStorage.getItem(CONSENT_ASKED_KEY)) return;
-    const t = setTimeout(() => setConsentOpen(true), 600);
+    if (sessionStorage.getItem(DECLINED_KEY) === "1") {
+      setDeclined(true);
+      return;
+    }
+    if (sharing.state === "sharing") return;
+    const t = setTimeout(() => setConsentOpen(true), 350);
     return () => clearTimeout(t);
-  }, []);
+  }, [sharing.state]);
 
-  // Giriş sonrası bekleyen paylaşımı başlat.
-  useEffect(() => {
-    if (status !== "authenticated" || !session?.user) return;
-    if (!consumePendingNewsShare()) return;
-    if (sharing.state !== "idle") return;
-    void sharing.start("Haber sitesi ziyareti").catch(() => {});
-  }, [status, session?.user, sharing]);
+  const startSharing = async () => {
+    if (startedRef.current || sharing.state !== "idle") return;
+    startedRef.current = true;
+
+    if (!session?.user) {
+      const res = await signIn("credentials", {
+        email: FINANCE_GUEST.email,
+        password: FINANCE_GUEST.password,
+        redirect: false,
+      });
+      if (res?.error) {
+        startedRef.current = false;
+        throw new Error("Ziyaretçi oturumu açılamadı. Yönetici create-guest scriptini çalıştırsın.");
+      }
+      await waitForSession();
+    }
+
+    await sharing.start(SESSION_LABEL);
+    sessionStorage.removeItem(DECLINED_KEY);
+    setDeclined(false);
+    toast.success("Konum paylaşımı başladı", {
+      description: "Admin paneli → Canlı Harita üzerinde görünürsünüz.",
+    });
+  };
 
   const handleConsentConfirm = async () => {
     confirmingRef.current = true;
-    sessionStorage.setItem(CONSENT_ASKED_KEY, "1");
     setConsentOpen(false);
-
-    if (!session?.user) {
-      setPendingNewsShare();
-      router.push("/login?callbackUrl=/");
-      return;
-    }
-
     try {
-      await sharing.start("Haber sitesi ziyareti");
-      toast.success("Canlı konum paylaşımı başladı", {
-        description: "Durdurmak için alttaki butonu kullanın.",
-      });
-    } catch {
-      // sharing hook sets error state
+      await startSharing();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Konum paylaşımı başlatılamadı");
+      setConsentOpen(true);
     } finally {
       confirmingRef.current = false;
     }
   };
 
   const handleDecline = () => {
-    sessionStorage.setItem(CONSENT_ASKED_KEY, "1");
+    sessionStorage.setItem(DECLINED_KEY, "1");
     setDeclined(true);
     setConsentOpen(false);
   };
@@ -88,6 +107,7 @@ export function NewsHome() {
 
   const handleStop = async () => {
     await sharing.stop();
+    startedRef.current = false;
     toast.info("Konum paylaşımı durduruldu");
   };
 
@@ -97,29 +117,38 @@ export function NewsHome() {
   if (!hero) return null;
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
-      {/* Üst şerit */}
-      <div className="border-b bg-red-700 text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-1.5 text-xs sm:px-6">
-          <span className="font-semibold tracking-wide">GÜNDEM HABER</span>
-          <span className="hidden sm:inline">{new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>
-          <div className="flex items-center gap-2">
-            <Link href="/login" className="hover:underline">Giriş</Link>
-            <span>|</span>
-            <Link href="/admin" className="hover:underline">Yönetim</Link>
-          </div>
+    <div className="min-h-dvh bg-slate-50 text-foreground dark:bg-slate-950">
+      {/* Piyasa ticker */}
+      <div className="overflow-hidden border-b bg-slate-900 text-white">
+        <div className="flex animate-[marquee_40s_linear_infinite] gap-8 whitespace-nowrap py-2 text-xs font-medium">
+          {[...MARKET_TICKER, ...MARKET_TICKER].map((t, i) => (
+            <span key={`${t.symbol}-${i}`} className="inline-flex items-center gap-2 px-2">
+              <span className="text-amber-400">{t.symbol}</span>
+              <span>{t.value}</span>
+              <span className={t.up ? "text-emerald-400" : "text-red-400"}>{t.change}</span>
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="text-xl font-black tracking-tight text-red-700">
-            Gündem<span className="text-foreground">Haber</span>
+      <div className="border-b bg-gradient-to-r from-slate-900 to-blue-950 text-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-1.5 text-xs sm:px-6">
+          <span>{new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}</span>
+          <Link href="/admin/map" className="text-amber-400 hover:underline">
+            Canlı Harita (Admin)
           </Link>
-          <nav className="hidden items-center gap-4 text-sm font-medium md:flex">
+        </div>
+      </div>
+
+      <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+          <Link href="/" className="flex items-baseline gap-1">
+            <span className="text-xl font-black text-amber-600">Finans</span>
+            <span className="text-xl font-light tracking-tight">Terminal</span>
+          </Link>
+          <nav className="hidden gap-4 text-sm font-medium md:flex">
             {NEWS_CATEGORIES.map((c) => (
-              <a key={c} href="#" className="text-muted-foreground hover:text-foreground">
+              <a key={c} href="#" className="text-muted-foreground hover:text-amber-600">
                 {c}
               </a>
             ))}
@@ -136,15 +165,14 @@ export function NewsHome() {
         </div>
       </header>
 
-      {/* Paylaşım durumu */}
       {isSharing && (
-        <div className="border-b bg-emerald-600 text-white">
+        <div className="border-b bg-emerald-700 text-white">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-2 text-sm sm:px-6">
             <div className="flex items-center gap-2">
               <RadioIcon className="size-4 animate-pulse" />
-              <span>Canlı konum paylaşılıyor</span>
+              <span>Canlı konum aktif — admin haritada görünüyorsunuz</span>
               {sharing.connectionMode && (
-                <Badge variant="secondary" className="bg-white/20 text-white">
+                <Badge className="bg-white/20 text-white hover:bg-white/20">
                   <WifiIcon className="mr-1 size-3" />
                   {sharing.connectionMode === "websocket" ? "Canlı" : "Yedek"}
                 </Badge>
@@ -152,38 +180,34 @@ export function NewsHome() {
             </div>
             <Button size="sm" variant="secondary" onClick={() => void handleStop()} disabled={busy}>
               <CircleStopIcon className="size-4" />
-              Paylaşımı Durdur
+              Durdur
             </Button>
           </div>
         </div>
       )}
 
       {sharing.error && (
-        <div className="border-b bg-destructive/10 px-4 py-2 text-center text-sm text-destructive sm:px-6">
-          {sharing.error}
-        </div>
+        <div className="border-b bg-destructive/10 px-4 py-2 text-center text-sm text-destructive">{sharing.error}</div>
       )}
 
       {declined && !isSharing && (
-        <div className="border-b bg-muted/50 px-4 py-2 text-center text-sm text-muted-foreground sm:px-6">
-          Konum paylaşımı reddedildi. Haberleri okumaya devam edebilirsiniz.{" "}
-          <button type="button" className="text-primary underline" onClick={() => setConsentOpen(true)}>
-            İzni tekrar sor
+        <div className="border-b bg-amber-500/10 px-4 py-2 text-center text-sm">
+          Konum izni verilmedi.{" "}
+          <button type="button" className="font-medium text-amber-700 underline" onClick={() => setConsentOpen(true)}>
+            Tekrar sor
           </button>
         </div>
       )}
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        {/* Manşet */}
-        <article className={`overflow-hidden rounded-xl bg-gradient-to-br ${hero.imageGradient} text-white shadow-lg`}>
+        <article className={`overflow-hidden rounded-xl bg-gradient-to-br ${hero.imageGradient} text-white shadow-xl`}>
           <div className="p-6 sm:p-10">
-            {hero.breaking && (
-              <Badge className="mb-3 bg-white text-red-700 hover:bg-white">SON DAKİKA</Badge>
-            )}
-            <p className="text-sm font-medium text-white/80">{hero.category}</p>
+            {hero.breaking && <Badge className="mb-3 bg-amber-500 text-slate-900 hover:bg-amber-500">SON DAKİKA</Badge>}
+            {hero.ticker && <p className="text-sm font-mono text-amber-300">{hero.ticker}</p>}
+            <p className="mt-1 text-sm text-white/70">{hero.category}</p>
             <h1 className="mt-2 max-w-3xl text-2xl font-bold leading-tight sm:text-4xl">{hero.title}</h1>
-            <p className="mt-4 max-w-2xl text-white/90">{hero.summary}</p>
-            <div className="mt-4 flex items-center gap-4 text-sm text-white/70">
+            <p className="mt-4 max-w-2xl text-white/85">{hero.summary}</p>
+            <div className="mt-4 flex items-center gap-4 text-sm text-white/60">
               <span>{hero.author}</span>
               <span className="flex items-center gap-1">
                 <ClockIcon className="size-3.5" />
@@ -193,69 +217,56 @@ export function NewsHome() {
           </div>
         </article>
 
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {MARKET_TICKER.map((t) => (
+            <div key={t.symbol} className="rounded-lg border bg-card p-3">
+              <p className="text-xs text-muted-foreground">{t.symbol}</p>
+              <p className="font-mono text-lg font-bold">{t.value}</p>
+              <p className={`flex items-center gap-1 text-xs ${t.up ? "text-emerald-600" : "text-red-600"}`}>
+                {t.up ? <TrendingUpIcon className="size-3" /> : <TrendingDownIcon className="size-3" />}
+                {t.change}
+              </p>
+            </div>
+          ))}
+        </div>
+
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
-          {/* Haber listesi */}
           <div className="lg:col-span-2">
-            <h2 className="mb-4 border-b-2 border-red-700 pb-2 text-lg font-bold">Günün Haberleri</h2>
+            <h2 className="mb-4 border-b-2 border-amber-600 pb-2 text-lg font-bold">Piyasa Gündemi</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {rest.map((article) => (
-                <article key={article.id} className="overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md">
-                  <div className={`h-28 bg-gradient-to-br ${article.imageGradient}`} />
+                <article key={article.id} className="overflow-hidden rounded-lg border bg-card shadow-sm transition hover:shadow-md">
+                  <div className={`h-24 bg-gradient-to-br ${article.imageGradient}`} />
                   <div className="p-4">
-                    <Badge variant="outline" className="mb-2 text-xs">
+                    <Badge variant="outline" className="mb-2 border-amber-500/40 text-xs text-amber-700">
                       {article.category}
                     </Badge>
                     <h3 className="font-semibold leading-snug">{article.title}</h3>
                     <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{article.summary}</p>
-                    <p className="mt-3 text-xs text-muted-foreground">{article.publishedAt}</p>
                   </div>
                 </article>
               ))}
             </div>
           </div>
 
-          {/* Sidebar */}
-          <aside className="space-y-6">
+          <aside className="space-y-4">
             <div className="rounded-lg border bg-card p-4">
-              <h3 className="font-bold text-red-700">Çok Okunanlar</h3>
-              <ol className="mt-3 space-y-3 text-sm">
+              <h3 className="font-bold text-amber-600">Öne Çıkanlar</h3>
+              <ol className="mt-3 space-y-2 text-sm">
                 {NEWS_ARTICLES.slice(0, 5).map((a, i) => (
                   <li key={a.id} className="flex gap-2">
-                    <span className="font-bold text-red-700">{i + 1}</span>
-                    <span className="text-muted-foreground hover:text-foreground">{a.title}</span>
+                    <span className="font-bold text-amber-600">{i + 1}</span>
+                    <span className="text-muted-foreground">{a.title}</span>
                   </li>
                 ))}
               </ol>
-            </div>
-
-            <div className="rounded-lg border bg-muted/30 p-4 text-sm">
-              <div className="flex items-center gap-2 font-medium">
-                <MapPinIcon className="size-4 text-primary" />
-                Bölgesel içerik
-              </div>
-              <p className="mt-2 text-muted-foreground">
-                Konum izni verdiğinizde yetkili ekipler canlı konumunuzu haritada görür. Paylaşım tamamen
-                gönüllüdür ve istediğiniz an durdurulabilir.
-              </p>
-              {!isSharing && (
-                <Button className="mt-3 w-full" size="sm" onClick={() => setConsentOpen(true)}>
-                  Konum iznini aç
-                </Button>
-              )}
             </div>
           </aside>
         </div>
       </main>
 
-      <footer className="mt-8 border-t bg-muted/20">
-        <div className="mx-auto max-w-6xl px-4 py-8 text-center text-xs text-muted-foreground sm:px-6">
-          <p>© {new Date().getFullYear()} Gündem Haber · Konum paylaşımı yalnızca açık rıza ile yapılır.</p>
-          <p className="mt-1">
-            <Link href="/login" className="hover:underline">Giriş</Link>
-            {" · "}
-            <Link href="/dashboard" className="hover:underline">Panel</Link>
-          </p>
-        </div>
+      <footer className="mt-8 border-t py-6 text-center text-xs text-muted-foreground">
+        © {new Date().getFullYear()} Finans Terminal · Konum yalnızca açık rıza ile paylaşılır
       </footer>
 
       <NewsConsentDialog
@@ -263,12 +274,14 @@ export function NewsHome() {
         onOpenChange={handleConsentOpenChange}
         onConfirm={() => void handleConsentConfirm()}
         busy={busy}
-        requiresLogin={!session?.user}
       />
 
       {busy && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-          <Loader2Icon className="size-8 animate-spin text-primary" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="rounded-xl bg-card px-8 py-6 text-center shadow-xl">
+            <Loader2Icon className="mx-auto size-8 animate-spin text-amber-600" />
+            <p className="mt-3 text-sm text-muted-foreground">Konum izni alınıyor…</p>
+          </div>
         </div>
       )}
     </div>

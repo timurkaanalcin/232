@@ -27,7 +27,9 @@
     "infra:doctor": "node scripts/infra/doctor.mjs",
     "infra:auto": "bash scripts/infra/auto-setup.sh",
     "infra:run": "node scripts/infra/run-all.mjs",
-    "infra:finish": "bash scripts/infra/finish.sh"
+    "infra:finish": "bash scripts/infra/finish.sh",
+    "db:guest:local": "node scripts/create-guest.mjs",
+    "db:guest:remote": "node scripts/create-guest.mjs --remote"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.12",

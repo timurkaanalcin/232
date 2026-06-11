@@ -7,65 +7,76 @@ export interface NewsArticle {
   publishedAt: string;
   imageGradient: string;
   breaking?: boolean;
+  ticker?: string;
 }
 
-export const NEWS_CATEGORIES = ["Gündem", "Ekonomi", "Spor", "Teknoloji", "Dünya", "Sağlık"] as const;
+export const NEWS_CATEGORIES = ["Borsa", "Döviz", "Altın", "Kripto", "Ekonomi", "Şirket"] as const;
+
+export const MARKET_TICKER = [
+  { symbol: "BIST100", value: "9.842", change: "+1,24%", up: true },
+  { symbol: "USD/TRY", value: "34,18", change: "+0,08%", up: true },
+  { symbol: "EUR/TRY", value: "37,02", change: "-0,12%", up: false },
+  { symbol: "GRAM ALTIN", value: "2.845", change: "+0,65%", up: true },
+  { symbol: "BTC", value: "$67.420", change: "+2,1%", up: true },
+  { symbol: "PETROL", value: "$78,4", change: "-0,4%", up: false },
+] as const;
 
 export const NEWS_ARTICLES: NewsArticle[] = [
   {
     id: "1",
-    category: "Gündem",
-    title: "Merkez Bankası faiz kararını açıkladı: Piyasalar nasıl tepki verdi?",
+    category: "Borsa",
+    title: "BIST 100 günü yükselişle kapattı: Bankacılık hisseleri öncülük etti",
     summary:
-      "Para Politikası Kurulu toplantısının ardından açıklanan karar, bankacılık ve reel sektörde yeni bir değerlendirme dalgası başlattı.",
-    author: "Ayşe Yılmaz",
-    publishedAt: "12 dk önce",
-    imageGradient: "from-red-700 via-red-900 to-slate-900",
+      "Küresel risk iştahının artmasıyla birlikte yerel endeks %1,2 yükseldi. Yabancı yatırımcı girişleri gün içinde 180 milyon doları aştı.",
+    author: "Finans Editörü",
+    publishedAt: "8 dk önce",
+    imageGradient: "from-slate-900 via-blue-950 to-emerald-950",
     breaking: true,
+    ticker: "BIST100 +1,24%",
   },
   {
     id: "2",
-    category: "Ekonomi",
-    title: "İstanbul borsasında günün öne çıkan hisseleri",
-    summary: "Bankacılık ve enerji sektörü öncülüğünde hacimli bir seans yaşandı. Uzmanlar kısa vadeli görünümü değerlendirdi.",
-    author: "Mehmet Kaya",
-    publishedAt: "34 dk önce",
-    imageGradient: "from-blue-800 via-indigo-900 to-slate-900",
+    category: "Döviz",
+    title: "Merkez Bankası rezervleri rekor seviyede: Piyasalar nasıl yorumluyor?",
+    summary: "Brüt rezervlerdeki artış döviz kurunda kısa vadeli istikrar beklentisini güçlendirdi.",
+    author: "Ekonomi Masası",
+    publishedAt: "22 dk önce",
+    imageGradient: "from-indigo-950 via-slate-900 to-blue-900",
   },
   {
     id: "3",
-    category: "Spor",
-    title: "Milli takım kadrosu açıklandı: Avrupa play-off maçı öncesi sürpriz isimler",
-    summary: "Teknik direktör, form grafiği yüksek genç oyunculara şans verdi. Kadroda son dakika değişikliği beklenmiyor.",
-    author: "Can Demir",
-    publishedAt: "1 saat önce",
-    imageGradient: "from-emerald-700 via-teal-900 to-slate-900",
+    category: "Altın",
+    title: "Gram altında yeni zirve: Yatırımcılar hangi seviyeleri izliyor?",
+    summary: "Jeopolitik gerilim ve küresel faiz beklentileri güvenli liman talebini canlı tutuyor.",
+    author: "Emtia Analiz",
+    publishedAt: "41 dk önce",
+    imageGradient: "from-amber-900 via-yellow-950 to-slate-900",
   },
   {
     id: "4",
-    category: "Teknoloji",
-    title: "Yapay zekâ destekli haber odaları yaygınlaşıyor",
-    summary: "Medya kuruluşları, doğrulama süreçlerini hızlandırmak için yeni araçlara yatırım yapıyor.",
-    author: "Elif Arslan",
-    publishedAt: "2 saat önce",
-    imageGradient: "from-violet-700 via-purple-900 to-slate-900",
+    category: "Kripto",
+    title: "Bitcoin 67 bin dolar bandında: Kurumsal alımlar hız kesmiyor",
+    summary: "ETF girişleri ve makro veri takvimi kripto piyasasında volatiliteyi artırabilir.",
+    author: "Dijital Varlıklar",
+    publishedAt: "1 saat önce",
+    imageGradient: "from-violet-950 via-purple-950 to-slate-900",
   },
   {
     id: "5",
-    category: "Dünya",
-    title: "Avrupa'da enerji fiyatlarında yeni düzenleme görüşmeleri",
-    summary: "Liderler, kış dönemi öncesi tüketici tarafındaki baskıyı azaltacak ortak adımlar arıyor.",
-    author: "Deniz Akın",
-    publishedAt: "3 saat önce",
-    imageGradient: "from-amber-700 via-orange-900 to-slate-900",
+    category: "Şirket",
+    title: "Holding şirketinden 2 milyar TL'lik yatırım planı açıklandı",
+    summary: "Enerji ve teknoloji alanındaki yeni yatırımlar 2026 sonuna kadar tamamlanacak.",
+    author: "Şirket Haberleri",
+    publishedAt: "2 saat önce",
+    imageGradient: "from-teal-950 via-cyan-950 to-slate-900",
   },
   {
     id: "6",
-    category: "Sağlık",
-    title: "Uzmanlar mevsimsel hastalıklara karşı erken önlem çağrısı yaptı",
-    summary: "Aşı takvimi ve hijyen kurallarına dikkat edilmesi gerektiği vurgulandı.",
-    author: "Dr. Selin Öztürk",
-    publishedAt: "4 saat önce",
-    imageGradient: "from-cyan-700 via-sky-900 to-slate-900",
+    category: "Ekonomi",
+    title: "Enflasyon verisi öncesi piyasalar temkinli seyrediyor",
+    summary: "Analistler çekirdek enflasyonda yavaşlama sinyallerine dikkat çekiyor.",
+    author: "Makro Gündem",
+    publishedAt: "3 saat önce",
+    imageGradient: "from-rose-950 via-red-950 to-slate-900",
   },
 ];

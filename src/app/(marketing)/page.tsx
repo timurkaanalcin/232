@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { NewsHome } from "@/modules/marketing/news-home";
 
 export const metadata: Metadata = {
-  title: "Gündem Haber — Son dakika, ekonomi, spor ve daha fazlası",
-  description: "Türkiye ve dünyadan son dakika haberleri, ekonomi, spor, teknoloji ve sağlık gündemi.",
+  title: "Finans Terminal — Borsa, döviz, altın ve ekonomi haberleri",
+  description: "Canlı piyasa verileri, BIST, döviz kurları, altın ve finans gündemi.",
 };
 
 export default function LandingPage() {

@@ -92,6 +92,15 @@
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
   --animate-pulse-dot: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
   @keyframes pulse-dot {
     0%,
     100% {

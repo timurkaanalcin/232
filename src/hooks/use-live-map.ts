@@ -32,7 +32,7 @@ export function useLiveMap(enabled: boolean) {
     queryKey: ["admin", "active-sessions"],
     queryFn: () => apiGet<{ sessions: LocationSessionDTO[] }>("/api/admin/sessions/active"),
     enabled,
-    refetchInterval: 60_000, // safety net on top of the realtime stream
+    refetchInterval: 10_000,
   });
 
   useEffect(() => {

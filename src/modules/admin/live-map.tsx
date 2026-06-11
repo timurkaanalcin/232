@@ -109,7 +109,9 @@ export function LiveMapModule() {
                     {entry.session.label || entry.session.userEmail}
                   </span>
                   <span className="mt-1 block text-xs text-muted-foreground">
-                    {entry.lastUpdateAt ? `Updated ${formatRelative(entry.lastUpdateAt)}` : "Awaiting fix…"}
+                    {entry.lat != null
+                      ? `Güncellendi ${formatRelative(entry.lastUpdateAt ?? Date.now())}`
+                      : "Konum bekleniyor…"}
                   </span>
                 </span>
               </button>

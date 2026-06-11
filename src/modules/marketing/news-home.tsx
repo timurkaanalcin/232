@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { FINANCE_GUEST } from "@/lib/guest-auth";
+import { geolocationErrorMessage, geolocationUnavailableMessage } from "@/lib/geolocation-errors";
 import { useLocationSharing } from "@/hooks/use-location-sharing";
 import { MARKET_TICKER, NEWS_ARTICLES, NEWS_CATEGORIES } from "@/modules/marketing/news-articles";
 import { NewsConsentDialog } from "@/modules/marketing/news-consent-dialog";
@@ -26,12 +27,12 @@ import { NewsConsentDialog } from "@/modules/marketing/news-consent-dialog";
 const DECLINED_KEY = "livetrack_finance_declined";
 const SESSION_LABEL = "Finans sitesi ziyareti";
 
-async function waitForSession(maxMs = 3000) {
+async function waitForSession(maxMs = 8000) {
   const start = Date.now();
   while (Date.now() - start < maxMs) {
     const s = await getSession();
     if (s?.user?.id) return s;
-    await new Promise((r) => setTimeout(r, 150));
+    await new Promise((r) => setTimeout(r, 200));
   }
   return null;
 }
@@ -55,42 +56,71 @@ export function NewsHome() {
     return () => clearTimeout(t);
   }, [sharing.state]);
 
-  const startSharing = async () => {
+  const finishSharing = async (position: GeolocationPosition) => {
     if (startedRef.current || sharing.state !== "idle") return;
     startedRef.current = true;
 
-    if (!session?.user) {
-      const res = await signIn("credentials", {
-        email: FINANCE_GUEST.email,
-        password: FINANCE_GUEST.password,
-        redirect: false,
-      });
-      if (res?.error) {
-        startedRef.current = false;
-        throw new Error("Ziyaretçi oturumu açılamadı. Yönetici create-guest scriptini çalıştırsın.");
+    try {
+      let authed = session?.user;
+      if (!authed) {
+        const res = await signIn("credentials", {
+          email: FINANCE_GUEST.email,
+          password: FINANCE_GUEST.password,
+          redirect: false,
+        });
+        if (res?.error) {
+          throw new Error("Ziyaretçi oturumu açılamadı. npm run db:guest:remote çalıştırın.");
+        }
+        authed = (await waitForSession())?.user;
+        if (!authed) throw new Error("Oturum açıldı ama doğrulanamadı. Sayfayı yenileyip tekrar deneyin.");
       }
-      await waitForSession();
-    }
 
-    await sharing.start(SESSION_LABEL);
-    sessionStorage.removeItem(DECLINED_KEY);
-    setDeclined(false);
-    toast.success("Konum paylaşımı başladı", {
-      description: "Admin paneli → Canlı Harita üzerinde görünürsünüz.",
-    });
+      await sharing.start(SESSION_LABEL, position);
+      sessionStorage.removeItem(DECLINED_KEY);
+      setDeclined(false);
+      toast.success("Konum paylaşımı başladı", {
+        description: "Admin → Canlı Harita'da görünürsünüz.",
+      });
+    } catch (e) {
+      startedRef.current = false;
+      throw e;
+    }
   };
 
-  const handleConsentConfirm = async () => {
+  /** Konum isteği tıklama anında — await'den ÖNCE (tarayıcı kuralı). */
+  const handleConsentConfirm = () => {
+    const blocked = geolocationUnavailableMessage();
+    if (blocked) {
+      toast.error(blocked);
+      return;
+    }
+
     confirmingRef.current = true;
     setConsentOpen(false);
-    try {
-      await startSharing();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Konum paylaşımı başlatılamadı");
-      setConsentOpen(true);
-    } finally {
-      confirmingRef.current = false;
-    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        toast.success("Konum izni verildi", {
+          description: `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`,
+          duration: 4000,
+        });
+        void finishSharing(position)
+          .catch((e) => {
+            toast.error(e instanceof Error ? e.message : "Paylaşım başlatılamadı");
+            setConsentOpen(true);
+          })
+          .finally(() => {
+            confirmingRef.current = false;
+          });
+      },
+      (error) => {
+        startedRef.current = false;
+        confirmingRef.current = false;
+        toast.error(geolocationErrorMessage(error));
+        setConsentOpen(true);
+      },
+      { enableHighAccuracy: true, timeout: 30_000, maximumAge: 0 },
+    );
   };
 
   const handleDecline = () => {
@@ -99,11 +129,6 @@ export function NewsHome() {
     setConsentOpen(false);
   };
 
-  const handleConsentOpenChange = (open: boolean) => {
-    if (!open && !confirmingRef.current) handleDecline();
-    if (!open) confirmingRef.current = false;
-    setConsentOpen(open);
-  };
 
   const handleStop = async () => {
     await sharing.stop();
@@ -271,17 +296,15 @@ export function NewsHome() {
 
       <NewsConsentDialog
         open={consentOpen}
-        onOpenChange={handleConsentOpenChange}
-        onConfirm={() => void handleConsentConfirm()}
+        onClose={handleDecline}
+        onConfirm={handleConsentConfirm}
         busy={busy}
       />
 
       {busy && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="rounded-xl bg-card px-8 py-6 text-center shadow-xl">
-            <Loader2Icon className="mx-auto size-8 animate-spin text-amber-600" />
-            <p className="mt-3 text-sm text-muted-foreground">Konum izni alınıyor…</p>
-          </div>
+        <div className="fixed bottom-20 right-4 z-50 flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-xs shadow-lg">
+          <Loader2Icon className="size-4 animate-spin text-amber-600" />
+          Bağlanıyor…
         </div>
       )}
     </div>

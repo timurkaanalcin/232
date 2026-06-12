@@ -3,13 +3,20 @@
  * Push app secrets to Cloudflare Worker (remote).
  * Reads from process env / .env.infra — never commit real values.
  */
-import { loadInfraEnv, ensureCloudflareCredentials, run } from "./lib.mjs";
+import { readFileSync } from "node:fs";
+import { loadInfraEnv, ensureCloudflareCredentials, run, WRANGLER_PATH } from "./lib.mjs";
+
+function getWorkerName() {
+  const content = readFileSync(WRANGLER_PATH, "utf8");
+  return content.match(/"name":\s*"([^"]+)"/)?.[1] ?? "borsahatti";
+}
 
 const SECRET_NAMES = [
   "AUTH_SECRET",
   "AUTH_URL",
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
+  "GOOGLE_MAPS_API_KEY",
   "RESEND_API_KEY",
   "EMAIL_FROM",
   "TELEGRAM_BOT_TOKEN",
@@ -43,7 +50,7 @@ for (const name of SECRET_NAMES) {
   const value = process.env[name];
   if (!value?.trim()) continue;
   console.log(`==> wrangler secret put ${name}`);
-  run("npx", ["wrangler", "secret", "put", name, "--name", "livetrack"], {
+  run("npx", ["wrangler", "secret", "put", name, "--name", getWorkerName()], {
     input: value,
     stdio: "pipe",
   });

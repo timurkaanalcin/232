@@ -22,6 +22,8 @@ declare global {
     AUTH_URL?: string;
     GOOGLE_CLIENT_ID?: string;
     GOOGLE_CLIENT_SECRET?: string;
+    /** Google Maps Geocoding API — doğru tam adres için */
+    GOOGLE_MAPS_API_KEY?: string;
     RESEND_API_KEY?: string;
     EMAIL_FROM?: string;
     TELEGRAM_BOT_TOKEN?: string;

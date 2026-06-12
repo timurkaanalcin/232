@@ -66,6 +66,7 @@ export interface LocationSessionRow {
   last_lng: number | null;
   last_accuracy: number | null;
   last_update_at: number | null;
+  last_address: string | null;
   points_count: number;
 }
 
@@ -135,6 +136,7 @@ export interface LocationSessionDTO {
   lastLng: number | null;
   lastAccuracy: number | null;
   lastUpdateAt: number | null;
+  lastAddress: string | null;
   pointsCount: number;
   // joined fields (admin views)
   userName?: string;

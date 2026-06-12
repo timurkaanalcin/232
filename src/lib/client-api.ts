@@ -12,6 +12,7 @@ export class ClientApiError extends Error {
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
+    credentials: "include",
     ...init,
     headers: {
       ...(init?.body ? { "Content-Type": "application/json" } : {}),

@@ -142,7 +142,13 @@ function UserMenu({ user }: { user: ShellUser }) {
 }
 
 export function AppShell({ user, children }: { user: ShellUser; children: ReactNode }) {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Admin: sadece konum ekranı — sidebar yok
+  if (pathname.startsWith("/admin")) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-dvh bg-background">

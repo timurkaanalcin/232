@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { SITE_NAME } from "@/modules/marketing/news-articles";
 import "./globals.css";
 
 const inter = Inter({
@@ -11,12 +12,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "LiveTrack — Consent-first real-time location sharing",
-    template: "%s · LiveTrack",
+    default: `${SITE_NAME} — Borsa, döviz, altın ve ekonomi haberleri`,
+    template: `%s · ${SITE_NAME}`,
   },
   description:
-    "Enterprise-grade real-time location sharing with explicit consent, full audit trails and GDPR/KVKK-compliant data handling.",
-  applicationName: "LiveTrack",
+    "Canlı piyasa verileri, BIST, döviz kurları, altın, video haberler ve Türkiye finans gündemi.",
+  applicationName: SITE_NAME,
   robots: { index: true, follow: true },
 };
 

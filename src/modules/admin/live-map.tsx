@@ -1,180 +1,140 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { ExpandIcon, MapPinnedIcon, RadioIcon, SearchIcon, ShrinkIcon, UserIcon } from "lucide-react";
+import { MapPinnedIcon, RadioIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminLocationShell } from "@/components/layout/admin-location-shell";
 import { useLiveMap, type LiveMapStatus } from "@/hooks/use-live-map";
-import { cn, formatAccuracy, formatDuration, formatRelative } from "@/lib/utils";
+import { SITE_URL } from "@/lib/site-config";
+import { formatRelative } from "@/lib/utils";
 
 const LiveMapCanvas = dynamic(() => import("@/modules/admin/live-map-canvas"), {
   ssr: false,
-  loading: () => <Skeleton className="h-full w-full rounded-none" />,
+  loading: () => <Skeleton className="size-full" />,
 });
 
-const STATUS_LABEL: Record<LiveMapStatus, { label: string; tone: "success" | "warning" }> = {
-  connecting: { label: "Connecting…", tone: "warning" },
-  live: { label: "Live", tone: "success" },
-  reconnecting: { label: "Reconnecting…", tone: "warning" },
+const STATUS_LABEL: Record<LiveMapStatus, string> = {
+  connecting: "Bağlanıyor…",
+  live: "Canlı",
+  reconnecting: "Yeniden bağlanıyor…",
 };
 
 export function LiveMapModule() {
-  const { sessions, status, snapshotLoading } = useLiveMap(true);
-  const [query, setQuery] = useState("");
+  const { sessions, status, snapshotLoading, refetchSnapshot } = useLiveMap(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [fullscreen, setFullscreen] = useState(false);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
 
-  const toggleFullscreen = async () => {
-    const el = mapContainerRef.current;
-    if (!el) return;
-    if (!document.fullscreenElement) {
-      await el.requestFullscreen();
-      setFullscreen(true);
-    } else {
-      await document.exitFullscreen();
-      setFullscreen(false);
+  const active = useMemo(() => {
+    const withPos = sessions.filter((s) => s.lat != null && s.lng != null);
+    if (selectedId) {
+      const picked = withPos.find((s) => s.session.id === selectedId);
+      if (picked) return picked;
+    }
+    return withPos[0] ?? sessions[0] ?? null;
+  }, [sessions, selectedId]);
+
+  const addressMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const s of sessions) {
+      if (s.session.lastAddress) map.set(s.session.id, s.session.lastAddress);
+    }
+    return map;
+  }, [sessions]);
+
+  useEffect(() => {
+    if (!active && sessions.length > 0) {
+      setSelectedId(sessions[0]!.session.id);
+    }
+  }, [active, sessions]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetchSnapshot();
+    } finally {
+      setRefreshing(false);
     }
   };
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = q
-      ? sessions.filter(
-          (entry) =>
-            entry.session.userName?.toLowerCase().includes(q) ||
-            entry.session.userEmail?.toLowerCase().includes(q) ||
-            entry.session.label.toLowerCase().includes(q),
-        )
-      : sessions;
-    return [...list].sort((a, b) => (b.lastUpdateAt ?? 0) - (a.lastUpdateAt ?? 0));
-  }, [sessions, query]);
-
-  const selected = filtered.find((entry) => entry.session.id === selectedId) ?? null;
-  const statusMeta = STATUS_LABEL[status];
+  const address = active?.session.lastAddress;
+  const hasCoords = active?.lat != null && active?.lng != null;
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-7rem)] w-full max-w-6xl flex-col gap-4 lg:flex-row">
-      {/* Session list */}
-      <Card className="flex w-full shrink-0 flex-col lg:w-80">
-        <div className="border-b p-4">
-          <div className="flex items-center justify-between">
-            <h1 className="font-semibold">Live sessions</h1>
-            <Badge variant={statusMeta.tone}>
-              <RadioIcon className="size-3" /> {statusMeta.label}
-            </Badge>
+    <AdminLocationShell onRefresh={() => void handleRefresh()} refreshing={refreshing}>
+      <div className="absolute inset-0">
+        <LiveMapCanvas
+          sessions={sessions.filter((s) => s.lat != null && s.lng != null)}
+          selectedId={active?.session.id ?? null}
+          onSelect={setSelectedId}
+          addresses={addressMap}
+        />
+      </div>
+
+      {/* Üst durum */}
+      <div className="pointer-events-none absolute left-3 top-3 z-[1000]">
+        <Badge variant={status === "live" ? "success" : "warning"} className="pointer-events-auto shadow-md">
+          <RadioIcon className="size-3" />
+          {STATUS_LABEL[status]}
+          {sessions.length > 0 && ` · ${sessions.length} kişi`}
+        </Badge>
+      </div>
+
+      {/* Alt bilgi — sadece konum / adres */}
+      <div className="absolute inset-x-0 bottom-0 z-[1000] border-t bg-background/95 p-4 shadow-lg backdrop-blur">
+        {snapshotLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {sessions.length} active {sessions.length === 1 ? "session" : "sessions"}
-          </p>
-          <div className="relative mt-3">
-            <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search user or label"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-8"
-            />
+        ) : active && hasCoords ? (
+          <div>
+            <p className="text-xs text-muted-foreground">
+              {active.session.userName || active.session.userEmail || "Ziyaretçi"}
+              {" · "}
+              {formatRelative(active.lastUpdateAt)}
+            </p>
+            {address ? (
+              <p className="mt-1 text-base font-medium leading-snug">{address}</p>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">Adres çözümleniyor…</p>
+            )}
+            {sessions.length > 1 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {sessions.map((s) => (
+                  <button
+                    key={s.session.id}
+                    type="button"
+                    onClick={() => setSelectedId(s.session.id)}
+                    className={`shrink-0 rounded-full border px-3 py-1 text-xs transition-colors ${
+                      active.session.id === s.session.id
+                        ? "border-amber-500 bg-amber-500/10 text-amber-700"
+                        : "bg-muted text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {s.session.userName || "Ziyaretçi"}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
-          {snapshotLoading ? (
-            <div className="grid gap-2 p-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-16" />
-              ))}
-            </div>
-          ) : filtered.length > 0 ? (
-            filtered.map((entry) => (
-              <button
-                key={entry.session.id}
-                onClick={() => setSelectedId(entry.session.id)}
-                className={cn(
-                  "mb-1 flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-accent/50 cursor-pointer",
-                  selectedId === entry.session.id && "bg-accent",
-                )}
-              >
-                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
-                  <UserIcon className="size-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">
-                    {entry.session.userName || entry.session.userEmail || "User"}
-                  </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {entry.session.label || entry.session.userEmail}
-                  </span>
-                  <span className="mt-1 block text-xs text-muted-foreground">
-                    {entry.lat != null
-                      ? `Güncellendi ${formatRelative(entry.lastUpdateAt ?? Date.now())}`
-                      : "Konum bekleniyor…"}
-                  </span>
-                </span>
-              </button>
-            ))
-          ) : (
-            <div className="flex flex-col items-center gap-2 p-8 text-center">
-              <MapPinnedIcon className="size-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                {sessions.length === 0 ? "No active sessions right now." : "No sessions match your search."}
+        ) : (
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <MapPinnedIcon className="size-5 shrink-0" />
+            <div className="text-sm">
+              <p>Henüz konum yok.</p>
+              <p className="text-xs">
+                Ziyaretçi{" "}
+                <a href={SITE_URL} className="text-amber-600 underline" target="_blank" rel="noreferrer">
+                  {SITE_URL.replace("https://", "")}
+                </a>{" "}
+                sitesinde izin vermeli.
               </p>
             </div>
-          )}
-        </div>
-      </Card>
-
-      {/* Map + detail */}
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <Card className="relative min-h-0 flex-1 overflow-hidden">
-          <Button
-            variant="secondary"
-            size="icon"
-            className="absolute right-3 top-3 z-[1000] size-8 shadow-md"
-            onClick={() => void toggleFullscreen()}
-            aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          >
-            {fullscreen ? <ShrinkIcon className="size-4" /> : <ExpandIcon className="size-4" />}
-          </Button>
-          <div ref={mapContainerRef} className="h-full min-h-[320px] bg-muted">
-            <LiveMapCanvas sessions={filtered} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
-        </Card>
-
-        {selected && (
-          <Card>
-            <CardContent className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-4">
-              <Detail label="User" value={selected.session.userName || "—"} />
-              <Detail label="Email" value={selected.session.userEmail || "—"} />
-              <Detail label="Duration" value={formatDuration(selected.session.startedAt, null)} />
-              <Detail label="Accuracy" value={formatAccuracy(selected.accuracy)} />
-              <Detail label="Points" value={String(selected.session.pointsCount)} />
-              <Detail
-                label="Coordinates"
-                value={
-                  selected.lat != null && selected.lng != null
-                    ? `${selected.lat.toFixed(4)}, ${selected.lng.toFixed(4)}`
-                    : "—"
-                }
-              />
-              <Detail label="Last update" value={formatRelative(selected.lastUpdateAt)} />
-              <Detail label="Consent" value="Explicit · granted" />
-            </CardContent>
-          </Card>
         )}
       </div>
-    </div>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="truncate text-sm font-medium">{value}</p>
-    </div>
+    </AdminLocationShell>
   );
 }

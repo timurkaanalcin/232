@@ -1,8 +1,5 @@
-import type { Metadata } from "next";
-import { AdminDashboard } from "@/modules/admin/dashboard";
-
-export const metadata: Metadata = { title: "Command center" };
+import { redirect } from "next/navigation";
 
 export default function AdminPage() {
-  return <AdminDashboard />;
+  redirect("/admin/map");
 }

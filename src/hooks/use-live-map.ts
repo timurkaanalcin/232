@@ -32,7 +32,9 @@ export function useLiveMap(enabled: boolean) {
     queryKey: ["admin", "active-sessions"],
     queryFn: () => apiGet<{ sessions: LocationSessionDTO[] }>("/api/admin/sessions/active"),
     enabled,
-    refetchInterval: 10_000,
+    refetchInterval: 3_000,
+    refetchOnWindowFocus: true,
+    retry: 2,
   });
 
   useEffect(() => {
@@ -41,14 +43,16 @@ export function useLiveMap(enabled: boolean) {
       const next = new Map<string, LiveSession>();
       for (const session of snapshot.data.sessions) {
         const existing = previous.get(session.id);
+        const lat = session.lastLat ?? existing?.lat ?? null;
+        const lng = session.lastLng ?? existing?.lng ?? null;
         next.set(session.id, {
-          session,
-          lat: existing?.lat ?? session.lastLat,
-          lng: existing?.lng ?? session.lastLng,
-          accuracy: existing?.accuracy ?? session.lastAccuracy,
+          session: { ...session, lastAddress: session.lastAddress ?? existing?.session.lastAddress ?? null },
+          lat,
+          lng,
+          accuracy: session.lastAccuracy ?? existing?.accuracy ?? null,
           speed: existing?.speed ?? null,
           heading: existing?.heading ?? null,
-          lastUpdateAt: existing?.lastUpdateAt ?? session.lastUpdateAt,
+          lastUpdateAt: Math.max(session.lastUpdateAt ?? 0, existing?.lastUpdateAt ?? 0) || null,
         });
       }
       return next;
@@ -144,6 +148,7 @@ export function useLiveMap(enabled: boolean) {
     sessions: [...sessions.values()],
     status,
     snapshotLoading: snapshot.isLoading,
+    snapshotError: snapshot.error,
     refetchSnapshot: snapshot.refetch,
   };
 }

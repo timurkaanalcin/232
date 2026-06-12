@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiPost } from "@/lib/client-api";
 import { geolocationErrorMessage } from "@/lib/geolocation-errors";
+import { positionFromGeolocation } from "@/lib/normalize-position";
 import type { LocationSessionDTO, RealtimeClientMessage } from "@/types";
 
 export type SharingState = "idle" | "starting" | "sharing" | "stopping";
@@ -29,7 +30,8 @@ interface UseLocationSharingResult {
 }
 
 const SEND_INTERVAL_MS = 2_000;
-const REST_FALLBACK_INTERVAL_MS = 10_000;
+const REST_FALLBACK_INTERVAL_MS = 4_000;
+const REST_HEARTBEAT_MS = 4_000;
 
 /**
  * Full lifecycle of a location sharing session on the client:
@@ -132,55 +134,36 @@ export function useLocationSharing(): UseLocationSharingResult {
   }, [cleanup]);
 
   const publishViaRest = useCallback(async (pos: GeolocationPosition, sessionId: string) => {
-    const message: RealtimeClientMessage = {
-      t: "pos",
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-      acc: Math.min(pos.coords.accuracy, 100_000),
-      hdg: pos.coords.heading,
-      spd: pos.coords.speed,
-      ts: pos.timestamp,
-    };
+    const message = positionFromGeolocation(pos);
     await apiPost("/api/location/update", { sessionId, position: message });
   }, []);
 
   const transmit = useCallback((pos: GeolocationPosition) => {
+    const message = positionFromGeolocation(pos);
     const current: CurrentPosition = {
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-      accuracy: pos.coords.accuracy,
-      heading: pos.coords.heading,
-      speed: pos.coords.speed,
-      timestamp: pos.timestamp,
+      lat: message.lat,
+      lng: message.lng,
+      accuracy: message.acc,
+      heading: message.hdg ?? null,
+      speed: message.spd ?? null,
+      timestamp: message.ts,
     };
     setPosition(current);
 
     const now = Date.now();
-    const message: RealtimeClientMessage = {
-      t: "pos",
-      lat: current.lat,
-      lng: current.lng,
-      acc: Math.min(current.accuracy, 100_000),
-      hdg: current.heading,
-      spd: current.speed,
-      ts: current.timestamp,
-    };
 
     const ws = wsRef.current;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      if (now - lastSentAtRef.current >= SEND_INTERVAL_MS) {
-        lastSentAtRef.current = now;
-        ws.send(JSON.stringify(message));
-      }
-      return;
+    if (ws && ws.readyState === WebSocket.OPEN && now - lastSentAtRef.current >= SEND_INTERVAL_MS) {
+      lastSentAtRef.current = now;
+      ws.send(JSON.stringify(message));
     }
 
-    // REST fallback, heavily throttled.
+    // REST yedek — admin harita snapshot'ı her zaman güncel kalsın.
     const activeSession = sessionRef.current;
     if (activeSession && now - lastRestSentAtRef.current >= REST_FALLBACK_INTERVAL_MS) {
       lastRestSentAtRef.current = now;
       void apiPost("/api/location/update", { sessionId: activeSession.id, position: message }).catch(() => {
-        // swallowed - next tick retries
+        // next tick retries
       });
     }
   }, []);
@@ -190,7 +173,7 @@ export function useLocationSharing(): UseLocationSharingResult {
       transmit,
       (geoError) => {
         if (geoError.code === geoError.PERMISSION_DENIED) {
-          setError("Location permission was denied. Sharing stopped.");
+          setError("Konum izni reddedildi. Tarayıcı ayarlarından bu siteye izin verin.");
           void stopInternal("permission_denied");
         }
       },
@@ -213,7 +196,7 @@ export function useLocationSharing(): UseLocationSharingResult {
       setSession(null);
       setState("idle");
       if (reason === "permission_denied") {
-        setError("Location permission was denied. Sharing stopped.");
+        setError("Konum izni reddedildi. Tarayıcı ayarlarından bu siteye izin verin.");
       }
     },
     [cleanup],
@@ -275,9 +258,35 @@ export function useLocationSharing(): UseLocationSharingResult {
       setState("sharing");
       void connectWebSocket();
       startWatching();
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          transmit(pos);
+          void publishViaRest(pos, activeSession.id);
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 5_000, timeout: 20_000 },
+      );
     },
-    [connectWebSocket, startWatching],
+    [connectWebSocket, publishViaRest, startWatching, transmit],
   );
+
+  // Konum yayını sırasında periyodik REST güncellemesi (admin harita için).
+  useEffect(() => {
+    if (state !== "sharing" || !session?.id) return;
+    const tick = () => {
+      if (!sessionRef.current) return;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          transmit(pos);
+          void publishViaRest(pos, sessionRef.current!.id);
+        },
+        () => {},
+        { enableHighAccuracy: false, maximumAge: 10_000, timeout: 15_000 },
+      );
+    };
+    const id = setInterval(tick, REST_HEARTBEAT_MS);
+    return () => clearInterval(id);
+  }, [state, session?.id, transmit, publishViaRest]);
 
   useEffect(() => () => cleanup(), [cleanup]);
 

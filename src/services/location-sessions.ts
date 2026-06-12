@@ -23,6 +23,7 @@ export function toLocationSessionDTO(
     lastLng: row.last_lng,
     lastAccuracy: row.last_accuracy,
     lastUpdateAt: row.last_update_at,
+    lastAddress: row.last_address ?? null,
     pointsCount: row.points_count,
     userName: row.user_name,
     userEmail: row.user_email,

@@ -2,7 +2,7 @@
 export function geolocationErrorMessage(error: GeolocationPositionError): string {
   switch (error.code) {
     case error.PERMISSION_DENIED:
-      return "Konum izni reddedildi. Adres çubuğundaki kilit/konum simgesinden bu siteye izin verin.";
+      return "Konum izni reddedildi. Adres çubuğundaki kilit simgesine tıklayıp Konum → İzin ver seçin. (iPhone: Ayarlar → Gizlilik → Konum Servisleri)";
     case error.POSITION_UNAVAILABLE:
       return "Konum alınamadı. Cihazınızda Konum Servisleri ve Wi-Fi/GPS açık olsun.";
     case error.TIMEOUT:

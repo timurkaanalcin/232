@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "livetrack",
+  "name": "borsahatti",
   "main": "worker.ts",
   "compatibility_date": "2026-05-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -36,6 +36,7 @@
   "vars": {
     // Non-secret variables. Secrets (AUTH_SECRET, GOOGLE_CLIENT_SECRET, ...)
     // must be set with `wrangler secret put <NAME>` - never here.
-    "AUTH_TRUST_HOST": "true"
+    "AUTH_TRUST_HOST": "true",
+    "NEXT_PUBLIC_SITE_URL": "https://borsahatti.timurkaanalcin.workers.dev"
   }
 }

@@ -11,7 +11,7 @@ import {
 import { logAudit } from "@/lib/audit";
 import { AUDIT_ACTIONS, REALTIME, canAssignRole, canManageRole } from "@/lib/constants";
 import { adminUpdateUserSchema } from "@/lib/validators";
-import { adminUpdateUser, findUserById, toUserDTO } from "@/services/users";
+import { adminUpdateUser, findUserById, generateClientNumericId, toUserDTO } from "@/services/users";
 import { revokeAllDeviceSessions } from "@/services/device-sessions";
 import { endLocationSession, getActiveSessionForUser } from "@/services/location-sessions";
 
@@ -47,7 +47,13 @@ export const PATCH = apiHandler(
       if (!manager) throw badRequest("Selected manager does not exist");
     }
 
-    await adminUpdateUser(db, id, parsed.data);
+    await adminUpdateUser(db, id, {
+      ...parsed.data,
+      clientNumericId:
+        parsed.data.role === "user" && !target.client_numeric_id
+          ? await generateClientNumericId(db)
+          : undefined,
+    });
 
     if (parsed.data.status === "disabled") {
       // Disabling immediately kills all sessions and any active sharing.

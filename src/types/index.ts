@@ -44,6 +44,7 @@ export interface UserRow {
   image: string | null;
   password_hash: string | null;
   role_id: RoleId;
+  client_numeric_id: string;
   phone: string;
   address: string;
   date_of_birth: string;
@@ -123,6 +124,7 @@ export interface UserDTO {
   name: string;
   image: string | null;
   role: RoleId;
+  clientNumericId: string;
   phone: string;
   address: string;
   dateOfBirth: string;

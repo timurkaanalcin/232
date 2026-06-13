@@ -10,6 +10,7 @@ export function toUserDTO(row: UserRowWithManager): UserDTO {
     name: row.name,
     image: row.image,
     role: row.role_id,
+    clientNumericId: row.client_numeric_id ?? "",
     phone: row.phone ?? "",
     address: row.address ?? "",
     dateOfBirth: row.date_of_birth ?? "",
@@ -32,6 +33,24 @@ export async function findUserById(db: D1Database, id: string): Promise<UserRow 
   return db.prepare(`SELECT * FROM users WHERE id = ?`).bind(id).first<UserRow>();
 }
 
+function generateEightDigitId(): string {
+  const values = new Uint32Array(1);
+  crypto.getRandomValues(values);
+  return String(10_000_000 + (values[0] % 90_000_000));
+}
+
+export async function generateClientNumericId(db: D1Database): Promise<string> {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const candidate = generateEightDigitId();
+    const existing = await db
+      .prepare(`SELECT id FROM users WHERE client_numeric_id = ? LIMIT 1`)
+      .bind(candidate)
+      .first<{ id: string }>();
+    if (!existing) return candidate;
+  }
+  throw new Error("Failed to generate a unique client ID");
+}
+
 export interface CreateUserInput {
   email: string;
   name: string;
@@ -51,14 +70,16 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
   const now = Date.now();
   const id = crypto.randomUUID();
   const passwordHash = input.password ? await hashPassword(input.password) : null;
+  const role = input.role ?? "user";
+  const clientNumericId = role === "user" ? await generateClientNumericId(db) : "";
 
   await db
     .prepare(
       `INSERT INTO users (
-         id, email, email_verified, name, image, password_hash, role_id, phone, address,
+         id, email, email_verified, name, image, password_hash, role_id, client_numeric_id, phone, address,
          date_of_birth, department, retention_status, manager_id, status, created_at, updated_at
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
     )
     .bind(
       id,
@@ -67,7 +88,8 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
       input.name,
       input.image ?? null,
       passwordHash,
-      input.role ?? "user",
+      role,
+      clientNumericId,
       input.phone ?? "",
       input.address ?? "",
       input.dateOfBirth ?? "",
@@ -103,6 +125,7 @@ export async function touchLastLogin(db: D1Database, id: string): Promise<void> 
 export interface AdminUpdateUserInput {
   name?: string;
   role?: RoleId;
+  clientNumericId?: string;
   phone?: string;
   address?: string;
   dateOfBirth?: string;
@@ -123,6 +146,10 @@ export async function adminUpdateUser(db: D1Database, id: string, input: AdminUp
   if (input.role !== undefined) {
     sets.push("role_id = ?");
     binds.push(input.role);
+  }
+  if (input.clientNumericId !== undefined) {
+    sets.push("client_numeric_id = ?");
+    binds.push(input.clientNumericId);
   }
   if (input.phone !== undefined) {
     sets.push("phone = ?");
@@ -174,9 +201,9 @@ export async function listUsers(db: D1Database, filter: ListUsersFilter): Promis
   const where: string[] = [];
   const binds: unknown[] = [];
   if (filter.q) {
-    where.push("(u.email LIKE ? OR u.name LIKE ? OR u.phone LIKE ?)");
+    where.push("(u.email LIKE ? OR u.name LIKE ? OR u.phone LIKE ? OR u.client_numeric_id LIKE ?)");
     const like = `%${filter.q.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`;
-    binds.push(like, like, like);
+    binds.push(like, like, like, like);
   }
   if (filter.role) {
     where.push("u.role_id = ?");
@@ -224,7 +251,7 @@ export async function exportUserData(db: D1Database, id: string) {
   const [user, sessions, locationSessions, locations, audit] = await Promise.all([
     db
       .prepare(
-        `SELECT id, email, name, image, role_id, phone, address, date_of_birth, department, retention_status,
+        `SELECT id, email, name, image, role_id, client_numeric_id, phone, address, date_of_birth, department, retention_status,
                 manager_id, status, email_verified, created_at, updated_at, last_login_at
          FROM users WHERE id = ?`,
       )

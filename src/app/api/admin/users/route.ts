@@ -68,7 +68,12 @@ export const POST = apiHandler(async (request: Request) => {
     targetId: created.id,
     ip: meta.ip,
     userAgent: meta.userAgent,
-    metadata: { email: created.email, role: created.role_id, department: created.department },
+    metadata: {
+      email: created.email,
+      role: created.role_id,
+      department: created.department,
+      clientNumericId: created.client_numeric_id,
+    },
   });
 
   return jsonOk({ user: toUserDTO(created) }, { status: 201 });

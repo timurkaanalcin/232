@@ -213,7 +213,7 @@ export function UserManagement() {
             <div className="relative flex-1">
               <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Ad, e-posta veya telefon ara"
+                placeholder="Ad, e-posta, telefon veya Client ID ara"
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
@@ -257,6 +257,11 @@ export function UserManagement() {
                 <SelectItem value="disabled">Pasif</SelectItem>
               </SelectContent>
             </Select>
+            {role === "user" ? (
+              <p className="text-xs text-muted-foreground">
+                Client ID otomatik atanır ve yalnızca rakamlardan oluşur.
+              </p>
+            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -294,6 +299,9 @@ export function UserManagement() {
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">{user.name}</p>
                           <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                          {user.clientNumericId ? (
+                            <p className="truncate text-xs font-medium text-primary">Client ID: {user.clientNumericId}</p>
+                          ) : null}
                           {user.address ? (
                             <p className="truncate text-xs text-muted-foreground">{user.address}</p>
                           ) : null}
@@ -306,6 +314,7 @@ export function UserManagement() {
                     <TableCell className="hidden lg:table-cell">
                       <div className="grid gap-1 text-xs">
                         <span className="font-medium">{CRM_DEPARTMENT_LABELS[user.department]}</span>
+                        <span className="text-muted-foreground">Client ID: {user.clientNumericId || "—"}</span>
                         <span className="text-muted-foreground">Retention Durum: {RETENTION_STATUS_LABELS[user.retentionStatus]}</span>
                         <span className="text-muted-foreground">Yönetici: {user.managerName || "—"}</span>
                       </div>
@@ -673,6 +682,14 @@ function EditUserDialog({
           <div className="grid gap-2">
             <Label htmlFor="edit-user-email">E posta adresi</Label>
             <Input id="edit-user-email" type="email" value={user?.email ?? ""} disabled />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-client-id">Client ID</Label>
+            <Input
+              id="edit-user-client-id"
+              value={user?.clientNumericId || "Client rolünde otomatik atanır"}
+              disabled
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="edit-user-birthdate">Doğum Tarihi</Label>

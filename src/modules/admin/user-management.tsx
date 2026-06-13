@@ -1,12 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, SearchIcon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CrownIcon,
+  FileTextIcon,
+  HeadphonesIcon,
+  PlusIcon,
+  SearchIcon,
+  ShieldIcon,
+  UserRoundIcon,
+  UsersIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -21,15 +33,129 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiGet, apiPatch, apiPost, ClientApiError } from "@/lib/client-api";
-import { ROLE_LABELS } from "@/lib/constants";
+import {
+  CRM_DEPARTMENT_LABELS,
+  RETENTION_STATUS_LABELS,
+  ROLE_LABELS,
+  ROLE_PERMISSIONS,
+} from "@/lib/constants";
 import { formatRelative, initials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { Paginated, RoleId, UserDTO, UserStatus } from "@/types";
+import type { CrmDepartment, Paginated, Permission, RetentionStatus, RoleId, UserDTO, UserStatus } from "@/types";
 
-const ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer", "user"];
+const ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer", "retention", "sale", "user"];
+const DEPARTMENTS: CrmDepartment[] = ["management", "retention", "sale", "client"];
+const RETENTION_STATUSES: RetentionStatus[] = ["pending", "active", "at_risk", "retained", "lost"];
+const NO_MANAGER_VALUE = "__none__";
+
+const PERMISSION_AREAS: { permission: Permission; label: string }[] = [
+  { permission: "customers.manage", label: "Müşteri Yönetimi" },
+  { permission: "tickets.manage", label: "Bilet Yönetimi" },
+  { permission: "documents.manage", label: "Belge Yönetimi" },
+  { permission: "reports.view", label: "Raporlar" },
+  { permission: "settings.manage", label: "Ayarlar" },
+  { permission: "admin.panel", label: "Admin Paneli" },
+];
+
+const ROLE_CARDS: {
+  role: RoleId;
+  title: string;
+  description: string;
+  tone: string;
+  icon: LucideIcon;
+}[] = [
+  {
+    role: "super_admin",
+    title: "Admin",
+    description: "Tam yetki - tüm modüllere erişim ve site ayarları",
+    tone: "border-red-200 bg-red-50 text-red-700",
+    icon: CrownIcon,
+  },
+  {
+    role: "admin",
+    title: "Head",
+    description: "Sale ve Retention ekiplerini, Team Leader'ları yönetir",
+    tone: "border-purple-200 bg-purple-50 text-purple-700",
+    icon: ShieldIcon,
+  },
+  {
+    role: "operator",
+    title: "Retention TL",
+    description: "Retention çalışanlarını yönetir ve takip eder",
+    tone: "border-blue-200 bg-blue-50 text-blue-700",
+    icon: HeadphonesIcon,
+  },
+  {
+    role: "viewer",
+    title: "Sale TL",
+    description: "Sale çalışanlarını ve müşteri iletişimini yönetir",
+    tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    icon: UsersIcon,
+  },
+  {
+    role: "retention",
+    title: "Retention",
+    description: "Müşteri tutma ve bilet süreçlerinde çalışır",
+    tone: "border-sky-200 bg-sky-50 text-sky-700",
+    icon: HeadphonesIcon,
+  },
+  {
+    role: "sale",
+    title: "Sale",
+    description: "Satış ve müşteri iletişimi süreçlerinde çalışır",
+    tone: "border-green-200 bg-green-50 text-green-700",
+    icon: UserRoundIcon,
+  },
+  {
+    role: "user",
+    title: "Client",
+    description: "Sadece okuma yetkisi",
+    tone: "border-slate-200 bg-slate-50 text-slate-700",
+    icon: FileTextIcon,
+  },
+];
 
 function errorMessage(error: unknown): string {
   return error instanceof ClientApiError ? error.message : "Something went wrong";
+}
+
+function RolePermissionCards() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Yetki Seviyeleri</CardTitle>
+        <CardDescription>CRM platformu için Admin, Head, Team Leader, Sale, Retention ve Client alanları.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {ROLE_CARDS.map((card) => {
+          const permissions = new Set(ROLE_PERMISSIONS[card.role] ?? []);
+          const Icon = card.icon;
+          return (
+            <div key={card.role} className={`rounded-xl border p-4 ${card.tone}`}>
+              <div className="mb-3 flex items-center gap-2">
+                <Icon className="size-4" />
+                <h3 className="font-semibold">{card.title}</h3>
+              </div>
+              <p className="min-h-10 text-xs opacity-75">{card.description}</p>
+              <div className="mt-4 grid gap-1 text-sm text-foreground">
+                {PERMISSION_AREAS.map((area) => {
+                  const enabled = permissions.has(area.permission);
+                  return (
+                    <div
+                      key={area.permission}
+                      className={enabled ? "font-medium" : "text-muted-foreground line-through opacity-45"}
+                    >
+                      {area.label}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
 }
 
 export function UserManagement() {
@@ -39,6 +165,7 @@ export function UserManagement() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserDTO | null>(null);
 
   const params = new URLSearchParams({ page: String(page), pageSize: "15" });
   if (query.trim()) params.set("q", query.trim());
@@ -68,13 +195,17 @@ export function UserManagement() {
     <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">User management</h1>
-          <p className="text-sm text-muted-foreground">Create users, assign roles and manage access.</p>
+          <h1 className="text-xl font-semibold tracking-tight">CRM Admin Paneli</h1>
+          <p className="text-sm text-muted-foreground">
+            Çalışanları oluşturun, yönetici atayın ve Sale/Retention yetkilerini yönetin.
+          </p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
-          <PlusIcon /> New user
+          <PlusIcon /> Yeni kullanıcı
         </Button>
       </div>
+
+      <RolePermissionCards />
 
       <Card>
         <CardContent className="p-4">
@@ -82,7 +213,7 @@ export function UserManagement() {
             <div className="relative flex-1">
               <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by name or email"
+                placeholder="Ad, e-posta veya telefon ara"
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
@@ -99,10 +230,10 @@ export function UserManagement() {
               }}
             >
               <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Role" />
+                <SelectValue placeholder="Rol" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
+                <SelectItem value="all">Tüm roller</SelectItem>
                 {ROLES.map((role) => (
                   <SelectItem key={role} value={role}>
                     {ROLE_LABELS[role]}
@@ -118,12 +249,12 @@ export function UserManagement() {
               }}
             >
               <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder="Durum" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="disabled">Disabled</SelectItem>
+                <SelectItem value="all">Tüm durumlar</SelectItem>
+                <SelectItem value="active">Aktif</SelectItem>
+                <SelectItem value="disabled">Pasif</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -142,11 +273,13 @@ export function UserManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead className="hidden sm:table-cell">Role</TableHead>
-                  <TableHead className="hidden md:table-cell">Status</TableHead>
-                  <TableHead className="hidden lg:table-cell">Last login</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Kullanıcı</TableHead>
+                  <TableHead className="hidden md:table-cell">Telefon</TableHead>
+                  <TableHead className="hidden lg:table-cell">CRM</TableHead>
+                  <TableHead className="hidden sm:table-cell">Rol</TableHead>
+                  <TableHead className="hidden md:table-cell">Durum</TableHead>
+                  <TableHead className="hidden xl:table-cell">Son giriş</TableHead>
+                  <TableHead className="text-right">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -161,7 +294,20 @@ export function UserManagement() {
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">{user.name}</p>
                           <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                          {user.address ? (
+                            <p className="truncate text-xs text-muted-foreground">{user.address}</p>
+                          ) : null}
                         </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                      {user.phone || "—"}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <div className="grid gap-1 text-xs">
+                        <span className="font-medium">{CRM_DEPARTMENT_LABELS[user.department]}</span>
+                        <span className="text-muted-foreground">Retention Durum: {RETENTION_STATUS_LABELS[user.retentionStatus]}</span>
+                        <span className="text-muted-foreground">Yönetici: {user.managerName || "—"}</span>
                       </div>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
@@ -183,35 +329,40 @@ export function UserManagement() {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       {user.status === "active" ? (
-                        <Badge variant="success">Active</Badge>
+                        <Badge variant="success">Aktif</Badge>
                       ) : (
-                        <Badge variant="destructive">Disabled</Badge>
+                        <Badge variant="destructive">Pasif</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                      {user.lastLoginAt ? formatRelative(user.lastLoginAt) : "Never"}
+                    <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                      {user.lastLoginAt ? formatRelative(user.lastLoginAt) : "Hiç"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant={user.status === "active" ? "outline" : "default"}
-                        size="sm"
-                        disabled={updateUser.isPending}
-                        onClick={() =>
-                          updateUser.mutate({
-                            id: user.id,
-                            body: { status: (user.status === "active" ? "disabled" : "active") as UserStatus },
-                          })
-                        }
-                      >
-                        {user.status === "active" ? "Disable" : "Enable"}
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
+                          Düzenle
+                        </Button>
+                        <Button
+                          variant={user.status === "active" ? "outline" : "default"}
+                          size="sm"
+                          disabled={updateUser.isPending}
+                          onClick={() =>
+                            updateUser.mutate({
+                              id: user.id,
+                              body: { status: (user.status === "active" ? "disabled" : "active") as UserStatus },
+                            })
+                          }
+                        >
+                          {user.status === "active" ? "Pasifleştir" : "Aktifleştir"}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
                 {usersQuery.data && usersQuery.data.items.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
-                      No users match your filters.
+                    <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                      Filtrelerle eşleşen kullanıcı bulunamadı.
                     </TableCell>
                   </TableRow>
                 )}
@@ -222,10 +373,10 @@ export function UserManagement() {
       </Card>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{usersQuery.data?.total ?? 0} users</p>
+        <p className="text-sm text-muted-foreground">{usersQuery.data?.total ?? 0} kullanıcı</p>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((v) => v - 1)}>
-            <ChevronLeftIcon /> Prev
+            <ChevronLeftIcon /> Önceki
           </Button>
           <span className="text-xs text-muted-foreground">
             {page} / {totalPages}
@@ -236,16 +387,28 @@ export function UserManagement() {
             disabled={page >= totalPages}
             onClick={() => setPage((v) => v + 1)}
           >
-            Next <ChevronRightIcon />
+            Sonraki <ChevronRightIcon />
           </Button>
         </div>
       </div>
 
       <CreateUserDialog
         open={createOpen}
+        users={usersQuery.data?.items ?? []}
         onOpenChange={setCreateOpen}
         onCreated={() => {
           setCreateOpen(false);
+          invalidate();
+        }}
+      />
+      <EditUserDialog
+        user={editingUser}
+        users={usersQuery.data?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setEditingUser(null);
+        }}
+        onSaved={() => {
+          setEditingUser(null);
           invalidate();
         }}
       />
@@ -255,26 +418,55 @@ export function UserManagement() {
 
 function CreateUserDialog({
   open,
+  users,
   onOpenChange,
   onCreated,
 }: {
   open: boolean;
+  users: UserDTO[];
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
 }) {
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [address, setAddress] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [image, setImage] = useState("");
   const [role, setRole] = useState<RoleId>("user");
+  const [department, setDepartment] = useState<CrmDepartment>("client");
+  const [retentionStatus, setRetentionStatus] = useState<RetentionStatus>("pending");
+  const [managerId, setManagerId] = useState<string>(NO_MANAGER_VALUE);
 
   const create = useMutation({
-    mutationFn: () => apiPost("/api/admin/users", { name, email, password, role }),
+    mutationFn: () =>
+      apiPost("/api/admin/users", {
+        name,
+        phone,
+        email,
+        password,
+        address,
+        dateOfBirth,
+        image,
+        role,
+        department,
+        retentionStatus,
+        managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
+      }),
     onSuccess: () => {
-      toast.success("User created");
+      toast.success("Kullanıcı oluşturuldu");
       setName("");
+      setPhone("");
       setEmail("");
       setPassword("");
+      setAddress("");
+      setDateOfBirth("");
+      setImage("");
       setRole("user");
+      setDepartment("client");
+      setRetentionStatus("pending");
+      setManagerId(NO_MANAGER_VALUE);
       onCreated();
     },
     onError: (error) => toast.error(errorMessage(error)),
@@ -282,35 +474,55 @@ function CreateUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create user</DialogTitle>
+          <DialogTitle>Yeni CRM kullanıcısı</DialogTitle>
           <DialogDescription>
-            The user can sign in immediately with these credentials. Assigning an admin-tier role requires
-            super-admin rights.
+            Admin panelindeki örneğe göre çalışan veya client hesabı oluşturun.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-2">
-            <Label htmlFor="new-user-name">Name</Label>
+            <Label htmlFor="new-user-name">Adı Soyadı</Label>
             <Input id="new-user-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="new-user-email">Email</Label>
+            <Label htmlFor="new-user-phone">Telefon numarası</Label>
+            <Input id="new-user-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="new-user-email">E posta adresi</Label>
             <Input id="new-user-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="new-user-password">Temporary password</Label>
+            <Label htmlFor="new-user-password">Şifre</Label>
             <Input
               id="new-user-password"
               type="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 10 chars, upper/lower/number"
+              placeholder="Min 10 karakter, büyük/küçük harf ve rakam"
+            />
+          </div>
+          <div className="grid gap-2 sm:col-span-2">
+            <Label htmlFor="new-user-address">Adres</Label>
+            <Input id="new-user-address" value={address} onChange={(e) => setAddress(e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="new-user-birthdate">Doğum Tarihi</Label>
+            <Input
+              id="new-user-birthdate"
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
             />
           </div>
           <div className="grid gap-2">
-            <Label>Role</Label>
+            <Label htmlFor="new-user-image">Fotoğraf URL</Label>
+            <Input id="new-user-image" value={image} onChange={(e) => setImage(e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Rol</Label>
             <Select value={role} onValueChange={(value) => setRole(value as RoleId)}>
               <SelectTrigger>
                 <SelectValue />
@@ -324,16 +536,231 @@ function CreateUserDialog({
               </SelectContent>
             </Select>
           </div>
+          <div className="grid gap-2">
+            <Label>Departman</Label>
+            <Select value={department} onValueChange={(value) => setDepartment(value as CrmDepartment)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DEPARTMENTS.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {CRM_DEPARTMENT_LABELS[item]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Yönetici</Label>
+            <Select value={managerId} onValueChange={setManagerId}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_MANAGER_VALUE}>Yönetici yok</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name} - {ROLE_LABELS[user.role]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Retention Durum</Label>
+            <Select value={retentionStatus} onValueChange={(value) => setRetentionStatus(value as RetentionStatus)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RETENTION_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {RETENTION_STATUS_LABELS[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            İptal
           </Button>
           <Button
             onClick={() => create.mutate()}
             disabled={create.isPending || !name || !email || password.length < 10}
           >
-            {create.isPending ? "Creating…" : "Create user"}
+            {create.isPending ? "Oluşturuluyor..." : "Kaydet"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditUserDialog({
+  user,
+  users,
+  onOpenChange,
+  onSaved,
+}: {
+  user: UserDTO | null;
+  users: UserDTO[];
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState(user?.name ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [address, setAddress] = useState(user?.address ?? "");
+  const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth ?? "");
+  const [image, setImage] = useState(user?.image ?? "");
+  const [role, setRole] = useState<RoleId>(user?.role ?? "user");
+  const [department, setDepartment] = useState<CrmDepartment>(user?.department ?? "client");
+  const [retentionStatus, setRetentionStatus] = useState<RetentionStatus>(user?.retentionStatus ?? "pending");
+  const [managerId, setManagerId] = useState<string>(user?.managerId ?? NO_MANAGER_VALUE);
+
+  useEffect(() => {
+    if (!user) return;
+    // The dialog stays mounted between row selections; sync local form state when the selected row changes.
+    setName(user.name);
+    setPhone(user.phone);
+    setAddress(user.address);
+    setDateOfBirth(user.dateOfBirth);
+    setImage(user.image ?? "");
+    setRole(user.role);
+    setDepartment(user.department);
+    setRetentionStatus(user.retentionStatus);
+    setManagerId(user.managerId ?? NO_MANAGER_VALUE);
+  }, [user]);
+
+  const save = useMutation({
+    mutationFn: () =>
+      apiPatch(`/api/admin/users/${user?.id}`, {
+        name,
+        phone,
+        address,
+        dateOfBirth,
+        image,
+        role,
+        department,
+        retentionStatus,
+        managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
+      }),
+    onSuccess: () => {
+      toast.success("Kullanıcı güncellendi");
+      onSaved();
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
+
+  return (
+    <Dialog open={Boolean(user)} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>CRM kullanıcısını düzenle</DialogTitle>
+          <DialogDescription>İletişim, yönetim ve Retention Durum bilgilerini güncelleyin.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-name">Adı Soyadı</Label>
+            <Input id="edit-user-name" value={name} onChange={(event) => setName(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-phone">Telefon numarası</Label>
+            <Input id="edit-user-phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-email">E posta adresi</Label>
+            <Input id="edit-user-email" type="email" value={user?.email ?? ""} disabled />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-birthdate">Doğum Tarihi</Label>
+            <Input
+              id="edit-user-birthdate"
+              type="date"
+              value={dateOfBirth}
+              onChange={(event) => setDateOfBirth(event.target.value)}
+            />
+          </div>
+          <div className="grid gap-2 sm:col-span-2">
+            <Label htmlFor="edit-user-address">Adres</Label>
+            <Input id="edit-user-address" value={address} onChange={(event) => setAddress(event.target.value)} />
+          </div>
+          <div className="grid gap-2 sm:col-span-2">
+            <Label htmlFor="edit-user-image">Fotoğraf URL</Label>
+            <Input id="edit-user-image" value={image} onChange={(event) => setImage(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Rol</Label>
+            <Select value={role} onValueChange={(value) => setRole(value as RoleId)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLES.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {ROLE_LABELS[item]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Departman</Label>
+            <Select value={department} onValueChange={(value) => setDepartment(value as CrmDepartment)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DEPARTMENTS.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {CRM_DEPARTMENT_LABELS[item]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Yönetici</Label>
+            <Select value={managerId} onValueChange={setManagerId}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_MANAGER_VALUE}>Yönetici yok</SelectItem>
+                {users
+                  .filter((item) => item.id !== user?.id)
+                  .map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name} - {ROLE_LABELS[item.role]}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Retention Durum</Label>
+            <Select value={retentionStatus} onValueChange={(value) => setRetentionStatus(value as RetentionStatus)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RETENTION_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {RETENTION_STATUS_LABELS[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            İptal
+          </Button>
+          <Button onClick={() => save.mutate()} disabled={save.isPending || !name}>
+            {save.isPending ? "Kaydediliyor..." : "Kaydet"}
           </Button>
         </DialogFooter>
       </DialogContent>

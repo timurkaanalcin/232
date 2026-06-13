@@ -2,9 +2,13 @@
 // Domain types shared between server, client and the realtime layer.
 // ----------------------------------------------------------------------------
 
-export type RoleId = "super_admin" | "admin" | "operator" | "viewer" | "user";
+export type RoleId = "super_admin" | "admin" | "operator" | "viewer" | "retention" | "sale" | "user";
 
 export type UserStatus = "active" | "disabled";
+
+export type CrmDepartment = "management" | "retention" | "sale" | "client";
+
+export type RetentionStatus = "pending" | "active" | "at_risk" | "retained" | "lost";
 
 export type LocationSessionStatus = "active" | "ended";
 
@@ -20,7 +24,13 @@ export type Permission =
   | "users.create"
   | "users.manage"
   | "roles.assign"
-  | "audit.view";
+  | "audit.view"
+  | "customers.manage"
+  | "tickets.manage"
+  | "documents.manage"
+  | "reports.view"
+  | "settings.manage"
+  | "admin.panel";
 
 // ----------------------------------------------------------------------------
 // Database rows
@@ -34,6 +44,12 @@ export interface UserRow {
   image: string | null;
   password_hash: string | null;
   role_id: RoleId;
+  phone: string;
+  address: string;
+  date_of_birth: string;
+  department: CrmDepartment;
+  retention_status: RetentionStatus;
+  manager_id: string | null;
   status: UserStatus;
   created_at: number;
   updated_at: number;
@@ -107,6 +123,13 @@ export interface UserDTO {
   name: string;
   image: string | null;
   role: RoleId;
+  phone: string;
+  address: string;
+  dateOfBirth: string;
+  department: CrmDepartment;
+  retentionStatus: RetentionStatus;
+  managerId: string | null;
+  managerName: string | null;
   status: UserStatus;
   emailVerified: boolean;
   createdAt: number;

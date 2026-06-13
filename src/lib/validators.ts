@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SECURITY } from "@/lib/constants";
+import { ROLE_IDS, SECURITY } from "@/lib/constants";
 
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
 
@@ -12,6 +12,32 @@ export const passwordSchema = z
   .regex(/[0-9]/, "Password must contain a digit");
 
 export const nameSchema = z.string().trim().min(1, "Name is required").max(100);
+
+const optionalTrimmedText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .transform((value) => value ?? "");
+
+const updateTrimmedText = (max: number) => z.string().trim().max(max).optional();
+
+const roleSchema = z.enum(ROLE_IDS);
+
+const crmDepartmentSchema = z.enum(["management", "retention", "sale", "client"]);
+
+const retentionStatusSchema = z.enum(["pending", "active", "at_risk", "retained", "lost"]);
+
+const managerIdSchema = z
+  .union([z.string().uuid(), z.literal("")])
+  .optional()
+  .transform((value) => (value ? value : null));
+
+const updateManagerIdSchema = z
+  .union([z.string().uuid(), z.literal("")])
+  .optional()
+  .transform((value) => (value === undefined ? undefined : value || null));
 
 export const registerSchema = z.object({
   name: nameSchema,
@@ -66,16 +92,34 @@ export const adminCreateUserSchema = z.object({
   name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
-  role: z.enum(["super_admin", "admin", "operator", "viewer", "user"]),
+  role: roleSchema,
+  phone: optionalTrimmedText(32),
+  address: optionalTrimmedText(300),
+  dateOfBirth: optionalTrimmedText(10).refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+    message: "Birth date must use YYYY-MM-DD format",
+  }),
+  image: optionalTrimmedText(1024),
+  department: crmDepartmentSchema.default("client"),
+  retentionStatus: retentionStatusSchema.default("pending"),
+  managerId: managerIdSchema,
 });
 
 export const adminUpdateUserSchema = z
   .object({
     name: nameSchema.optional(),
-    role: z.enum(["super_admin", "admin", "operator", "viewer", "user"]).optional(),
+    role: roleSchema.optional(),
+    phone: updateTrimmedText(32),
+    address: updateTrimmedText(300),
+    dateOfBirth: updateTrimmedText(10).refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+      message: "Birth date must use YYYY-MM-DD format",
+    }),
+    image: updateTrimmedText(1024),
+    department: crmDepartmentSchema.optional(),
+    retentionStatus: retentionStatusSchema.optional(),
+    managerId: updateManagerIdSchema,
     status: z.enum(["active", "disabled"]).optional(),
   })
-  .refine((value) => Object.keys(value).length > 0, { message: "No fields to update" });
+  .refine((value) => Object.values(value).some((field) => field !== undefined), { message: "No fields to update" });
 
 export const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -89,6 +133,6 @@ export const auditQuerySchema = paginationSchema.extend({
 
 export const userSearchSchema = paginationSchema.extend({
   q: z.string().trim().max(254).optional(),
-  role: z.enum(["super_admin", "admin", "operator", "viewer", "user"]).optional(),
+  role: roleSchema.optional(),
   status: z.enum(["active", "disabled"]).optional(),
 });

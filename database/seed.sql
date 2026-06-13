@@ -1,15 +1,18 @@
 -- Seed: roles and role permissions. Idempotent.
 
 INSERT OR IGNORE INTO roles (id, name, description, created_at) VALUES
-  ('super_admin', 'Super Admin', 'Full system access including role assignment', unixepoch() * 1000),
-  ('admin',       'Admin',       'Manage users, sessions and view audit logs',   unixepoch() * 1000),
-  ('operator',    'Operator',    'Monitor live map and manage location sessions', unixepoch() * 1000),
-  ('viewer',      'Viewer',      'Read-only access to live map and statistics',  unixepoch() * 1000),
-  ('user',        'User',        'Standard user - can share own location',       unixepoch() * 1000);
+  ('super_admin', 'Admin',                 'Full CRM access including role assignment and system settings', unixepoch() * 1000),
+  ('admin',       'Head',                  'Manages all CRM teams and team leaders',                        unixepoch() * 1000),
+  ('operator',    'Retention Team Leader', 'Manages the retention team',                                     unixepoch() * 1000),
+  ('viewer',      'Sale Team Leader',      'Manages the sales team',                                         unixepoch() * 1000),
+  ('retention',   'Retention',             'CRM retention employee',                                         unixepoch() * 1000),
+  ('sale',        'Sale',                  'CRM sales employee',                                             unixepoch() * 1000),
+  ('user',        'Client',                'Client account with read-only CRM access',                       unixepoch() * 1000);
 
 INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   -- super_admin
   ('super_admin', 'admin.access'),
+  ('super_admin', 'admin.panel'),
   ('super_admin', 'stats.view'),
   ('super_admin', 'map.live_view'),
   ('super_admin', 'sessions.view'),
@@ -19,8 +22,14 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('super_admin', 'users.manage'),
   ('super_admin', 'roles.assign'),
   ('super_admin', 'audit.view'),
-  -- admin
+  ('super_admin', 'customers.manage'),
+  ('super_admin', 'tickets.manage'),
+  ('super_admin', 'documents.manage'),
+  ('super_admin', 'reports.view'),
+  ('super_admin', 'settings.manage'),
+  -- head
   ('admin', 'admin.access'),
+  ('admin', 'admin.panel'),
   ('admin', 'stats.view'),
   ('admin', 'map.live_view'),
   ('admin', 'sessions.view'),
@@ -28,15 +37,44 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('admin', 'users.view'),
   ('admin', 'users.create'),
   ('admin', 'users.manage'),
+  ('admin', 'roles.assign'),
   ('admin', 'audit.view'),
-  -- operator
+  ('admin', 'customers.manage'),
+  ('admin', 'tickets.manage'),
+  ('admin', 'documents.manage'),
+  ('admin', 'reports.view'),
+  -- retention team leader
   ('operator', 'admin.access'),
   ('operator', 'stats.view'),
   ('operator', 'map.live_view'),
   ('operator', 'sessions.view'),
   ('operator', 'sessions.manage'),
-  -- viewer
+  ('operator', 'users.view'),
+  ('operator', 'users.create'),
+  ('operator', 'users.manage'),
+  ('operator', 'roles.assign'),
+  ('operator', 'customers.manage'),
+  ('operator', 'tickets.manage'),
+  ('operator', 'documents.manage'),
+  ('operator', 'reports.view'),
+  -- sale team leader
   ('viewer', 'admin.access'),
   ('viewer', 'stats.view'),
   ('viewer', 'map.live_view'),
-  ('viewer', 'sessions.view');
+  ('viewer', 'sessions.view'),
+  ('viewer', 'users.view'),
+  ('viewer', 'users.create'),
+  ('viewer', 'users.manage'),
+  ('viewer', 'roles.assign'),
+  ('viewer', 'customers.manage'),
+  ('viewer', 'tickets.manage'),
+  ('viewer', 'reports.view'),
+  -- retention
+  ('retention', 'customers.manage'),
+  ('retention', 'tickets.manage'),
+  ('retention', 'documents.manage'),
+  -- sale
+  ('sale', 'customers.manage'),
+  ('sale', 'tickets.manage'),
+  -- client
+  ('user', 'customers.manage');

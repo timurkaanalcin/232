@@ -1,13 +1,22 @@
 import { hashPassword } from "@/lib/crypto";
-import type { Paginated, RoleId, UserDTO, UserRow, UserStatus } from "@/types";
+import type { CrmDepartment, Paginated, RetentionStatus, RoleId, UserDTO, UserRow, UserStatus } from "@/types";
 
-export function toUserDTO(row: UserRow): UserDTO {
+type UserRowWithManager = UserRow & { manager_name?: string | null };
+
+export function toUserDTO(row: UserRowWithManager): UserDTO {
   return {
     id: row.id,
     email: row.email,
     name: row.name,
     image: row.image,
     role: row.role_id,
+    phone: row.phone ?? "",
+    address: row.address ?? "",
+    dateOfBirth: row.date_of_birth ?? "",
+    department: row.department ?? "client",
+    retentionStatus: row.retention_status ?? "pending",
+    managerId: row.manager_id ?? null,
+    managerName: row.manager_name ?? null,
     status: row.status,
     emailVerified: row.email_verified === 1,
     createdAt: row.created_at,
@@ -29,6 +38,12 @@ export interface CreateUserInput {
   password?: string;
   image?: string | null;
   role?: RoleId;
+  phone?: string;
+  address?: string;
+  dateOfBirth?: string;
+  department?: CrmDepartment;
+  retentionStatus?: RetentionStatus;
+  managerId?: string | null;
   emailVerified?: boolean;
 }
 
@@ -39,8 +54,11 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
 
   await db
     .prepare(
-      `INSERT INTO users (id, email, email_verified, name, image, password_hash, role_id, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+      `INSERT INTO users (
+         id, email, email_verified, name, image, password_hash, role_id, phone, address,
+         date_of_birth, department, retention_status, manager_id, status, created_at, updated_at
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
     )
     .bind(
       id,
@@ -50,6 +68,12 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
       input.image ?? null,
       passwordHash,
       input.role ?? "user",
+      input.phone ?? "",
+      input.address ?? "",
+      input.dateOfBirth ?? "",
+      input.department ?? "client",
+      input.retentionStatus ?? "pending",
+      input.managerId ?? null,
       now,
       now,
     )
@@ -79,6 +103,13 @@ export async function touchLastLogin(db: D1Database, id: string): Promise<void> 
 export interface AdminUpdateUserInput {
   name?: string;
   role?: RoleId;
+  phone?: string;
+  address?: string;
+  dateOfBirth?: string;
+  image?: string;
+  department?: CrmDepartment;
+  retentionStatus?: RetentionStatus;
+  managerId?: string | null;
   status?: UserStatus;
 }
 
@@ -92,6 +123,34 @@ export async function adminUpdateUser(db: D1Database, id: string, input: AdminUp
   if (input.role !== undefined) {
     sets.push("role_id = ?");
     binds.push(input.role);
+  }
+  if (input.phone !== undefined) {
+    sets.push("phone = ?");
+    binds.push(input.phone);
+  }
+  if (input.address !== undefined) {
+    sets.push("address = ?");
+    binds.push(input.address);
+  }
+  if (input.dateOfBirth !== undefined) {
+    sets.push("date_of_birth = ?");
+    binds.push(input.dateOfBirth);
+  }
+  if (input.image !== undefined) {
+    sets.push("image = ?");
+    binds.push(input.image || null);
+  }
+  if (input.department !== undefined) {
+    sets.push("department = ?");
+    binds.push(input.department);
+  }
+  if (input.retentionStatus !== undefined) {
+    sets.push("retention_status = ?");
+    binds.push(input.retentionStatus);
+  }
+  if (input.managerId !== undefined) {
+    sets.push("manager_id = ?");
+    binds.push(input.managerId);
   }
   if (input.status !== undefined) {
     sets.push("status = ?");
@@ -115,30 +174,37 @@ export async function listUsers(db: D1Database, filter: ListUsersFilter): Promis
   const where: string[] = [];
   const binds: unknown[] = [];
   if (filter.q) {
-    where.push("(email LIKE ? OR name LIKE ?)");
+    where.push("(u.email LIKE ? OR u.name LIKE ? OR u.phone LIKE ?)");
     const like = `%${filter.q.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`;
-    binds.push(like, like);
+    binds.push(like, like, like);
   }
   if (filter.role) {
-    where.push("role_id = ?");
+    where.push("u.role_id = ?");
     binds.push(filter.role);
   }
   if (filter.status) {
-    where.push("status = ?");
+    where.push("u.status = ?");
     binds.push(filter.status);
   }
   const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
 
   const countRow = await db
-    .prepare(`SELECT COUNT(*) AS total FROM users ${whereSql}`)
+    .prepare(`SELECT COUNT(*) AS total FROM users u ${whereSql}`)
     .bind(...binds)
     .first<{ total: number }>();
 
   const offset = (filter.page - 1) * filter.pageSize;
   const rows = await db
-    .prepare(`SELECT * FROM users ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .prepare(
+      `SELECT u.*, m.name AS manager_name
+       FROM users u
+       LEFT JOIN users m ON m.id = u.manager_id
+       ${whereSql}
+       ORDER BY u.created_at DESC
+       LIMIT ? OFFSET ?`,
+    )
     .bind(...binds, filter.pageSize, offset)
-    .all<UserRow>();
+    .all<UserRowWithManager>();
 
   return {
     items: rows.results.map(toUserDTO),
@@ -158,7 +224,8 @@ export async function exportUserData(db: D1Database, id: string) {
   const [user, sessions, locationSessions, locations, audit] = await Promise.all([
     db
       .prepare(
-        `SELECT id, email, name, image, role_id, status, email_verified, created_at, updated_at, last_login_at
+        `SELECT id, email, name, image, role_id, phone, address, date_of_birth, department, retention_status,
+                manager_id, status, email_verified, created_at, updated_at, last_login_at
          FROM users WHERE id = ?`,
       )
       .bind(id)

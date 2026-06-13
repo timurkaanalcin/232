@@ -9,7 +9,7 @@ import {
   requirePermission,
 } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { AUDIT_ACTIONS, REALTIME } from "@/lib/constants";
+import { AUDIT_ACTIONS, REALTIME, canAssignRole, canManageRole } from "@/lib/constants";
 import { adminUpdateUserSchema } from "@/lib/validators";
 import { adminUpdateUser, findUserById, toUserDTO } from "@/services/users";
 import { revokeAllDeviceSessions } from "@/services/device-sessions";
@@ -33,13 +33,18 @@ export const PATCH = apiHandler(
       const permissions = await getPermissions(db, actor.role);
       if (!permissions.has("roles.assign")) throw forbidden();
       if (id === actor.id) throw badRequest("You cannot change your own role");
+      if (!canAssignRole(actor.role, parsed.data.role)) throw forbidden();
     }
     if (parsed.data.status === "disabled" && id === actor.id) {
       throw badRequest("You cannot disable your own account");
     }
-    // Admin-tier accounts can only be modified by super admins.
-    if (target.role_id !== "user" && actor.role !== "super_admin") {
+    if (!canManageRole(actor.role, target.role_id)) {
       throw forbidden();
+    }
+    if (parsed.data.managerId === id) throw badRequest("A user cannot manage themselves");
+    if (parsed.data.managerId) {
+      const manager = await findUserById(db, parsed.data.managerId);
+      if (!manager) throw badRequest("Selected manager does not exist");
     }
 
     await adminUpdateUser(db, id, parsed.data);

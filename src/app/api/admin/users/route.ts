@@ -8,9 +8,9 @@ import {
   requirePermission,
 } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { AUDIT_ACTIONS } from "@/lib/constants";
+import { AUDIT_ACTIONS, canAssignRole } from "@/lib/constants";
 import { adminCreateUserSchema, userSearchSchema } from "@/lib/validators";
-import { createUser, findUserByEmail, listUsers, toUserDTO } from "@/services/users";
+import { createUser, findUserByEmail, findUserById, listUsers, toUserDTO } from "@/services/users";
 
 export const GET = apiHandler(async (request: Request) => {
   const { db } = await requirePermission("users.view");
@@ -34,20 +34,29 @@ export const POST = apiHandler(async (request: Request) => {
     throw badRequest(parsed.error.issues[0]?.message ?? "Invalid user data");
   }
 
-  // Only super admins can mint other admin-tier accounts.
-  if (parsed.data.role !== "user") {
-    const permissions = await getPermissions(db, actor.role);
-    if (!permissions.has("roles.assign")) throw forbidden();
-  }
+  const permissions = await getPermissions(db, actor.role);
+  if (parsed.data.role !== "user" && !permissions.has("roles.assign")) throw forbidden();
+  if (!canAssignRole(actor.role, parsed.data.role)) throw forbidden();
 
   const existing = await findUserByEmail(db, parsed.data.email);
   if (existing) throw badRequest("An account with this email already exists");
+  if (parsed.data.managerId) {
+    const manager = await findUserById(db, parsed.data.managerId);
+    if (!manager) throw badRequest("Selected manager does not exist");
+  }
 
   const created = await createUser(db, {
     email: parsed.data.email,
     name: parsed.data.name,
     password: parsed.data.password,
     role: parsed.data.role,
+    phone: parsed.data.phone,
+    address: parsed.data.address,
+    dateOfBirth: parsed.data.dateOfBirth,
+    image: parsed.data.image,
+    department: parsed.data.department,
+    retentionStatus: parsed.data.retentionStatus,
+    managerId: parsed.data.managerId,
     emailVerified: true,
   });
 
@@ -59,7 +68,7 @@ export const POST = apiHandler(async (request: Request) => {
     targetId: created.id,
     ip: meta.ip,
     userAgent: meta.userAgent,
-    metadata: { email: created.email, role: created.role_id },
+    metadata: { email: created.email, role: created.role_id, department: created.department },
   });
 
   return jsonOk({ user: toUserDTO(created) }, { status: 201 });

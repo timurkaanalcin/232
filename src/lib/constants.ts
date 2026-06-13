@@ -1,15 +1,44 @@
-import type { Permission, RoleId } from "@/types";
+import type { CrmDepartment, Permission, RetentionStatus, RoleId } from "@/types";
 
 export const APP_NAME = "LiveTrack";
+
+export const ROLE_IDS = ["super_admin", "admin", "operator", "viewer", "retention", "sale", "user"] as const;
 
 export const ADMIN_ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer"];
 
 export const ROLE_LABELS: Record<RoleId, string> = {
-  super_admin: "Super Admin",
-  admin: "Admin",
-  operator: "Operator",
-  viewer: "Viewer",
-  user: "User",
+  super_admin: "Admin",
+  admin: "Head",
+  operator: "Retention Team Leader",
+  viewer: "Sale Team Leader",
+  retention: "Retention",
+  sale: "Sale",
+  user: "Client",
+};
+
+export const ROLE_RANK: Record<RoleId, number> = {
+  super_admin: 100,
+  admin: 80,
+  operator: 60,
+  viewer: 60,
+  retention: 40,
+  sale: 40,
+  user: 0,
+};
+
+export const CRM_DEPARTMENT_LABELS: Record<CrmDepartment, string> = {
+  management: "Yönetim",
+  retention: "Retention",
+  sale: "Sale",
+  client: "Client",
+};
+
+export const RETENTION_STATUS_LABELS: Record<RetentionStatus, string> = {
+  pending: "Beklemede",
+  active: "Aktif",
+  at_risk: "Riskli",
+  retained: "Korundu",
+  lost: "Kayıp",
 };
 
 export const AUDIT_ACTIONS = {
@@ -90,6 +119,7 @@ export const RATE_LIMITS = {
 export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
   super_admin: [
     "admin.access",
+    "admin.panel",
     "stats.view",
     "map.live_view",
     "sessions.view",
@@ -99,8 +129,30 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "users.manage",
     "roles.assign",
     "audit.view",
+    "customers.manage",
+    "tickets.manage",
+    "documents.manage",
+    "reports.view",
+    "settings.manage",
   ],
   admin: [
+    "admin.access",
+    "admin.panel",
+    "stats.view",
+    "map.live_view",
+    "sessions.view",
+    "sessions.manage",
+    "users.view",
+    "users.create",
+    "users.manage",
+    "roles.assign",
+    "audit.view",
+    "customers.manage",
+    "tickets.manage",
+    "documents.manage",
+    "reports.view",
+  ],
+  operator: [
     "admin.access",
     "stats.view",
     "map.live_view",
@@ -109,9 +161,35 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "users.view",
     "users.create",
     "users.manage",
-    "audit.view",
+    "roles.assign",
+    "customers.manage",
+    "tickets.manage",
+    "documents.manage",
+    "reports.view",
   ],
-  operator: ["admin.access", "stats.view", "map.live_view", "sessions.view", "sessions.manage"],
-  viewer: ["admin.access", "stats.view", "map.live_view", "sessions.view"],
-  user: [],
+  viewer: [
+    "admin.access",
+    "stats.view",
+    "map.live_view",
+    "sessions.view",
+    "users.view",
+    "users.create",
+    "users.manage",
+    "roles.assign",
+    "customers.manage",
+    "tickets.manage",
+    "reports.view",
+  ],
+  retention: ["customers.manage", "tickets.manage", "documents.manage"],
+  sale: ["customers.manage", "tickets.manage"],
+  user: ["customers.manage"],
 };
+
+export function canAssignRole(actorRole: RoleId, targetRole: RoleId): boolean {
+  if (actorRole === "super_admin") return true;
+  return ROLE_RANK[actorRole] > ROLE_RANK[targetRole];
+}
+
+export function canManageRole(actorRole: RoleId, targetRole: RoleId): boolean {
+  return canAssignRole(actorRole, targetRole);
+}

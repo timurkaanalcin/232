@@ -165,3 +165,19 @@ export const userSearchSchema = paginationSchema.extend({
   role: roleSchema.optional(),
   status: z.enum(["active", "disabled"]).optional(),
 });
+
+export const createTradeOrderSchema = z.object({
+  clientId: z.string().uuid(),
+  symbol: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .min(1)
+    .max(12)
+    .regex(/^[A-Z0-9._-]+$/, "Symbol must contain only letters, numbers, dot, dash or underscore"),
+  market: z.string().trim().toUpperCase().min(1).max(12).default("US"),
+  side: z.enum(["buy", "sell"]),
+  orderType: z.enum(["market", "limit"]),
+  quantity: z.number().positive().max(1_000_000),
+  price: z.number().positive().max(10_000_000),
+});

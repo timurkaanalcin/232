@@ -155,6 +155,8 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "documents.manage",
     "reports.view",
     "settings.manage",
+    "trading.access",
+    "trading.order",
   ],
   shift: [
     "admin.access",
@@ -172,6 +174,8 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "tickets.manage",
     "documents.manage",
     "reports.view",
+    "trading.access",
+    "trading.order",
   ],
   admin: [
     "admin.access",
@@ -189,6 +193,8 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "tickets.manage",
     "documents.manage",
     "reports.view",
+    "trading.access",
+    "trading.order",
   ],
   operator: [
     "admin.access",
@@ -204,6 +210,8 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "tickets.manage",
     "documents.manage",
     "reports.view",
+    "trading.access",
+    "trading.order",
   ],
   viewer: [
     "admin.access",
@@ -217,9 +225,11 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "customers.manage",
     "tickets.manage",
     "reports.view",
+    "trading.access",
+    "trading.order",
   ],
-  retention: ["customers.manage", "tickets.manage", "documents.manage"],
-  sale: ["customers.manage", "tickets.manage"],
+  retention: ["customers.manage", "tickets.manage", "documents.manage", "trading.access"],
+  sale: ["customers.manage", "tickets.manage", "trading.access", "trading.order"],
   user: ["customers.manage"],
 };
 

@@ -28,6 +28,8 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('super_admin', 'documents.manage'),
   ('super_admin', 'reports.view'),
   ('super_admin', 'settings.manage'),
+  ('super_admin', 'trading.access'),
+  ('super_admin', 'trading.order'),
   -- shift
   ('shift', 'admin.access'),
   ('shift', 'admin.panel'),
@@ -44,6 +46,8 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('shift', 'tickets.manage'),
   ('shift', 'documents.manage'),
   ('shift', 'reports.view'),
+  ('shift', 'trading.access'),
+  ('shift', 'trading.order'),
   -- head
   ('admin', 'admin.access'),
   ('admin', 'admin.panel'),
@@ -60,6 +64,8 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('admin', 'tickets.manage'),
   ('admin', 'documents.manage'),
   ('admin', 'reports.view'),
+  ('admin', 'trading.access'),
+  ('admin', 'trading.order'),
   -- retention team leader
   ('operator', 'admin.access'),
   ('operator', 'stats.view'),
@@ -74,6 +80,8 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('operator', 'tickets.manage'),
   ('operator', 'documents.manage'),
   ('operator', 'reports.view'),
+  ('operator', 'trading.access'),
+  ('operator', 'trading.order'),
   -- sale team leader
   ('viewer', 'admin.access'),
   ('viewer', 'stats.view'),
@@ -86,12 +94,17 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('viewer', 'customers.manage'),
   ('viewer', 'tickets.manage'),
   ('viewer', 'reports.view'),
+  ('viewer', 'trading.access'),
+  ('viewer', 'trading.order'),
   -- retention
   ('retention', 'customers.manage'),
   ('retention', 'tickets.manage'),
   ('retention', 'documents.manage'),
+  ('retention', 'trading.access'),
   -- sale
   ('sale', 'customers.manage'),
   ('sale', 'tickets.manage'),
+  ('sale', 'trading.access'),
+  ('sale', 'trading.order'),
   -- client
   ('user', 'customers.manage');

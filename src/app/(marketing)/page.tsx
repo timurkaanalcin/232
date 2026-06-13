@@ -116,6 +116,9 @@ export default function LandingPage() {
             <Button size="lg" variant="outline" asChild>
               <Link href="/admin/users">CRM panelini aç</Link>
             </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/admin/trading">Trading terminali</Link>
+            </Button>
           </div>
           <div className="grid gap-3 pt-4 sm:grid-cols-4">
             {stats.map((item) => (
@@ -210,7 +213,8 @@ export default function LandingPage() {
             <div>
               <h2 className="text-3xl font-semibold">CRM panelini şimdi inceleyin</h2>
               <p className="mt-2 text-primary-foreground/80">
-                Demo admin hesabıyla giriş yapın ve client, statü, reklam kaynağı, takip zamanı ve KPI ekranlarını görün.
+                Demo admin hesabıyla giriş yapın ve client, statü, reklam kaynağı, takip zamanı, KPI ekranları
+                ve CRM'e bağlı trading terminalini görün.
               </p>
             </div>
             <Button size="lg" variant="secondary" asChild>

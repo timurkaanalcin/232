@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlarmClockIcon,
@@ -447,6 +448,11 @@ export function UserManagement() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/admin/trading">
+              <TrendingUpIcon /> Trading terminal
+            </Link>
+          </Button>
           <Button
             variant="outline"
             onClick={() => downloadVisibleUsersCsv(usersQuery.data?.items ?? [])}

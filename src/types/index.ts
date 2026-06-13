@@ -48,7 +48,15 @@ export type Permission =
   | "documents.manage"
   | "reports.view"
   | "settings.manage"
-  | "admin.panel";
+  | "admin.panel"
+  | "trading.access"
+  | "trading.order";
+
+export type TradeSide = "buy" | "sell";
+
+export type TradeOrderType = "market" | "limit";
+
+export type TradeOrderStatus = "filled" | "rejected";
 
 // ----------------------------------------------------------------------------
 // Database rows
@@ -299,6 +307,70 @@ export interface SecurityEventDTO {
   ip: string;
   metadata: Record<string, unknown>;
   createdAt: number;
+}
+
+export interface TradingClientDTO {
+  id: string;
+  clientNumericId: string;
+  name: string;
+  email: string;
+  phone: string;
+  adSource: string;
+  saleStatus: CrmStatus;
+  retentionStatus: CrmStatus;
+  managerName: string | null;
+}
+
+export interface TradingOrderDTO {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientNumericId: string;
+  actorEmail: string;
+  symbol: string;
+  market: string;
+  side: TradeSide;
+  orderType: TradeOrderType;
+  quantity: number;
+  price: number;
+  status: TradeOrderStatus;
+  notional: number;
+  pnl: number;
+  createdAt: number;
+}
+
+export interface TradingPositionDTO {
+  clientId: string;
+  clientName: string;
+  clientNumericId: string;
+  symbol: string;
+  quantity: number;
+  averagePrice: number;
+  currentPrice: number;
+  marketValue: number;
+  unrealizedPnl: number;
+}
+
+export interface TradingSymbolDTO {
+  symbol: string;
+  name: string;
+  market: string;
+  price: number;
+  change: number;
+}
+
+export interface TradingWorkspaceDTO {
+  clients: TradingClientDTO[];
+  symbols: TradingSymbolDTO[];
+  orders: TradingOrderDTO[];
+  positions: TradingPositionDTO[];
+  summary: {
+    equity: number;
+    availableMargin: number;
+    usedMargin: number;
+    openPositions: number;
+    dailyPnl: number;
+  };
 }
 
 // ----------------------------------------------------------------------------

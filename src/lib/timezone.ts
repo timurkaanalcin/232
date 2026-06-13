@@ -35,9 +35,13 @@ export function parseDateTimeInZone(value: string, timeZone: string): number | n
   if (!value) return null;
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
   if (!match) return null;
-  const [, year, month, day, hour, minute] = match.map(Number);
-  let utc = Date.UTC(year, month - 1, day, hour, minute, 0);
-  utc -= timeZoneOffsetMs(timeZone, new Date(utc));
-  utc -= timeZoneOffsetMs(timeZone, new Date(utc)) - timeZoneOffsetMs(timeZone, new Date(Date.UTC(year, month - 1, day, hour, minute, 0)));
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const guess = Date.UTC(year, month - 1, day, hour, minute, 0);
+  let utc = guess - timeZoneOffsetMs(timeZone, new Date(guess));
+  utc = guess - timeZoneOffsetMs(timeZone, new Date(utc));
   return Number.isNaN(utc) ? null : utc;
 }

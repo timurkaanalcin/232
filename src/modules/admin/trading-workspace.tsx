@@ -121,7 +121,7 @@ function MarketChart({ symbol }: { symbol: TradingSymbolDTO }) {
       <div className="relative z-10 flex h-[300px] items-end gap-1 px-5 pb-6 pt-8">
         {candles.map((value, index) => {
           const height = 18 + ((value - min) / Math.max(1, max - min)) * 230;
-          const up = index === 0 || value >= candles[index - 1];
+          const up = index === 0 || value >= (candles[index - 1] ?? value);
           return (
             <div key={`${value}-${index}`} className="flex flex-1 items-end justify-center">
               <div

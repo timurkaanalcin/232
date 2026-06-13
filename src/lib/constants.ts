@@ -54,6 +54,26 @@ export const CRM_STATUS_LABELS: Record<CrmStatus, string> = {
   never_answer: "Never Answer",
 };
 
+export const COUNTRY_TIMEZONES = [
+  { countryCode: "TR", label: "Türkiye", timezone: "Europe/Istanbul" },
+  { countryCode: "RU", label: "Rusya", timezone: "Europe/Moscow" },
+  { countryCode: "DE", label: "Almanya", timezone: "Europe/Berlin" },
+  { countryCode: "GB", label: "İngiltere", timezone: "Europe/London" },
+  { countryCode: "US", label: "Amerika", timezone: "America/New_York" },
+  { countryCode: "AE", label: "Birleşik Arap Emirlikleri", timezone: "Asia/Dubai" },
+] as const;
+
+export const DEFAULT_TIMEZONE = "Europe/Istanbul";
+export const DEFAULT_COUNTRY_CODE = "TR";
+
+export function isSupportedTimezone(timezone: string): boolean {
+  return COUNTRY_TIMEZONES.some((item) => item.timezone === timezone);
+}
+
+export function countryForTimezone(timezone: string): string {
+  return COUNTRY_TIMEZONES.find((item) => item.timezone === timezone)?.countryCode ?? DEFAULT_COUNTRY_CODE;
+}
+
 export const RETENTION_STATUS_LABELS: Record<RetentionStatus, string> = CRM_STATUS_LABELS;
 
 export const SCHEDULE_REQUIRED_STATUSES: CrmStatus[] = ["call_back", "active"];

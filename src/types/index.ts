@@ -81,6 +81,8 @@ export interface UserRow {
   retention_status_scheduled_at: number | null;
   ad_source: string;
   extra_info: string;
+  country_code: string;
+  timezone: string;
   manager_id: string | null;
   status: UserStatus;
   created_at: number;
@@ -165,6 +167,8 @@ export interface UserDTO {
   retentionStatus: RetentionStatus;
   retentionStatusScheduledAt: number | null;
   adSource: string;
+  countryCode: string;
+  timezone: string;
   managerId: string | null;
   managerName: string | null;
   status: UserStatus;

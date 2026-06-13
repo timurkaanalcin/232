@@ -32,9 +32,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiGet, apiPatch, apiPost, ClientApiError } from "@/lib/client-api";
-import { CRM_STATUS_LABELS, ROLE_LABELS, requiresStatusSchedule } from "@/lib/constants";
+import { CRM_STATUS_LABELS, DEFAULT_TIMEZONE, ROLE_LABELS, requiresStatusSchedule } from "@/lib/constants";
+import { formatDateTimeForZone, parseDateTimeInZone } from "@/lib/timezone";
 import { formatRelative } from "@/lib/utils";
-import type { ClientDetailDTO, CrmStatus, RetentionStatus } from "@/types";
+import type { ClientDetailDTO, CrmStatus, RetentionStatus, UserDTO } from "@/types";
 
 const CRM_STATUSES: CrmStatus[] = [
   "new",
@@ -59,20 +60,6 @@ const NO_MANAGER_VALUE = "__none__";
 
 function errorMessage(error: unknown): string {
   return error instanceof ClientApiError ? error.message : "İşlem tamamlanamadı";
-}
-
-function toDateTimeInputValue(value: number | null | undefined): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const offsetMs = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-}
-
-function fromDateTimeInputValue(value: string): number | null {
-  if (!value) return null;
-  const time = new Date(value).getTime();
-  return Number.isNaN(time) ? null : time;
 }
 
 function money(value: number, currency = "$"): string {
@@ -114,9 +101,14 @@ export function ClientDetail({ clientId }: { clientId: string }) {
     queryKey: ["admin", "client-detail", clientId],
     queryFn: () => apiGet<{ detail: ClientDetailDTO }>(`/api/admin/clients/${clientId}`),
   });
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => apiGet<{ user: UserDTO }>("/api/profile"),
+  });
 
   const detail = detailQuery.data?.detail;
   const client = detail?.user;
+  const actorTimezone = profileQuery.data?.user.timezone ?? DEFAULT_TIMEZONE;
 
   useEffect(() => {
     if (!detail) return;
@@ -127,15 +119,15 @@ export function ClientDetail({ clientId }: { clientId: string }) {
     setExtraInfo(detail.extraInfo);
     setManagerId(detail.user.managerId ?? NO_MANAGER_VALUE);
     setSaleStatus(detail.user.saleStatus);
-    setSaleScheduledAt(toDateTimeInputValue(detail.user.saleStatusScheduledAt));
+    setSaleScheduledAt(formatDateTimeForZone(detail.user.saleStatusScheduledAt, actorTimezone));
     setRetentionStatus(detail.user.retentionStatus);
-    setRetentionScheduledAt(toDateTimeInputValue(detail.user.retentionStatusScheduledAt));
+    setRetentionScheduledAt(formatDateTimeForZone(detail.user.retentionStatusScheduledAt, actorTimezone));
     setAdSource(detail.user.adSource);
-  }, [detail]);
+  }, [detail, actorTimezone]);
 
   const saveDetail = useMutation({
-    mutationFn: () =>
-      apiPatch(`/api/admin/clients/${clientId}`, {
+    mutationFn: () => {
+      const payload: Record<string, unknown> = {
         extraInfo,
         name,
         phone,
@@ -143,11 +135,17 @@ export function ClientDetail({ clientId }: { clientId: string }) {
         dateOfBirth,
         managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
         saleStatus,
-        saleStatusScheduledAt: fromDateTimeInputValue(saleScheduledAt),
         retentionStatus,
-        retentionStatusScheduledAt: fromDateTimeInputValue(retentionScheduledAt),
         adSource,
-      }),
+      };
+      if (saleScheduledAt || requiresStatusSchedule(saleStatus)) {
+        payload.saleStatusScheduledAt = parseDateTimeInZone(saleScheduledAt, actorTimezone);
+      }
+      if (retentionScheduledAt || requiresStatusSchedule(retentionStatus)) {
+        payload.retentionStatusScheduledAt = parseDateTimeInZone(retentionScheduledAt, actorTimezone);
+      }
+      return apiPatch(`/api/admin/clients/${clientId}`, payload);
+    },
     onSuccess: () => {
       toast.success("Client güncellendi");
       void queryClient.invalidateQueries({ queryKey: ["admin", "client-detail", clientId] });
@@ -358,6 +356,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
                 <div className="grid gap-2">
                   <Label>Sale tarih ve saat</Label>
                   <Input type="datetime-local" value={saleScheduledAt} onChange={(event) => setSaleScheduledAt(event.target.value)} />
+                  <p className="text-xs text-muted-foreground">Saat dilimi: {actorTimezone}</p>
                 </div>
               ) : null}
               <div className="rounded-lg border p-3 text-sm">
@@ -429,6 +428,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
                     value={retentionScheduledAt}
                     onChange={(event) => setRetentionScheduledAt(event.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">Saat dilimi: {actorTimezone}</p>
                 </div>
               ) : null}
               <Button

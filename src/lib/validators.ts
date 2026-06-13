@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ROLE_IDS, SECURITY } from "@/lib/constants";
+import { COUNTRY_TIMEZONES, ROLE_IDS, SECURITY } from "@/lib/constants";
 
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
 
@@ -26,6 +26,10 @@ const updateTrimmedText = (max: number) => z.string().trim().max(max).optional()
 const roleSchema = z.enum(ROLE_IDS);
 
 const crmDepartmentSchema = z.enum(["management", "retention", "sale", "client"]);
+
+const timezoneSchema = z.enum(COUNTRY_TIMEZONES.map((item) => item.timezone) as [string, ...string[]]);
+
+const countryCodeSchema = z.enum(COUNTRY_TIMEZONES.map((item) => item.countryCode) as [string, ...string[]]);
 
 const crmStatusSchema = z.enum([
   "new",
@@ -87,6 +91,8 @@ export const changePasswordSchema = z.object({
 
 export const updateProfileSchema = z.object({
   name: nameSchema,
+  timezone: timezoneSchema.optional(),
+  countryCode: countryCodeSchema.optional(),
 });
 
 export const startLocationSessionSchema = z.object({

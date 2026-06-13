@@ -1,4 +1,5 @@
 import { hashPassword } from "@/lib/crypto";
+import { DEFAULT_COUNTRY_CODE, DEFAULT_TIMEZONE, countryForTimezone } from "@/lib/constants";
 import type { CrmDepartment, CrmStatus, Paginated, RetentionStatus, RoleId, UserDTO, UserRow, UserStatus } from "@/types";
 
 type UserRowWithManager = UserRow & {
@@ -26,6 +27,8 @@ export function toUserDTO(row: UserRowWithManager): UserDTO {
     retentionStatus: row.retention_status ?? "new",
     retentionStatusScheduledAt: row.retention_status_scheduled_at ?? null,
     adSource: row.ad_source ?? "",
+    countryCode: row.country_code ?? DEFAULT_COUNTRY_CODE,
+    timezone: row.timezone ?? DEFAULT_TIMEZONE,
     managerId: row.manager_id ?? null,
     managerName: row.manager_name ?? null,
     status: row.status,
@@ -83,6 +86,8 @@ export interface CreateUserInput {
   retentionStatusScheduledAt?: number | null;
   adSource?: string;
   managerId?: string | null;
+  countryCode?: string;
+  timezone?: string;
   emailVerified?: boolean;
 }
 
@@ -98,9 +103,9 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
       `INSERT INTO users (
          id, email, email_verified, name, image, password_hash, role_id, client_numeric_id, sale_status,
          sale_status_scheduled_at, phone, address, date_of_birth, department, retention_status,
-         retention_status_scheduled_at, ad_source, manager_id, status, created_at, updated_at
+         retention_status_scheduled_at, ad_source, country_code, timezone, manager_id, status, created_at, updated_at
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
     )
     .bind(
       id,
@@ -120,6 +125,8 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
       input.retentionStatus ?? "new",
       input.retentionStatusScheduledAt ?? null,
       input.adSource ?? "",
+      input.countryCode ?? countryForTimezone(input.timezone ?? DEFAULT_TIMEZONE),
+      input.timezone ?? DEFAULT_TIMEZONE,
       input.managerId ?? null,
       now,
       now,
@@ -133,6 +140,19 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
 
 export async function updateUserProfile(db: D1Database, id: string, name: string): Promise<void> {
   await db.prepare(`UPDATE users SET name = ?, updated_at = ? WHERE id = ?`).bind(name, Date.now(), id).run();
+}
+
+export async function updateUserLocale(
+  db: D1Database,
+  id: string,
+  input: { name: string; timezone?: string; countryCode?: string },
+): Promise<void> {
+  const timezone = input.timezone ?? DEFAULT_TIMEZONE;
+  const countryCode = input.countryCode ?? countryForTimezone(timezone);
+  await db
+    .prepare(`UPDATE users SET name = ?, timezone = ?, country_code = ?, updated_at = ? WHERE id = ?`)
+    .bind(input.name, timezone, countryCode, Date.now(), id)
+    .run();
 }
 
 export async function setUserPassword(db: D1Database, id: string, password: string): Promise<void> {
@@ -319,7 +339,7 @@ export async function exportUserData(db: D1Database, id: string) {
       .prepare(
         `SELECT id, email, name, image, role_id, client_numeric_id, sale_status, sale_status_scheduled_at,
                 phone, address, date_of_birth, department, retention_status, retention_status_scheduled_at,
-                ad_source, extra_info, manager_id, status, email_verified, created_at, updated_at, last_login_at
+                ad_source, extra_info, country_code, timezone, manager_id, status, email_verified, created_at, updated_at, last_login_at
          FROM users WHERE id = ?`,
       )
       .bind(id)

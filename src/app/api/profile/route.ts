@@ -2,7 +2,7 @@ import { apiHandler, assertSameOrigin, badRequest, jsonOk, notFound, requireUser
 import { logAudit } from "@/lib/audit";
 import { AUDIT_ACTIONS, REALTIME } from "@/lib/constants";
 import { updateProfileSchema } from "@/lib/validators";
-import { deleteUserAccount, findUserById, toUserDTO, updateUserProfile } from "@/services/users";
+import { deleteUserAccount, findUserById, toUserDTO, updateUserLocale } from "@/services/users";
 import { getActiveSessionForUser, endLocationSession } from "@/services/location-sessions";
 
 export const GET = apiHandler(async () => {
@@ -21,7 +21,7 @@ export const PATCH = apiHandler(async (request: Request) => {
     throw badRequest(parsed.error.issues[0]?.message ?? "Invalid profile data");
   }
 
-  await updateUserProfile(db, user.id, parsed.data.name);
+  await updateUserLocale(db, user.id, parsed.data);
   await logAudit(db, {
     actorId: user.id,
     actorEmail: user.email,

@@ -3,6 +3,9 @@ import {
   loginSchema,
   passwordSchema,
   positionSchema,
+  createRiskEventSchema,
+  riskEventActionSchema,
+  riskEventQuerySchema,
   registerSchema,
   startLocationSessionSchema,
 } from "@/lib/validators";
@@ -54,5 +57,46 @@ describe("positionSchema", () => {
   it("rejects out-of-range coordinates", () => {
     expect(positionSchema.safeParse({ lat: 200, lng: 29, acc: 10, ts: Date.now() }).success).toBe(false);
     expect(positionSchema.safeParse({ lat: 41, lng: -500, acc: 10, ts: Date.now() }).success).toBe(false);
+  });
+});
+
+describe("risk event validators", () => {
+  it("accepts paginated filters for risk events", () => {
+    const result = riskEventQuerySchema.parse({
+      page: "2",
+      pageSize: "50",
+      status: "open",
+      severity: "critical",
+      subject: "wallet-123",
+    });
+
+    expect(result).toMatchObject({ page: 2, pageSize: 50, status: "open", severity: "critical" });
+  });
+
+  it("bounds risk scores to the expected range", () => {
+    expect(
+      createRiskEventSchema.safeParse({
+        source: "ai_risk_engine",
+        eventType: "risk.limit_breached",
+        severity: "warning",
+        riskScore: 100,
+        title: "Drawdown limit warning",
+      }).success,
+    ).toBe(true);
+
+    expect(
+      createRiskEventSchema.safeParse({
+        source: "ai_risk_engine",
+        eventType: "risk.limit_breached",
+        severity: "warning",
+        riskScore: 101,
+        title: "Drawdown limit warning",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("limits operator notes for risk event actions", () => {
+    expect(riskEventActionSchema.safeParse({ note: "Reviewed by desk" }).success).toBe(true);
+    expect(riskEventActionSchema.safeParse({ note: "x".repeat(1_001) }).success).toBe(false);
   });
 });

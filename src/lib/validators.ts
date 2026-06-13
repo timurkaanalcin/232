@@ -92,3 +92,27 @@ export const userSearchSchema = paginationSchema.extend({
   role: z.enum(["super_admin", "admin", "operator", "viewer", "user"]).optional(),
   status: z.enum(["active", "disabled"]).optional(),
 });
+
+export const riskEventQuerySchema = paginationSchema.extend({
+  status: z.enum(["open", "acknowledged", "resolved"]).optional(),
+  severity: z.enum(["info", "warning", "critical"]).optional(),
+  source: z.string().trim().max(80).optional(),
+  type: z.string().trim().max(120).optional(),
+  subject: z.string().trim().max(160).optional(),
+});
+
+export const createRiskEventSchema = z.object({
+  source: z.string().trim().min(1).max(80),
+  eventType: z.string().trim().min(1).max(120),
+  severity: z.enum(["info", "warning", "critical"]),
+  riskScore: z.number().int().min(0).max(100).optional().default(0),
+  subjectType: z.string().trim().max(80).optional().default(""),
+  subjectId: z.string().trim().max(120).optional().default(""),
+  title: z.string().trim().min(1).max(160),
+  description: z.string().trim().max(2_000).optional().default(""),
+  metadata: z.record(z.string(), z.unknown()).optional().default({}),
+});
+
+export const riskEventActionSchema = z.object({
+  note: z.string().trim().max(1_000).optional().default(""),
+});

@@ -19,6 +19,8 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('super_admin', 'users.manage'),
   ('super_admin', 'roles.assign'),
   ('super_admin', 'audit.view'),
+  ('super_admin', 'risk.view'),
+  ('super_admin', 'risk.manage'),
   -- admin
   ('admin', 'admin.access'),
   ('admin', 'stats.view'),
@@ -29,14 +31,18 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('admin', 'users.create'),
   ('admin', 'users.manage'),
   ('admin', 'audit.view'),
+  ('admin', 'risk.view'),
+  ('admin', 'risk.manage'),
   -- operator
   ('operator', 'admin.access'),
   ('operator', 'stats.view'),
   ('operator', 'map.live_view'),
   ('operator', 'sessions.view'),
   ('operator', 'sessions.manage'),
+  ('operator', 'risk.view'),
   -- viewer
   ('viewer', 'admin.access'),
   ('viewer', 'stats.view'),
   ('viewer', 'map.live_view'),
-  ('viewer', 'sessions.view');
+  ('viewer', 'sessions.view'),
+  ('viewer', 'risk.view');

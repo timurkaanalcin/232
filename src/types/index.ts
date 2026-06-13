@@ -20,7 +20,13 @@ export type Permission =
   | "users.create"
   | "users.manage"
   | "roles.assign"
-  | "audit.view";
+  | "audit.view"
+  | "risk.view"
+  | "risk.manage";
+
+export type RiskEventSeverity = "info" | "warning" | "critical";
+
+export type RiskEventStatus = "open" | "acknowledged" | "resolved";
 
 // ----------------------------------------------------------------------------
 // Database rows
@@ -95,6 +101,27 @@ export interface AuditLogRow {
   user_agent: string;
   metadata: string;
   created_at: number;
+}
+
+export interface RiskEventRow {
+  id: number;
+  source: string;
+  event_type: string;
+  severity: RiskEventSeverity;
+  status: RiskEventStatus;
+  risk_score: number;
+  subject_type: string;
+  subject_id: string;
+  title: string;
+  description: string;
+  metadata: string;
+  operator_note: string;
+  acknowledged_by: string | null;
+  acknowledged_at: number | null;
+  resolved_by: string | null;
+  resolved_at: number | null;
+  created_at: number;
+  updated_at: number;
 }
 
 // ----------------------------------------------------------------------------
@@ -232,6 +259,27 @@ export interface SecurityEventDTO {
   ip: string;
   metadata: Record<string, unknown>;
   createdAt: number;
+}
+
+export interface RiskEventDTO {
+  id: number;
+  source: string;
+  eventType: string;
+  severity: RiskEventSeverity;
+  status: RiskEventStatus;
+  riskScore: number;
+  subjectType: string;
+  subjectId: string;
+  title: string;
+  description: string;
+  metadata: Record<string, unknown>;
+  operatorNote: string;
+  acknowledgedBy: string | null;
+  acknowledgedAt: number | null;
+  resolvedBy: string | null;
+  resolvedAt: number | null;
+  createdAt: number;
+  updatedAt: number;
 }
 
 // ----------------------------------------------------------------------------

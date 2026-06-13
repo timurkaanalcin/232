@@ -52,10 +52,10 @@ Exceeded limits log a `security_events` row and return HTTP 429.
 
 | Role | Capabilities |
 |------|-------------|
-| `super_admin` | Full access incl. role assignment |
-| `admin` | User management, audit, live map |
-| `operator` | Live map, session management |
-| `viewer` | Read-only live map + stats |
+| `super_admin` | Full access incl. role assignment and risk workflow control |
+| `admin` | User management, audit, live map, risk workflow control |
+| `operator` | Live map, session management, read-only risk monitoring |
+| `viewer` | Read-only live map, stats and risk monitoring |
 | `user` | Own profile, sharing, history |
 
 Permissions enforced server-side on every admin endpoint.
@@ -65,6 +65,9 @@ Permissions enforced server-side on every admin endpoint.
 **Audit log** (`audit_logs`) — append-only trail of user-visible actions: login, consent, sessions, admin views.
 
 **Security events** (`security_events`) — failed logins, rate limits, suspicious patterns. Visible in `/admin/security`.
+
+**Risk events** (`risk_events`) — operational AI/trading/wallet/liquidation alerts. Viewing requires
+`risk.view`; acknowledgement, resolution and manual creation require `risk.manage` and write audit entries.
 
 ## GDPR / KVKK
 

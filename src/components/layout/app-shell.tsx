@@ -15,6 +15,7 @@ import {
   SettingsIcon,
   ShieldAlertIcon,
   ShieldIcon,
+  SirenIcon,
   UsersIcon,
   XIcon,
 } from "lucide-react";
@@ -63,6 +64,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin/users", label: "Users", icon: UsersIcon, permission: "users.view" },
   { href: "/admin/audit", label: "Audit Logs", icon: ScrollTextIcon, permission: "audit.view" },
   { href: "/admin/security", label: "Security", icon: ShieldAlertIcon, permission: "audit.view" },
+  { href: "/admin/risk", label: "Risk", icon: SirenIcon, permission: "risk.view" },
 ];
 
 function NavLinks({ user, onNavigate }: { user: ShellUser; onNavigate?: () => void }) {

@@ -17,7 +17,7 @@ export function AuthShell({
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
       <div className="flex flex-col px-6 py-8 sm:px-10">
-        <Link href="/" aria-label="LiveTrack home" className="w-fit">
+        <Link href="/" aria-label="CRM Nexus home" className="w-fit">
           <Logo />
         </Link>
         <div className="flex flex-1 items-center justify-center py-10">
@@ -36,11 +36,10 @@ export function AuthShell({
         <div className="relative flex h-full flex-col justify-end p-12 text-primary-foreground">
           <ShieldCheckIcon className="mb-6 size-12" />
           <blockquote className="text-2xl font-medium leading-snug">
-            Real-time location sharing built on explicit consent — with full audit trails and the right to be
-            forgotten.
+            Sale ve Retention ekipleri için client, statü, takip zamanı ve reklam kaynağı yönetimi tek panelde.
           </blockquote>
           <p className="mt-4 text-sm text-primary-foreground/80">
-            GDPR &amp; KVKK-compliant · End-to-end auditable · Edge-native
+            Admin · Shift · Head · Team Leader · Sale · Retention · Client
           </p>
         </div>
       </div>

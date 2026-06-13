@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { DashboardModule } from "@/modules/location/dashboard";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = { title: "CRM Panel" };
 
 export default function DashboardPage() {
-  return <DashboardModule />;
+  redirect("/admin/users");
 }

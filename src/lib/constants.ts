@@ -1,6 +1,6 @@
 import type { CrmDepartment, CrmStatus, Permission, RetentionStatus, RoleId } from "@/types";
 
-export const APP_NAME = "LiveTrack";
+export const APP_NAME = "CRM Nexus";
 
 export const ROLE_IDS = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale", "user"] as const;
 

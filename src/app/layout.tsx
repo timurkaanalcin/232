@@ -12,11 +12,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: `${SITE_NAME} — Borsa, döviz, altın ve ekonomi haberleri`,
+    default: `${SITE_NAME} — Sale ve Retention CRM platformu`,
     template: `%s · ${SITE_NAME}`,
   },
   description:
-    "Canlı piyasa verileri, BIST, döviz kurları, altın, video haberler ve Türkiye finans gündemi.",
+    "Client yönetimi, Sale ve Retention statüleri, takip zamanları, reklam kaynakları ve ekip yetkileri için profesyonel CRM platformu.",
   applicationName: SITE_NAME,
   robots: { index: true, follow: true },
 };

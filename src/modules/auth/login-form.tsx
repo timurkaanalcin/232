@@ -15,7 +15,7 @@ import { GoogleButton } from "@/components/auth/google-button";
 export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") ?? "/dashboard";
+  const callbackUrl = params.get("callbackUrl") ?? "/admin/users";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           <div className="relative">
             <Separator />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">
-              or
+              veya
             </span>
           </div>
         </>
@@ -56,7 +56,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           </Alert>
         )}
         <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">E-posta</Label>
           <Input
             id="email"
             type="email"
@@ -68,9 +68,9 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         </div>
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Şifre</Label>
             <Link href="/forgot-password" className="text-xs text-primary hover:underline">
-              Forgot password?
+              Şifremi unuttum
             </Link>
           </div>
           <Input
@@ -84,7 +84,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         </div>
         <Button type="submit" disabled={loading} className="w-full">
           {loading && <Loader2Icon className="animate-spin" />}
-          Sign in
+          CRM'e giriş yap
         </Button>
       </form>
     </div>

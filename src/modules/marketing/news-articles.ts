@@ -21,7 +21,7 @@ export interface FinanceVideo {
 
 import { SITE_URL } from "@/lib/site-config";
 
-export const SITE_NAME = "borsahatti";
+export const SITE_NAME = "CRM Nexus";
 export { SITE_URL };
 
 export const NEWS_CATEGORIES = ["Borsa", "Döviz", "Altın", "Kripto", "Ekonomi", "Şirket"] as const;

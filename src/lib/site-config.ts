@@ -1,5 +1,5 @@
 /** Cloudflare Worker adı — workers.dev URL'sinin ilk parçası */
-export const WORKER_NAME = "borsahatti";
+export const WORKER_NAME = "crm-nexus";
 
 /**
  * Hesap workers.dev alt alanı (Cloudflare dashboard).

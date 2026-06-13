@@ -162,9 +162,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: ReactN
         <div className="flex flex-1 flex-col gap-1 overflow-y-auto py-3">
           <NavLinks user={user} />
         </div>
-        <div className="border-t p-4 text-xs text-muted-foreground">
-          Consent-first location sharing
-        </div>
+        <div className="border-t p-4 text-xs text-muted-foreground">Sale & Retention CRM operasyon paneli</div>
       </aside>
 
       {/* Mobile drawer */}

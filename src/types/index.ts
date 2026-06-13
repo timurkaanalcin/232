@@ -171,10 +171,15 @@ export interface UserDTO {
   timezone: string;
   managerId: string | null;
   managerName: string | null;
+  managerRole: RoleId | null;
   status: UserStatus;
   emailVerified: boolean;
   createdAt: number;
   lastLoginAt: number | null;
+  financeSummary: {
+    totalDeposit: number;
+    totalBalance: number;
+  };
   tradingSummary: {
     orderCount: number;
     totalNotional: number;

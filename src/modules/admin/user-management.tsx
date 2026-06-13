@@ -10,9 +10,11 @@ import {
   ChevronRightIcon,
   CrownIcon,
   DownloadIcon,
+  EyeIcon,
   FileTextIcon,
   HeadphonesIcon,
   MegaphoneIcon,
+  PhoneIcon,
   PlusIcon,
   SearchIcon,
   ShieldIcon,
@@ -46,7 +48,7 @@ import {
   ROLE_PERMISSIONS,
   requiresStatusSchedule,
 } from "@/lib/constants";
-import { formatRelative, initials } from "@/lib/utils";
+import { initials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type {
   AnalyticsBreakdownItem,
@@ -58,7 +60,6 @@ import type {
   RetentionStatus,
   RoleId,
   UserDTO,
-  UserStatus,
 } from "@/types";
 
 const ROLES: RoleId[] = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale", "user"];
@@ -191,6 +192,20 @@ function money(value: number, currency = "$"): string {
   return `${currency}${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function shortDate(value: number): string {
+  return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(value));
+}
+
+function clientAssignedStatus(user: UserDTO): { label: string; value: string } {
+  if (user.managerRole === "sale" || user.managerRole === "viewer") {
+    return { label: "Sale", value: CRM_STATUS_LABELS[user.saleStatus] };
+  }
+  if (user.managerRole === "retention" || user.managerRole === "operator") {
+    return { label: "Retention", value: CRM_STATUS_LABELS[user.retentionStatus] };
+  }
+  return { label: "Sale", value: CRM_STATUS_LABELS[user.saleStatus] };
+}
+
 function csvCell(value: unknown): string {
   const text = String(value ?? "");
   return `"${text.replaceAll('"', '""')}"`;
@@ -215,6 +230,10 @@ function downloadVisibleUsersCsv(users: UserDTO[]): void {
     "Retention Statüsü",
     "Retention Tarih/Saat",
     "Yönetici",
+    "Sorumlu Rol",
+    "Gösterilen Statü",
+    "Yatırdığı Para",
+    "Toplam Bakiye",
     "Trading Emir",
     "Trading Hacim",
     "Açık Pozisyon",
@@ -234,6 +253,10 @@ function downloadVisibleUsersCsv(users: UserDTO[]): void {
     CRM_STATUS_LABELS[user.retentionStatus],
     formatDateTime(user.retentionStatusScheduledAt),
     user.managerName ?? "",
+    user.managerRole ? ROLE_LABELS[user.managerRole] : "",
+    `${clientAssignedStatus(user).label}: ${clientAssignedStatus(user).value}`,
+    user.financeSummary.totalDeposit,
+    user.financeSummary.totalBalance,
     user.tradingSummary.orderCount,
     user.tradingSummary.totalNotional,
     user.tradingSummary.openPositions,
@@ -437,7 +460,7 @@ export function UserManagement() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("user");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserDTO | null>(null);
@@ -462,16 +485,6 @@ export function UserManagement() {
     void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
     void queryClient.invalidateQueries({ queryKey: ["admin", "crm", "overview"] });
   };
-
-  const updateUser = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
-      apiPatch(`/api/admin/users/${id}`, body),
-    onSuccess: () => {
-      toast.success("User updated");
-      invalidate();
-    },
-    onError: (error) => toast.error(errorMessage(error)),
-  });
 
   const totalPages = usersQuery.data ? Math.max(1, Math.ceil(usersQuery.data.total / 15)) : 1;
 
@@ -573,124 +586,80 @@ export function UserManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Kullanıcı</TableHead>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Ad Soyad</TableHead>
                   <TableHead className="hidden md:table-cell">Telefon</TableHead>
-                  <TableHead className="hidden lg:table-cell">CRM</TableHead>
-                  <TableHead className="hidden sm:table-cell">Rol</TableHead>
-                  <TableHead className="hidden md:table-cell">Durum</TableHead>
-                  <TableHead className="hidden xl:table-cell">Son giriş</TableHead>
+                  <TableHead className="hidden lg:table-cell">E-posta</TableHead>
+                  <TableHead className="hidden xl:table-cell">Kayıt Tarihi</TableHead>
+                  <TableHead className="hidden xl:table-cell">Yatırdığı Para</TableHead>
+                  <TableHead className="hidden lg:table-cell">Toplam Bakiye</TableHead>
+                  <TableHead className="hidden md:table-cell">Statü</TableHead>
                   <TableHead className="text-right">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {usersQuery.data?.items.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                          {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
-                          <AvatarFallback>{initials(user.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{user.name}</p>
-                          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-                          {user.clientNumericId ? (
-                            <p className="truncate text-xs font-medium text-primary">Client ID: {user.clientNumericId}</p>
-                          ) : null}
-                          {user.address ? (
-                            <p className="truncate text-xs text-muted-foreground">{user.address}</p>
-                          ) : null}
+                {usersQuery.data?.items.map((user) => {
+                  const assignedStatus = clientAssignedStatus(user);
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium text-primary">
+                        {user.clientNumericId || user.id.slice(0, 8)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-8">
+                            {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+                            <AvatarFallback>{initials(user.name)}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{user.name}</p>
+                            <p className="truncate text-xs text-muted-foreground md:hidden">{user.phone || "Telefon yok"}</p>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                      {user.phone || "—"}
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <div className="grid gap-1 text-xs">
-                        <span className="font-medium">{CRM_DEPARTMENT_LABELS[user.department]}</span>
-                        <span className="text-muted-foreground">Client ID: {user.clientNumericId || "—"}</span>
-                        <span className="text-muted-foreground">Reklam Kaynağı: {user.adSource || "—"}</span>
-                        <span className="text-muted-foreground">Sale Statüsü: {CRM_STATUS_LABELS[user.saleStatus]}</span>
-                        <span className="text-muted-foreground">
-                          Sale Tarih/Saat: {user.saleStatusScheduledAt ? formatRelative(user.saleStatusScheduledAt) : "—"}
-                        </span>
-                        <span className="text-muted-foreground">Retention Statüsü: {CRM_STATUS_LABELS[user.retentionStatus]}</span>
-                        <span className="text-muted-foreground">
-                          Retention Tarih/Saat: {user.retentionStatusScheduledAt ? formatRelative(user.retentionStatusScheduledAt) : "—"}
-                        </span>
-                        <span className="text-muted-foreground">Yönetici: {user.managerName || "—"}</span>
-                        {user.role === "user" ? (
-                          <span className="text-muted-foreground">
-                            Trading: {user.tradingSummary.orderCount} emir · {money(user.tradingSummary.totalNotional)} ·{" "}
-                            {user.tradingSummary.openPositions} pozisyon
-                          </span>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-sm">{user.phone || "—"}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{user.email}</TableCell>
+                      <TableCell className="hidden xl:table-cell text-sm">{shortDate(user.createdAt)}</TableCell>
+                      <TableCell className="hidden xl:table-cell font-medium text-emerald-600">
+                        {money(user.financeSummary.totalDeposit)}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell font-medium">{money(user.financeSummary.totalBalance)}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge variant="secondary">
+                          {assignedStatus.label}: {assignedStatus.value}
+                        </Badge>
+                        {user.managerName ? (
+                          <p className="mt-1 text-xs text-muted-foreground">Sorumlu: {user.managerName}</p>
                         ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Select
-                        value={user.role}
-                        onValueChange={(role) => updateUser.mutate({ id: user.id, body: { role } })}
-                      >
-                        <SelectTrigger className="h-8 w-36">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ROLES.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {ROLE_LABELS[role]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {user.status === "active" ? (
-                        <Badge variant="success">Aktif</Badge>
-                      ) : (
-                        <Badge variant="destructive">Pasif</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
-                      {user.lastLoginAt ? formatRelative(user.lastLoginAt) : "Hiç"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {user.role === "user" ? (
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/admin/trading?clientId=${user.id}`}>Terminal</Link>
-                          </Button>
-                        ) : null}
-                        {user.role === "user" ? (
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/admin/clients/${user.id}`}>Düzenle</Link>
-                          </Button>
-                        ) : (
-                          <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
-                            Düzenle
-                          </Button>
-                        )}
-                        <Button
-                          variant={user.status === "active" ? "outline" : "default"}
-                          size="sm"
-                          disabled={updateUser.isPending}
-                          onClick={() =>
-                            updateUser.mutate({
-                              id: user.id,
-                              body: { status: (user.status === "active" ? "disabled" : "active") as UserStatus },
-                            })
-                          }
-                        >
-                          {user.status === "active" ? "Pasifleştir" : "Aktifleştir"}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {user.phone ? (
+                            <Button variant="outline" size="sm" asChild aria-label={`${user.name} ara`}>
+                              <a href={`tel:${user.phone}`}>
+                                <PhoneIcon /> Ara
+                              </a>
+                            </Button>
+                          ) : null}
+                          {user.role === "user" ? (
+                            <Button variant="outline" size="sm" asChild aria-label={`${user.name} detay`}>
+                              <Link href={`/admin/clients/${user.id}`}>
+                                <EyeIcon /> Detay
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
+                              Düzenle
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {usersQuery.data && usersQuery.data.items.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
                       Filtrelerle eşleşen kullanıcı bulunamadı.
                     </TableCell>
                   </TableRow>

@@ -4,6 +4,9 @@ import type { CrmDepartment, CrmStatus, Paginated, RetentionStatus, RoleId, User
 
 type UserRowWithManager = UserRow & {
   manager_name?: string | null;
+  manager_role?: RoleId | null;
+  total_deposit?: number | null;
+  total_balance?: number | null;
   trade_order_count?: number | null;
   trade_total_notional?: number | null;
   trade_open_positions?: number | null;
@@ -31,10 +34,15 @@ export function toUserDTO(row: UserRowWithManager): UserDTO {
     timezone: row.timezone ?? DEFAULT_TIMEZONE,
     managerId: row.manager_id ?? null,
     managerName: row.manager_name ?? null,
+    managerRole: row.manager_role ?? null,
     status: row.status,
     emailVerified: row.email_verified === 1,
     createdAt: row.created_at,
     lastLoginAt: row.last_login_at,
+    financeSummary: {
+      totalDeposit: row.total_deposit ?? 0,
+      totalBalance: row.total_balance ?? 0,
+    },
     tradingSummary: {
       orderCount: row.trade_order_count ?? 0,
       totalNotional: row.trade_total_notional ?? 0,
@@ -302,8 +310,27 @@ export async function listUsers(db: D1Database, filter: ListUsersFilter): Promis
            HAVING ABS(quantity) > 0.000001
          )
          GROUP BY client_id
+       ),
+       money_stats AS (
+         SELECT client_id,
+                COALESCE(SUM(CASE WHEN tx_type = 'deposit' THEN amount ELSE 0 END), 0) AS total_deposit,
+                COALESCE(SUM(CASE
+                  WHEN tx_type IN ('deposit', 'bonus', 'transfer') THEN amount
+                  WHEN tx_type IN ('withdrawal', 'commission', 'swap') THEN -amount
+                  ELSE 0
+                END), 0) AS net_money
+         FROM crm_money_transactions
+         WHERE tx_status IN ('pending', 'approved')
+         GROUP BY client_id
+       ),
+       account_stats AS (
+         SELECT client_id, COALESCE(SUM(balance + credit), 0) AS account_balance
+         FROM crm_trade_accounts
+         GROUP BY client_id
        )
-       SELECT u.*, m.name AS manager_name,
+       SELECT u.*, m.name AS manager_name, m.role_id AS manager_role,
+              COALESCE(ms.total_deposit, 0) AS total_deposit,
+              COALESCE(ast.account_balance, 0) + COALESCE(ms.net_money, 0) AS total_balance,
               COALESCE(ts.order_count, 0) AS trade_order_count,
               COALESCE(ts.total_notional, 0) AS trade_total_notional,
               COALESCE(ops.open_positions, 0) AS trade_open_positions,
@@ -312,6 +339,8 @@ export async function listUsers(db: D1Database, filter: ListUsersFilter): Promis
        LEFT JOIN users m ON m.id = u.manager_id
        LEFT JOIN trade_stats ts ON ts.client_id = u.id
        LEFT JOIN open_position_stats ops ON ops.client_id = u.id
+       LEFT JOIN money_stats ms ON ms.client_id = u.id
+       LEFT JOIN account_stats ast ON ast.client_id = u.id
        ${whereSql}
        ORDER BY u.created_at DESC
        LIMIT ? OFFSET ?`,

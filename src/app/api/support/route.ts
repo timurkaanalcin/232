@@ -29,7 +29,7 @@ export const GET = apiHandler(async (request: Request) => {
 export const POST = apiHandler(async (request: Request) => {
   await assertSameOrigin(request);
   const { user, db } = await requireUser();
-  const body = await request.json().catch(() => null);
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const parsed = supportMessageSchema.safeParse(body);
   if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? "Invalid message");
 

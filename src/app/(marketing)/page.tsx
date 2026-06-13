@@ -1,21 +1,19 @@
 import type { Metadata } from "next";
-import { NewsHome } from "@/modules/marketing/news-home";
-
-import { SITE_NAME } from "@/modules/marketing/news-articles";
+import { InstantWebsite } from "@/modules/marketing/instant-website";
 import { SITE_URL } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: `${SITE_NAME} — Borsa, döviz, altın ve ekonomi haberleri`,
-  description: "Canlı piyasa verileri, BIST, döviz kurları, altın, video haberler ve finans gündemi.",
+  title: "CanlıSite — Anında güncellenen web sitesi",
+  description: "Hot reload destekli modern Next.js web sitesi.",
   openGraph: {
-    title: SITE_NAME,
-    description: "Türkiye finans gündemi — borsa, döviz, altın, kripto",
+    title: "CanlıSite",
+    description: "Değiştir, kaydet, web sitesini anında gör.",
     url: SITE_URL,
-    siteName: SITE_NAME,
+    siteName: "CanlıSite",
     type: "website",
   },
 };
 
 export default function LandingPage() {
-  return <NewsHome />;
+  return <InstantWebsite />;
 }

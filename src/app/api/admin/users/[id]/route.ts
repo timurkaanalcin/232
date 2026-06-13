@@ -9,7 +9,7 @@ import {
   requirePermission,
 } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { AUDIT_ACTIONS, REALTIME, canAssignRole, canManageRole } from "@/lib/constants";
+import { AUDIT_ACTIONS, REALTIME, canAssignRole, canManageRole, requiresStatusSchedule } from "@/lib/constants";
 import { adminUpdateUserSchema } from "@/lib/validators";
 import { adminUpdateUser, findUserById, generateClientNumericId, toUserDTO } from "@/services/users";
 import { revokeAllDeviceSessions } from "@/services/device-sessions";
@@ -46,12 +46,33 @@ export const PATCH = apiHandler(
       const manager = await findUserById(db, parsed.data.managerId);
       if (!manager) throw badRequest("Selected manager does not exist");
     }
+    const nextRole = parsed.data.role ?? target.role_id;
+    const nextSaleStatus = parsed.data.saleStatus ?? target.sale_status;
+    const nextSaleStatusScheduledAt =
+      parsed.data.saleStatusScheduledAt !== undefined
+        ? parsed.data.saleStatusScheduledAt
+        : target.sale_status_scheduled_at;
+    const nextRetentionStatus = parsed.data.retentionStatus ?? target.retention_status;
+    const nextRetentionStatusScheduledAt =
+      parsed.data.retentionStatusScheduledAt !== undefined
+        ? parsed.data.retentionStatusScheduledAt
+        : target.retention_status_scheduled_at;
+    if (nextRole === "user") {
+      if (requiresStatusSchedule(nextSaleStatus) && !nextSaleStatusScheduledAt) {
+        throw badRequest("Sale status date and time are required for Call Back and Active clients");
+      }
+      if (requiresStatusSchedule(nextRetentionStatus) && !nextRetentionStatusScheduledAt) {
+        throw badRequest("Retention status date and time are required for Call Back and Active clients");
+      }
+    }
 
     await adminUpdateUser(db, id, {
       ...parsed.data,
       clientNumericId:
         parsed.data.role === "user" && !target.client_numeric_id
           ? await generateClientNumericId(db)
+          : parsed.data.role && parsed.data.role !== "user"
+            ? ""
           : undefined,
     });
 

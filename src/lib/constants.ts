@@ -1,13 +1,14 @@
-import type { CrmDepartment, Permission, RetentionStatus, RoleId } from "@/types";
+import type { CrmDepartment, CrmStatus, Permission, RetentionStatus, RoleId } from "@/types";
 
 export const APP_NAME = "LiveTrack";
 
-export const ROLE_IDS = ["super_admin", "admin", "operator", "viewer", "retention", "sale", "user"] as const;
+export const ROLE_IDS = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale", "user"] as const;
 
-export const ADMIN_ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer"];
+export const ADMIN_ROLES: RoleId[] = ["super_admin", "shift", "admin", "operator", "viewer"];
 
 export const ROLE_LABELS: Record<RoleId, string> = {
   super_admin: "Admin",
+  shift: "Shift",
   admin: "Head",
   operator: "Retention Team Leader",
   viewer: "Sale Team Leader",
@@ -18,6 +19,7 @@ export const ROLE_LABELS: Record<RoleId, string> = {
 
 export const ROLE_RANK: Record<RoleId, number> = {
   super_admin: 100,
+  shift: 90,
   admin: 80,
   operator: 60,
   viewer: 60,
@@ -33,13 +35,32 @@ export const CRM_DEPARTMENT_LABELS: Record<CrmDepartment, string> = {
   client: "Client",
 };
 
-export const RETENTION_STATUS_LABELS: Record<RetentionStatus, string> = {
-  pending: "Beklemede",
-  active: "Aktif",
-  at_risk: "Riskli",
-  retained: "Korundu",
-  lost: "Kayıp",
+export const CRM_STATUS_LABELS: Record<CrmStatus, string> = {
+  new: "New",
+  no_answer: "No Answer",
+  call_back: "Call Back",
+  not_interested: "Not Interested",
+  low_potential: "Low Potential",
+  potential: "Potential",
+  recovery: "Recovery",
+  active: "Active",
+  wrong_number: "Wrong Number",
+  wrong_person: "Wrong Person",
+  referral: "Referral",
+  test: "Test",
+  renew: "Renew",
+  depositor: "Depositor",
+  trash: "Trash",
+  never_answer: "Never Answer",
 };
+
+export const RETENTION_STATUS_LABELS: Record<RetentionStatus, string> = CRM_STATUS_LABELS;
+
+export const SCHEDULE_REQUIRED_STATUSES: CrmStatus[] = ["call_back", "active"];
+
+export function requiresStatusSchedule(status: CrmStatus): boolean {
+  return SCHEDULE_REQUIRED_STATUSES.includes(status);
+}
 
 export const AUDIT_ACTIONS = {
   LOGIN: "auth.login",
@@ -134,6 +155,23 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "documents.manage",
     "reports.view",
     "settings.manage",
+  ],
+  shift: [
+    "admin.access",
+    "admin.panel",
+    "stats.view",
+    "map.live_view",
+    "sessions.view",
+    "sessions.manage",
+    "users.view",
+    "users.create",
+    "users.manage",
+    "roles.assign",
+    "audit.view",
+    "customers.manage",
+    "tickets.manage",
+    "documents.manage",
+    "reports.view",
   ],
   admin: [
     "admin.access",

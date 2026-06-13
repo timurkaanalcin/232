@@ -35,17 +35,35 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { apiGet, apiPatch, apiPost, ClientApiError } from "@/lib/client-api";
 import {
   CRM_DEPARTMENT_LABELS,
-  RETENTION_STATUS_LABELS,
+  CRM_STATUS_LABELS,
   ROLE_LABELS,
   ROLE_PERMISSIONS,
+  requiresStatusSchedule,
 } from "@/lib/constants";
 import { formatRelative, initials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { CrmDepartment, Paginated, Permission, RetentionStatus, RoleId, UserDTO, UserStatus } from "@/types";
+import type { CrmDepartment, CrmStatus, Paginated, Permission, RetentionStatus, RoleId, UserDTO, UserStatus } from "@/types";
 
-const ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer", "retention", "sale", "user"];
+const ROLES: RoleId[] = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale", "user"];
 const DEPARTMENTS: CrmDepartment[] = ["management", "retention", "sale", "client"];
-const RETENTION_STATUSES: RetentionStatus[] = ["pending", "active", "at_risk", "retained", "lost"];
+const CRM_STATUSES: CrmStatus[] = [
+  "new",
+  "no_answer",
+  "call_back",
+  "not_interested",
+  "low_potential",
+  "potential",
+  "recovery",
+  "active",
+  "wrong_number",
+  "wrong_person",
+  "referral",
+  "test",
+  "renew",
+  "depositor",
+  "trash",
+  "never_answer",
+];
 const NO_MANAGER_VALUE = "__none__";
 
 const PERMISSION_AREAS: { permission: Permission; label: string }[] = [
@@ -70,6 +88,13 @@ const ROLE_CARDS: {
     description: "Tam yetki - tüm modüllere erişim ve site ayarları",
     tone: "border-red-200 bg-red-50 text-red-700",
     icon: CrownIcon,
+  },
+  {
+    role: "shift",
+    title: "Shift",
+    description: "Admin yetkisi; Head ve altını yönetir, site ayarlarını değiştiremez",
+    tone: "border-amber-200 bg-amber-50 text-amber-700",
+    icon: ShieldIcon,
   },
   {
     role: "admin",
@@ -117,6 +142,24 @@ const ROLE_CARDS: {
 
 function errorMessage(error: unknown): string {
   return error instanceof ClientApiError ? error.message : "Something went wrong";
+}
+
+function toDateTimeInputValue(value: number | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function fromDateTimeInputValue(value: string): number | null {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? null : time;
+}
+
+function isScheduleMissingForClient(role: RoleId, status: CrmStatus, scheduledAt: string): boolean {
+  return role === "user" && requiresStatusSchedule(status) && !scheduledAt;
 }
 
 function RolePermissionCards() {
@@ -310,7 +353,15 @@ export function UserManagement() {
                       <div className="grid gap-1 text-xs">
                         <span className="font-medium">{CRM_DEPARTMENT_LABELS[user.department]}</span>
                         <span className="text-muted-foreground">Client ID: {user.clientNumericId || "—"}</span>
-                        <span className="text-muted-foreground">Retention Durum: {RETENTION_STATUS_LABELS[user.retentionStatus]}</span>
+                        <span className="text-muted-foreground">Reklam Kaynağı: {user.adSource || "—"}</span>
+                        <span className="text-muted-foreground">Sale Statüsü: {CRM_STATUS_LABELS[user.saleStatus]}</span>
+                        <span className="text-muted-foreground">
+                          Sale Tarih/Saat: {user.saleStatusScheduledAt ? formatRelative(user.saleStatusScheduledAt) : "—"}
+                        </span>
+                        <span className="text-muted-foreground">Retention Statüsü: {CRM_STATUS_LABELS[user.retentionStatus]}</span>
+                        <span className="text-muted-foreground">
+                          Retention Tarih/Saat: {user.retentionStatusScheduledAt ? formatRelative(user.retentionStatusScheduledAt) : "—"}
+                        </span>
                         <span className="text-muted-foreground">Yönetici: {user.managerName || "—"}</span>
                       </div>
                     </TableCell>
@@ -440,8 +491,14 @@ function CreateUserDialog({
   const [image, setImage] = useState("");
   const [role, setRole] = useState<RoleId>("user");
   const [department, setDepartment] = useState<CrmDepartment>("client");
-  const [retentionStatus, setRetentionStatus] = useState<RetentionStatus>("pending");
+  const [saleStatus, setSaleStatus] = useState<CrmStatus>("new");
+  const [saleStatusScheduledAt, setSaleStatusScheduledAt] = useState("");
+  const [retentionStatus, setRetentionStatus] = useState<RetentionStatus>("new");
+  const [retentionStatusScheduledAt, setRetentionStatusScheduledAt] = useState("");
+  const [adSource, setAdSource] = useState("");
   const [managerId, setManagerId] = useState<string>(NO_MANAGER_VALUE);
+  const saleScheduleMissing = isScheduleMissingForClient(role, saleStatus, saleStatusScheduledAt);
+  const retentionScheduleMissing = isScheduleMissingForClient(role, retentionStatus, retentionStatusScheduledAt);
 
   const create = useMutation({
     mutationFn: () =>
@@ -455,7 +512,11 @@ function CreateUserDialog({
         image,
         role,
         department,
+        saleStatus,
+        saleStatusScheduledAt: fromDateTimeInputValue(saleStatusScheduledAt),
         retentionStatus,
+        retentionStatusScheduledAt: fromDateTimeInputValue(retentionStatusScheduledAt),
+        adSource,
         managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
       }),
     onSuccess: () => {
@@ -469,7 +530,11 @@ function CreateUserDialog({
       setImage("");
       setRole("user");
       setDepartment("client");
-      setRetentionStatus("pending");
+      setSaleStatus("new");
+      setSaleStatusScheduledAt("");
+      setRetentionStatus("new");
+      setRetentionStatusScheduledAt("");
+      setAdSource("");
       setManagerId(NO_MANAGER_VALUE);
       onCreated();
     },
@@ -561,6 +626,15 @@ function CreateUserDialog({
             </Select>
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="new-user-ad-source">Reklam Kaynağı</Label>
+            <Input
+              id="new-user-ad-source"
+              value={adSource}
+              onChange={(event) => setAdSource(event.target.value)}
+              placeholder="Örn. Facebook, Google, Shift"
+            />
+          </div>
+          <div className="grid gap-2">
             <Label>Yönetici</Label>
             <Select value={managerId} onValueChange={setManagerId}>
               <SelectTrigger>
@@ -577,20 +651,59 @@ function CreateUserDialog({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label>Retention Durum</Label>
-            <Select value={retentionStatus} onValueChange={(value) => setRetentionStatus(value as RetentionStatus)}>
+            <Label>Sale Statüsü</Label>
+            <Select value={saleStatus} onValueChange={(value) => setSaleStatus(value as CrmStatus)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {RETENTION_STATUSES.map((status) => (
+                {CRM_STATUSES.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {RETENTION_STATUS_LABELS[status]}
+                    {CRM_STATUS_LABELS[status]}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          {requiresStatusSchedule(saleStatus) ? (
+            <div className="grid gap-2">
+              <Label htmlFor="new-user-sale-scheduled-at">Sale Tarih ve Saat</Label>
+              <Input
+                id="new-user-sale-scheduled-at"
+                type="datetime-local"
+                value={saleStatusScheduledAt}
+                onChange={(event) => setSaleStatusScheduledAt(event.target.value)}
+                required={role === "user"}
+              />
+            </div>
+          ) : null}
+          <div className="grid gap-2">
+            <Label>Retention Statüsü</Label>
+            <Select value={retentionStatus} onValueChange={(value) => setRetentionStatus(value as RetentionStatus)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CRM_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {CRM_STATUS_LABELS[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {requiresStatusSchedule(retentionStatus) ? (
+            <div className="grid gap-2">
+              <Label htmlFor="new-user-retention-scheduled-at">Retention Tarih ve Saat</Label>
+              <Input
+                id="new-user-retention-scheduled-at"
+                type="datetime-local"
+                value={retentionStatusScheduledAt}
+                onChange={(event) => setRetentionStatusScheduledAt(event.target.value)}
+                required={role === "user"}
+              />
+            </div>
+          ) : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -598,7 +711,14 @@ function CreateUserDialog({
           </Button>
           <Button
             onClick={() => create.mutate()}
-            disabled={create.isPending || !name || !email || password.length < 10}
+            disabled={
+              create.isPending ||
+              !name ||
+              !email ||
+              password.length < 10 ||
+              saleScheduleMissing ||
+              retentionScheduleMissing
+            }
           >
             {create.isPending ? "Oluşturuluyor..." : "Kaydet"}
           </Button>
@@ -626,8 +746,16 @@ function EditUserDialog({
   const [image, setImage] = useState(user?.image ?? "");
   const [role, setRole] = useState<RoleId>(user?.role ?? "user");
   const [department, setDepartment] = useState<CrmDepartment>(user?.department ?? "client");
-  const [retentionStatus, setRetentionStatus] = useState<RetentionStatus>(user?.retentionStatus ?? "pending");
+  const [saleStatus, setSaleStatus] = useState<CrmStatus>(user?.saleStatus ?? "new");
+  const [saleStatusScheduledAt, setSaleStatusScheduledAt] = useState(toDateTimeInputValue(user?.saleStatusScheduledAt));
+  const [retentionStatus, setRetentionStatus] = useState<RetentionStatus>(user?.retentionStatus ?? "new");
+  const [retentionStatusScheduledAt, setRetentionStatusScheduledAt] = useState(
+    toDateTimeInputValue(user?.retentionStatusScheduledAt),
+  );
+  const [adSource, setAdSource] = useState(user?.adSource ?? "");
   const [managerId, setManagerId] = useState<string>(user?.managerId ?? NO_MANAGER_VALUE);
+  const saleScheduleMissing = isScheduleMissingForClient(role, saleStatus, saleStatusScheduledAt);
+  const retentionScheduleMissing = isScheduleMissingForClient(role, retentionStatus, retentionStatusScheduledAt);
 
   useEffect(() => {
     if (!user) return;
@@ -639,7 +767,11 @@ function EditUserDialog({
     setImage(user.image ?? "");
     setRole(user.role);
     setDepartment(user.department);
+    setSaleStatus(user.saleStatus);
+    setSaleStatusScheduledAt(toDateTimeInputValue(user.saleStatusScheduledAt));
     setRetentionStatus(user.retentionStatus);
+    setRetentionStatusScheduledAt(toDateTimeInputValue(user.retentionStatusScheduledAt));
+    setAdSource(user.adSource);
     setManagerId(user.managerId ?? NO_MANAGER_VALUE);
   }, [user]);
 
@@ -653,7 +785,11 @@ function EditUserDialog({
         image,
         role,
         department,
+        saleStatus,
+        saleStatusScheduledAt: fromDateTimeInputValue(saleStatusScheduledAt),
         retentionStatus,
+        retentionStatusScheduledAt: fromDateTimeInputValue(retentionStatusScheduledAt),
+        adSource,
         managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
       }),
     onSuccess: () => {
@@ -739,6 +875,14 @@ function EditUserDialog({
             </Select>
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="edit-user-ad-source">Reklam Kaynağı</Label>
+            <Input
+              id="edit-user-ad-source"
+              value={adSource}
+              onChange={(event) => setAdSource(event.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
             <Label>Yönetici</Label>
             <Select value={managerId} onValueChange={setManagerId}>
               <SelectTrigger>
@@ -757,26 +901,68 @@ function EditUserDialog({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label>Retention Durum</Label>
-            <Select value={retentionStatus} onValueChange={(value) => setRetentionStatus(value as RetentionStatus)}>
+            <Label>Sale Statüsü</Label>
+            <Select value={saleStatus} onValueChange={(value) => setSaleStatus(value as CrmStatus)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {RETENTION_STATUSES.map((status) => (
+                {CRM_STATUSES.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {RETENTION_STATUS_LABELS[status]}
+                    {CRM_STATUS_LABELS[status]}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          {requiresStatusSchedule(saleStatus) ? (
+            <div className="grid gap-2">
+              <Label htmlFor="edit-user-sale-scheduled-at">Sale Tarih ve Saat</Label>
+              <Input
+                id="edit-user-sale-scheduled-at"
+                type="datetime-local"
+                value={saleStatusScheduledAt}
+                onChange={(event) => setSaleStatusScheduledAt(event.target.value)}
+                required={role === "user"}
+              />
+            </div>
+          ) : null}
+          <div className="grid gap-2">
+            <Label>Retention Statüsü</Label>
+            <Select value={retentionStatus} onValueChange={(value) => setRetentionStatus(value as RetentionStatus)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CRM_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {CRM_STATUS_LABELS[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {requiresStatusSchedule(retentionStatus) ? (
+            <div className="grid gap-2">
+              <Label htmlFor="edit-user-retention-scheduled-at">Retention Tarih ve Saat</Label>
+              <Input
+                id="edit-user-retention-scheduled-at"
+                type="datetime-local"
+                value={retentionStatusScheduledAt}
+                onChange={(event) => setRetentionStatusScheduledAt(event.target.value)}
+                required={role === "user"}
+              />
+            </div>
+          ) : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             İptal
           </Button>
-          <Button onClick={() => save.mutate()} disabled={save.isPending || !name}>
+          <Button
+            onClick={() => save.mutate()}
+            disabled={save.isPending || !name || saleScheduleMissing || retentionScheduleMissing}
+          >
             {save.isPending ? "Kaydediliyor..." : "Kaydet"}
           </Button>
         </DialogFooter>

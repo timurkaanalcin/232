@@ -2,13 +2,31 @@
 // Domain types shared between server, client and the realtime layer.
 // ----------------------------------------------------------------------------
 
-export type RoleId = "super_admin" | "admin" | "operator" | "viewer" | "retention" | "sale" | "user";
+export type RoleId = "super_admin" | "shift" | "admin" | "operator" | "viewer" | "retention" | "sale" | "user";
 
 export type UserStatus = "active" | "disabled";
 
 export type CrmDepartment = "management" | "retention" | "sale" | "client";
 
-export type RetentionStatus = "pending" | "active" | "at_risk" | "retained" | "lost";
+export type CrmStatus =
+  | "new"
+  | "no_answer"
+  | "call_back"
+  | "not_interested"
+  | "low_potential"
+  | "potential"
+  | "recovery"
+  | "active"
+  | "wrong_number"
+  | "wrong_person"
+  | "referral"
+  | "test"
+  | "renew"
+  | "depositor"
+  | "trash"
+  | "never_answer";
+
+export type RetentionStatus = CrmStatus;
 
 export type LocationSessionStatus = "active" | "ended";
 
@@ -45,11 +63,15 @@ export interface UserRow {
   password_hash: string | null;
   role_id: RoleId;
   client_numeric_id: string;
+  sale_status: CrmStatus;
+  sale_status_scheduled_at: number | null;
   phone: string;
   address: string;
   date_of_birth: string;
   department: CrmDepartment;
   retention_status: RetentionStatus;
+  retention_status_scheduled_at: number | null;
+  ad_source: string;
   manager_id: string | null;
   status: UserStatus;
   created_at: number;
@@ -125,11 +147,15 @@ export interface UserDTO {
   image: string | null;
   role: RoleId;
   clientNumericId: string;
+  saleStatus: CrmStatus;
+  saleStatusScheduledAt: number | null;
   phone: string;
   address: string;
   dateOfBirth: string;
   department: CrmDepartment;
   retentionStatus: RetentionStatus;
+  retentionStatusScheduledAt: number | null;
+  adSource: string;
   managerId: string | null;
   managerName: string | null;
   status: UserStatus;

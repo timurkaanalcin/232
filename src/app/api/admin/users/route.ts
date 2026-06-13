@@ -8,7 +8,7 @@ import {
   requirePermission,
 } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { AUDIT_ACTIONS, canAssignRole } from "@/lib/constants";
+import { AUDIT_ACTIONS, canAssignRole, requiresStatusSchedule } from "@/lib/constants";
 import { adminCreateUserSchema, userSearchSchema } from "@/lib/validators";
 import { createUser, findUserByEmail, findUserById, listUsers, toUserDTO } from "@/services/users";
 
@@ -44,6 +44,14 @@ export const POST = apiHandler(async (request: Request) => {
     const manager = await findUserById(db, parsed.data.managerId);
     if (!manager) throw badRequest("Selected manager does not exist");
   }
+  if (parsed.data.role === "user") {
+    if (requiresStatusSchedule(parsed.data.saleStatus) && !parsed.data.saleStatusScheduledAt) {
+      throw badRequest("Sale status date and time are required for Call Back and Active clients");
+    }
+    if (requiresStatusSchedule(parsed.data.retentionStatus) && !parsed.data.retentionStatusScheduledAt) {
+      throw badRequest("Retention status date and time are required for Call Back and Active clients");
+    }
+  }
 
   const created = await createUser(db, {
     email: parsed.data.email,
@@ -55,7 +63,11 @@ export const POST = apiHandler(async (request: Request) => {
     dateOfBirth: parsed.data.dateOfBirth,
     image: parsed.data.image,
     department: parsed.data.department,
+    saleStatus: parsed.data.saleStatus,
+    saleStatusScheduledAt: parsed.data.saleStatusScheduledAt,
     retentionStatus: parsed.data.retentionStatus,
+    retentionStatusScheduledAt: parsed.data.retentionStatusScheduledAt,
+    adSource: parsed.data.adSource,
     managerId: parsed.data.managerId,
     emailVerified: true,
   });
@@ -73,6 +85,7 @@ export const POST = apiHandler(async (request: Request) => {
       role: created.role_id,
       department: created.department,
       clientNumericId: created.client_numeric_id,
+      adSource: created.ad_source,
     },
   });
 

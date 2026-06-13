@@ -1,5 +1,5 @@
 import { hashPassword } from "@/lib/crypto";
-import type { CrmDepartment, Paginated, RetentionStatus, RoleId, UserDTO, UserRow, UserStatus } from "@/types";
+import type { CrmDepartment, CrmStatus, Paginated, RetentionStatus, RoleId, UserDTO, UserRow, UserStatus } from "@/types";
 
 type UserRowWithManager = UserRow & { manager_name?: string | null };
 
@@ -11,11 +11,15 @@ export function toUserDTO(row: UserRowWithManager): UserDTO {
     image: row.image,
     role: row.role_id,
     clientNumericId: row.client_numeric_id ?? "",
+    saleStatus: row.sale_status ?? "new",
+    saleStatusScheduledAt: row.sale_status_scheduled_at ?? null,
     phone: row.phone ?? "",
     address: row.address ?? "",
     dateOfBirth: row.date_of_birth ?? "",
     department: row.department ?? "client",
-    retentionStatus: row.retention_status ?? "pending",
+    retentionStatus: row.retention_status ?? "new",
+    retentionStatusScheduledAt: row.retention_status_scheduled_at ?? null,
+    adSource: row.ad_source ?? "",
     managerId: row.manager_id ?? null,
     managerName: row.manager_name ?? null,
     status: row.status,
@@ -61,7 +65,11 @@ export interface CreateUserInput {
   address?: string;
   dateOfBirth?: string;
   department?: CrmDepartment;
+  saleStatus?: CrmStatus;
+  saleStatusScheduledAt?: number | null;
   retentionStatus?: RetentionStatus;
+  retentionStatusScheduledAt?: number | null;
+  adSource?: string;
   managerId?: string | null;
   emailVerified?: boolean;
 }
@@ -76,10 +84,11 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
   await db
     .prepare(
       `INSERT INTO users (
-         id, email, email_verified, name, image, password_hash, role_id, client_numeric_id, phone, address,
-         date_of_birth, department, retention_status, manager_id, status, created_at, updated_at
+         id, email, email_verified, name, image, password_hash, role_id, client_numeric_id, sale_status,
+         sale_status_scheduled_at, phone, address, date_of_birth, department, retention_status,
+         retention_status_scheduled_at, ad_source, manager_id, status, created_at, updated_at
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
     )
     .bind(
       id,
@@ -90,11 +99,15 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
       passwordHash,
       role,
       clientNumericId,
+      input.saleStatus ?? "new",
+      input.saleStatusScheduledAt ?? null,
       input.phone ?? "",
       input.address ?? "",
       input.dateOfBirth ?? "",
       input.department ?? "client",
-      input.retentionStatus ?? "pending",
+      input.retentionStatus ?? "new",
+      input.retentionStatusScheduledAt ?? null,
+      input.adSource ?? "",
       input.managerId ?? null,
       now,
       now,
@@ -131,7 +144,11 @@ export interface AdminUpdateUserInput {
   dateOfBirth?: string;
   image?: string;
   department?: CrmDepartment;
+  saleStatus?: CrmStatus;
+  saleStatusScheduledAt?: number | null;
   retentionStatus?: RetentionStatus;
+  retentionStatusScheduledAt?: number | null;
+  adSource?: string;
   managerId?: string | null;
   status?: UserStatus;
 }
@@ -171,9 +188,25 @@ export async function adminUpdateUser(db: D1Database, id: string, input: AdminUp
     sets.push("department = ?");
     binds.push(input.department);
   }
+  if (input.saleStatus !== undefined) {
+    sets.push("sale_status = ?");
+    binds.push(input.saleStatus);
+  }
+  if (input.saleStatusScheduledAt !== undefined) {
+    sets.push("sale_status_scheduled_at = ?");
+    binds.push(input.saleStatusScheduledAt);
+  }
   if (input.retentionStatus !== undefined) {
     sets.push("retention_status = ?");
     binds.push(input.retentionStatus);
+  }
+  if (input.retentionStatusScheduledAt !== undefined) {
+    sets.push("retention_status_scheduled_at = ?");
+    binds.push(input.retentionStatusScheduledAt);
+  }
+  if (input.adSource !== undefined) {
+    sets.push("ad_source = ?");
+    binds.push(input.adSource);
   }
   if (input.managerId !== undefined) {
     sets.push("manager_id = ?");
@@ -201,9 +234,9 @@ export async function listUsers(db: D1Database, filter: ListUsersFilter): Promis
   const where: string[] = [];
   const binds: unknown[] = [];
   if (filter.q) {
-    where.push("(u.email LIKE ? OR u.name LIKE ? OR u.phone LIKE ? OR u.client_numeric_id LIKE ?)");
+    where.push("(u.email LIKE ? OR u.name LIKE ? OR u.phone LIKE ? OR u.client_numeric_id LIKE ? OR u.ad_source LIKE ?)");
     const like = `%${filter.q.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`;
-    binds.push(like, like, like, like);
+    binds.push(like, like, like, like, like);
   }
   if (filter.role) {
     where.push("u.role_id = ?");
@@ -251,8 +284,9 @@ export async function exportUserData(db: D1Database, id: string) {
   const [user, sessions, locationSessions, locations, audit] = await Promise.all([
     db
       .prepare(
-        `SELECT id, email, name, image, role_id, client_numeric_id, phone, address, date_of_birth, department, retention_status,
-                manager_id, status, email_verified, created_at, updated_at, last_login_at
+        `SELECT id, email, name, image, role_id, client_numeric_id, sale_status, sale_status_scheduled_at,
+                phone, address, date_of_birth, department, retention_status, retention_status_scheduled_at,
+                ad_source, manager_id, status, email_verified, created_at, updated_at, last_login_at
          FROM users WHERE id = ?`,
       )
       .bind(id)

@@ -27,7 +27,28 @@ const roleSchema = z.enum(ROLE_IDS);
 
 const crmDepartmentSchema = z.enum(["management", "retention", "sale", "client"]);
 
-const retentionStatusSchema = z.enum(["pending", "active", "at_risk", "retained", "lost"]);
+const crmStatusSchema = z.enum([
+  "new",
+  "no_answer",
+  "call_back",
+  "not_interested",
+  "low_potential",
+  "potential",
+  "recovery",
+  "active",
+  "wrong_number",
+  "wrong_person",
+  "referral",
+  "test",
+  "renew",
+  "depositor",
+  "trash",
+  "never_answer",
+]);
+
+const optionalTimestampSchema = z.number().int().positive().nullable().default(null);
+
+const updateTimestampSchema = z.number().int().positive().nullable().optional();
 
 const managerIdSchema = z
   .union([z.string().uuid(), z.literal("")])
@@ -100,7 +121,11 @@ export const adminCreateUserSchema = z.object({
   }),
   image: optionalTrimmedText(1024),
   department: crmDepartmentSchema.default("client"),
-  retentionStatus: retentionStatusSchema.default("pending"),
+  saleStatus: crmStatusSchema.default("new"),
+  saleStatusScheduledAt: optionalTimestampSchema,
+  retentionStatus: crmStatusSchema.default("new"),
+  retentionStatusScheduledAt: optionalTimestampSchema,
+  adSource: optionalTrimmedText(120),
   managerId: managerIdSchema,
 });
 
@@ -115,7 +140,11 @@ export const adminUpdateUserSchema = z
     }),
     image: updateTrimmedText(1024),
     department: crmDepartmentSchema.optional(),
-    retentionStatus: retentionStatusSchema.optional(),
+    saleStatus: crmStatusSchema.optional(),
+    saleStatusScheduledAt: updateTimestampSchema,
+    retentionStatus: crmStatusSchema.optional(),
+    retentionStatusScheduledAt: updateTimestampSchema,
+    adSource: updateTrimmedText(120),
     managerId: updateManagerIdSchema,
     status: z.enum(["active", "disabled"]).optional(),
   })

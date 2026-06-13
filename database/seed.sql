@@ -2,6 +2,7 @@
 
 INSERT OR IGNORE INTO roles (id, name, description, created_at) VALUES
   ('super_admin', 'Admin',                 'Full CRM access including role assignment and system settings', unixepoch() * 1000),
+  ('shift',       'Shift',                 'Admin-level CRM access without site settings; manages Head and below', unixepoch() * 1000),
   ('admin',       'Head',                  'Manages all CRM teams and team leaders',                        unixepoch() * 1000),
   ('operator',    'Retention Team Leader', 'Manages the retention team',                                     unixepoch() * 1000),
   ('viewer',      'Sale Team Leader',      'Manages the sales team',                                         unixepoch() * 1000),
@@ -27,6 +28,22 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('super_admin', 'documents.manage'),
   ('super_admin', 'reports.view'),
   ('super_admin', 'settings.manage'),
+  -- shift
+  ('shift', 'admin.access'),
+  ('shift', 'admin.panel'),
+  ('shift', 'stats.view'),
+  ('shift', 'map.live_view'),
+  ('shift', 'sessions.view'),
+  ('shift', 'sessions.manage'),
+  ('shift', 'users.view'),
+  ('shift', 'users.create'),
+  ('shift', 'users.manage'),
+  ('shift', 'roles.assign'),
+  ('shift', 'audit.view'),
+  ('shift', 'customers.manage'),
+  ('shift', 'tickets.manage'),
+  ('shift', 'documents.manage'),
+  ('shift', 'reports.view'),
   -- head
   ('admin', 'admin.access'),
   ('admin', 'admin.panel'),

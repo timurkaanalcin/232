@@ -257,11 +257,6 @@ export function UserManagement() {
                 <SelectItem value="disabled">Pasif</SelectItem>
               </SelectContent>
             </Select>
-            {role === "user" ? (
-              <p className="text-xs text-muted-foreground">
-                Client ID otomatik atanır ve yalnızca rakamlardan oluşur.
-              </p>
-            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -544,6 +539,11 @@ function CreateUserDialog({
                 ))}
               </SelectContent>
             </Select>
+            {role === "user" ? (
+              <p className="text-xs text-muted-foreground">
+                Client ID otomatik atanır ve yalnızca rakamlardan oluşur.
+              </p>
+            ) : null}
           </div>
           <div className="grid gap-2">
             <Label>Departman</Label>

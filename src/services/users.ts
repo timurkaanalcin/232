@@ -36,7 +36,7 @@ export async function findUserById(db: D1Database, id: string): Promise<UserRow 
 function generateEightDigitId(): string {
   const values = new Uint32Array(1);
   crypto.getRandomValues(values);
-  return String(10_000_000 + (values[0] % 90_000_000));
+  return String(10_000_000 + ((values[0] ?? 0) % 90_000_000));
 }
 
 export async function generateClientNumericId(db: D1Database): Promise<string> {

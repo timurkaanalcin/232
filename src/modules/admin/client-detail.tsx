@@ -442,7 +442,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
           </Card>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
           <Card>
             <CardHeader>
               <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Ek Bilgi</CardTitle>
@@ -451,12 +451,51 @@ export function ClientDetail({ clientId }: { clientId: string }) {
               <textarea
                 value={extraInfo}
                 onChange={(event) => setExtraInfo(event.target.value)}
-                className="min-h-44 rounded-lg border bg-background p-3 text-sm outline-none ring-ring focus:ring-2"
+                className="min-h-28 rounded-lg border bg-background p-3 text-sm outline-none ring-ring focus:ring-2"
                 placeholder="Client hakkında ek bilgiler..."
               />
               <Button className="w-fit bg-amber-500 hover:bg-amber-600" onClick={() => saveDetail.mutate()} disabled={saveDetail.isPending}>
                 Güncelle
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Yorumlar</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <textarea
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                className="min-h-20 rounded-lg border bg-background p-3 text-sm outline-none ring-ring focus:ring-2"
+                placeholder="Yorumu buraya girin..."
+              />
+              <Button
+                className="w-fit bg-amber-300 text-amber-950 hover:bg-amber-400"
+                disabled={addComment.isPending || !comment.trim()}
+                onClick={() => addComment.mutate()}
+              >
+                <SendIcon /> Yeni yorum ekle
+              </Button>
+              {detail.comments.length > 0 ? (
+                <div className="grid max-h-44 gap-3 overflow-y-auto">
+                  {detail.comments.map((item) => (
+                    <div key={item.id} className="rounded-lg border bg-muted/30 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium">{item.authorName || item.authorEmail}</p>
+                        <span className="text-xs text-muted-foreground">{formatRelative(item.createdAt)}</span>
+                      </div>
+                      <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{item.body}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid place-items-center gap-2 py-6 text-center text-sm text-muted-foreground">
+                  <MessageSquareIcon className="size-7" />
+                  <p>Henüz yorum yok</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

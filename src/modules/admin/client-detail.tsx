@@ -298,7 +298,6 @@ export function ClientDetail({ clientId }: { clientId: string }) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="overflow-x-auto">
           <TabsList className="bg-background">
             <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
-            <TabsTrigger value="contact">İletişim</TabsTrigger>
             <TabsTrigger value="personal">Kişisel Bilgiler</TabsTrigger>
             <TabsTrigger value="trading">Ticaret Hesapları</TabsTrigger>
             <TabsTrigger value="positions">Pozisyonlar</TabsTrigger>
@@ -307,6 +306,8 @@ export function ClientDetail({ clientId }: { clientId: string }) {
           </TabsList>
         </Tabs>
 
+        {activeTab === "overview" ? (
+          <>
         <div className="grid gap-4 lg:grid-cols-3">
           <Card>
             <CardHeader>
@@ -441,7 +442,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
           </Card>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[0.9fr_2fr]">
+        <div className="grid gap-4">
           <Card>
             <CardHeader>
               <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Ek Bilgi</CardTitle>
@@ -458,45 +459,6 @@ export function ClientDetail({ clientId }: { clientId: string }) {
               </Button>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">İletişim</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <textarea
-                value={comment}
-                onChange={(event) => setComment(event.target.value)}
-                className="min-h-20 rounded-lg border bg-background p-3 text-sm outline-none ring-ring focus:ring-2"
-                placeholder="Yorumu buraya girin..."
-              />
-              <Button
-                className="w-fit bg-amber-300 text-amber-950 hover:bg-amber-400"
-                disabled={addComment.isPending || !comment.trim()}
-                onClick={() => addComment.mutate()}
-              >
-                <SendIcon /> Yeni yorum ekle
-              </Button>
-              {detail.comments.length > 0 ? (
-                <div className="grid gap-3">
-                  {detail.comments.map((item) => (
-                    <div key={item.id} className="rounded-lg border bg-muted/30 p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-medium">{item.authorName || item.authorEmail}</p>
-                        <span className="text-xs text-muted-foreground">{formatRelative(item.createdAt)}</span>
-                      </div>
-                      <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{item.body}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid place-items-center gap-2 py-10 text-center text-sm text-muted-foreground">
-                  <MessageSquareIcon className="size-8" />
-                  <p>Henüz iletişim kaydı yok</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
@@ -505,6 +467,8 @@ export function ClientDetail({ clientId }: { clientId: string }) {
           <SmallModule icon={BadgeDollarSignIcon} title="Para İşlemleri" value={money(client.tradingSummary.totalNotional)} />
           <SmallModule icon={FileTextIcon} title="Belgeler" value={`${detail.documents.length} belge`} />
         </div>
+          </>
+        ) : null}
 
         {activeTab === "personal" ? (
           <Card>
@@ -720,39 +684,6 @@ export function ClientDetail({ clientId }: { clientId: string }) {
           </Card>
         ) : null}
 
-        {activeTab === "contact" ? (
-          <Card>
-            <CardHeader>
-              <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Canlı Destek Mesajları</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <textarea
-                value={supportMessage}
-                onChange={(event) => setSupportMessage(event.target.value)}
-                className="min-h-20 rounded-lg border bg-background p-3 text-sm outline-none ring-ring focus:ring-2"
-                placeholder="Client ile canlı destek mesajı..."
-              />
-              <Button className="w-fit" disabled={sendSupportMessage.isPending || !supportMessage.trim()} onClick={() => sendSupportMessage.mutate()}>
-                <SendIcon /> Destek mesajı gönder
-              </Button>
-              <div className="grid gap-3">
-                {detail.supportMessages.length > 0 ? (
-                  detail.supportMessages.map((message) => (
-                    <div key={message.id} className={`rounded-lg border p-3 ${message.mine ? "bg-primary/10" : "bg-muted/30"}`}>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-medium">{message.senderName || message.senderEmail}</p>
-                        <span className="text-xs text-muted-foreground">{formatRelative(message.createdAt)}</span>
-                      </div>
-                      <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{message.body}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="py-8 text-center text-sm text-muted-foreground">Henüz canlı destek mesajı yok.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
       </div>
     </div>
   );

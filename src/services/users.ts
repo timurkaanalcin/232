@@ -314,12 +314,12 @@ export async function deleteUserAccount(db: D1Database, id: string): Promise<voi
 
 /** GDPR/KVKK access: exports all personal data held for a user. */
 export async function exportUserData(db: D1Database, id: string) {
-  const [user, sessions, locationSessions, locations, audit, tradeOrders] = await Promise.all([
+  const [user, sessions, locationSessions, locations, audit, tradeOrders, clientComments] = await Promise.all([
     db
       .prepare(
         `SELECT id, email, name, image, role_id, client_numeric_id, sale_status, sale_status_scheduled_at,
                 phone, address, date_of_birth, department, retention_status, retention_status_scheduled_at,
-                ad_source, manager_id, status, email_verified, created_at, updated_at, last_login_at
+                ad_source, extra_info, manager_id, status, email_verified, created_at, updated_at, last_login_at
          FROM users WHERE id = ?`,
       )
       .bind(id)
@@ -356,6 +356,13 @@ export async function exportUserData(db: D1Database, id: string) {
       )
       .bind(id)
       .all(),
+    db
+      .prepare(
+        `SELECT author_name, author_email, body, created_at
+         FROM crm_client_comments WHERE client_id = ? ORDER BY created_at DESC LIMIT 10000`,
+      )
+      .bind(id)
+      .all(),
   ]);
 
   return {
@@ -366,5 +373,6 @@ export async function exportUserData(db: D1Database, id: string) {
     locationPoints: locations.results,
     auditTrail: audit.results,
     tradeOrders: tradeOrders.results,
+    clientComments: clientComments.results,
   };
 }

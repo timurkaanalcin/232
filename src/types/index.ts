@@ -80,6 +80,7 @@ export interface UserRow {
   retention_status: RetentionStatus;
   retention_status_scheduled_at: number | null;
   ad_source: string;
+  extra_info: string;
   manager_id: string | null;
   status: UserStatus;
   created_at: number;
@@ -380,6 +381,28 @@ export interface TradingWorkspaceDTO {
     openPositions: number;
     dailyPnl: number;
   };
+}
+
+export interface ClientCommentDTO {
+  id: string;
+  authorId: string | null;
+  authorName: string;
+  authorEmail: string;
+  body: string;
+  createdAt: number;
+}
+
+export interface ClientManagerOptionDTO {
+  id: string;
+  name: string;
+  role: RoleId;
+}
+
+export interface ClientDetailDTO {
+  user: UserDTO;
+  extraInfo: string;
+  comments: ClientCommentDTO[];
+  managers: ClientManagerOptionDTO[];
 }
 
 // ----------------------------------------------------------------------------

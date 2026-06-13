@@ -658,9 +658,15 @@ export function UserManagement() {
                             <Link href={`/admin/trading?clientId=${user.id}`}>Terminal</Link>
                           </Button>
                         ) : null}
-                        <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
-                          Düzenle
-                        </Button>
+                        {user.role === "user" ? (
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/admin/clients/${user.id}`}>Düzenle</Link>
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
+                            Düzenle
+                          </Button>
+                        )}
                         <Button
                           variant={user.status === "active" ? "outline" : "default"}
                           size="sm"

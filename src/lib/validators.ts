@@ -181,3 +181,19 @@ export const createTradeOrderSchema = z.object({
   quantity: z.number().positive().max(1_000_000),
   price: z.number().positive().max(10_000_000),
 });
+
+export const clientDetailUpdateSchema = z
+  .object({
+    extraInfo: updateTrimmedText(10_000),
+    managerId: updateManagerIdSchema,
+    saleStatus: crmStatusSchema.optional(),
+    saleStatusScheduledAt: updateTimestampSchema,
+    retentionStatus: crmStatusSchema.optional(),
+    retentionStatusScheduledAt: updateTimestampSchema,
+    adSource: updateTrimmedText(120),
+  })
+  .refine((value) => Object.values(value).some((field) => field !== undefined), { message: "No fields to update" });
+
+export const clientCommentSchema = z.object({
+  body: z.string().trim().min(1, "Comment is required").max(2_000),
+});

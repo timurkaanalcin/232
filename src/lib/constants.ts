@@ -4,7 +4,7 @@ export const APP_NAME = "CRM Nexus";
 
 export const ROLE_IDS = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale", "user"] as const;
 
-export const ADMIN_ROLES: RoleId[] = ["super_admin", "shift", "admin", "operator", "viewer"];
+export const ADMIN_ROLES: RoleId[] = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale"];
 
 export const ROLE_LABELS: Record<RoleId, string> = {
   super_admin: "Admin",

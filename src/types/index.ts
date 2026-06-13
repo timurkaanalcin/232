@@ -83,6 +83,7 @@ export interface UserRow {
   extra_info: string;
   country_code: string;
   timezone: string;
+  company_name: string;
   manager_id: string | null;
   status: UserStatus;
   created_at: number;
@@ -169,6 +170,7 @@ export interface UserDTO {
   adSource: string;
   countryCode: string;
   timezone: string;
+  companyName: string;
   managerId: string | null;
   managerName: string | null;
   managerRole: RoleId | null;

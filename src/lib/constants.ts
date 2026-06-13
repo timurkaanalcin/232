@@ -250,7 +250,7 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
   ],
   retention: ["customers.manage", "tickets.manage", "documents.manage", "trading.access"],
   sale: ["customers.manage", "tickets.manage", "trading.access", "trading.order"],
-  user: ["customers.manage"],
+  user: ["trading.access", "trading.order"],
 };
 
 export function canAssignRole(actorRole: RoleId, targetRole: RoleId): boolean {

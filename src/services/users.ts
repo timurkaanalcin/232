@@ -32,6 +32,7 @@ export function toUserDTO(row: UserRowWithManager): UserDTO {
     adSource: row.ad_source ?? "",
     countryCode: row.country_code ?? DEFAULT_COUNTRY_CODE,
     timezone: row.timezone ?? DEFAULT_TIMEZONE,
+    companyName: row.company_name ?? "",
     managerId: row.manager_id ?? null,
     managerName: row.manager_name ?? null,
     managerRole: row.manager_role ?? null,
@@ -96,6 +97,7 @@ export interface CreateUserInput {
   managerId?: string | null;
   countryCode?: string;
   timezone?: string;
+  companyName?: string;
   emailVerified?: boolean;
 }
 
@@ -111,9 +113,9 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
       `INSERT INTO users (
          id, email, email_verified, name, image, password_hash, role_id, client_numeric_id, sale_status,
          sale_status_scheduled_at, phone, address, date_of_birth, department, retention_status,
-         retention_status_scheduled_at, ad_source, country_code, timezone, manager_id, status, created_at, updated_at
+         retention_status_scheduled_at, ad_source, country_code, timezone, company_name, manager_id, status, created_at, updated_at
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
     )
     .bind(
       id,
@@ -135,6 +137,7 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
       input.adSource ?? "",
       input.countryCode ?? countryForTimezone(input.timezone ?? DEFAULT_TIMEZONE),
       input.timezone ?? DEFAULT_TIMEZONE,
+      input.companyName ?? "",
       input.managerId ?? null,
       now,
       now,
@@ -190,6 +193,7 @@ export interface AdminUpdateUserInput {
   retentionStatusScheduledAt?: number | null;
   adSource?: string;
   managerId?: string | null;
+  companyName?: string;
   status?: UserStatus;
 }
 
@@ -251,6 +255,10 @@ export async function adminUpdateUser(db: D1Database, id: string, input: AdminUp
   if (input.managerId !== undefined) {
     sets.push("manager_id = ?");
     binds.push(input.managerId);
+  }
+  if (input.companyName !== undefined) {
+    sets.push("company_name = ?");
+    binds.push(input.companyName);
   }
   if (input.status !== undefined) {
     sets.push("status = ?");

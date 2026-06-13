@@ -107,4 +107,5 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('sale', 'trading.access'),
   ('sale', 'trading.order'),
   -- client
-  ('user', 'customers.manage');
+  ('user', 'trading.access'),
+  ('user', 'trading.order');

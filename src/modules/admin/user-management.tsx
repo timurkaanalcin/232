@@ -465,6 +465,20 @@ export function UserManagement() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserDTO | null>(null);
 
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => apiGet<{ user: UserDTO }>("/api/profile"),
+  });
+  const currentRole = profileQuery.data?.user.role;
+  const isPlatformAdmin = currentRole === "super_admin";
+
+  useEffect(() => {
+    if (isPlatformAdmin && roleFilter !== "shift") {
+      setRoleFilter("shift");
+      setPage(1);
+    }
+  }, [isPlatformAdmin, roleFilter]);
+
   const params = new URLSearchParams({ page: String(page), pageSize: "15" });
   if (query.trim()) params.set("q", query.trim());
   if (roleFilter !== "all") params.set("role", roleFilter);
@@ -492,9 +506,13 @@ export function UserManagement() {
     <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">CRM Admin Paneli</h1>
+          <h1 className="text-xl font-semibold tracking-tight">
+            {isPlatformAdmin ? "Shift Şirket Yönetimi" : "CRM Admin Paneli"}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Çalışanları oluşturun, yönetici atayın ve Sale/Retention yetkilerini yönetin.
+            {isPlatformAdmin
+              ? "Her Shift farklı bir şirketi temsil eder. Admin yalnızca Shift kullanıcılarını oluşturur ve yönetir."
+              : "Çalışanları oluşturun, yönetici atayın ve Sale/Retention yetkilerini yönetin."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -516,9 +534,9 @@ export function UserManagement() {
         </div>
       </div>
 
-      <CrmOverviewPanel overview={overviewQuery.data?.overview} loading={overviewQuery.isLoading} />
+      {!isPlatformAdmin ? <CrmOverviewPanel overview={overviewQuery.data?.overview} loading={overviewQuery.isLoading} /> : null}
 
-      <RolePermissionCards />
+      {isPlatformAdmin ? <RolePermissionCards /> : null}
 
       <Card>
         <CardContent className="p-4">
@@ -535,7 +553,7 @@ export function UserManagement() {
                 className="pl-8"
               />
             </div>
-            <Select
+            {!isPlatformAdmin ? <Select
               value={roleFilter}
               onValueChange={(value) => {
                 setRoleFilter(value);
@@ -553,7 +571,7 @@ export function UserManagement() {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> : null}
             <Select
               value={statusFilter}
               onValueChange={(value) => {
@@ -585,21 +603,63 @@ export function UserManagement() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Ad Soyad</TableHead>
-                  <TableHead className="hidden md:table-cell">Telefon</TableHead>
-                  <TableHead className="hidden lg:table-cell">E-posta</TableHead>
-                  <TableHead className="hidden xl:table-cell">Kayıt Tarihi</TableHead>
-                  <TableHead className="hidden xl:table-cell">Yatırdığı Para</TableHead>
-                  <TableHead className="hidden lg:table-cell">Toplam Bakiye</TableHead>
-                  <TableHead className="hidden md:table-cell">Statü</TableHead>
-                  <TableHead className="text-right">İşlemler</TableHead>
-                </TableRow>
+                {isPlatformAdmin ? (
+                  <TableRow>
+                    <TableHead>Şirket</TableHead>
+                    <TableHead>Shift Kullanıcısı</TableHead>
+                    <TableHead className="hidden md:table-cell">Telefon</TableHead>
+                    <TableHead className="hidden lg:table-cell">E-posta</TableHead>
+                    <TableHead className="hidden xl:table-cell">Kayıt Tarihi</TableHead>
+                    <TableHead className="hidden md:table-cell">Durum</TableHead>
+                    <TableHead className="text-right">İşlemler</TableHead>
+                  </TableRow>
+                ) : (
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Ad Soyad</TableHead>
+                    <TableHead className="hidden md:table-cell">Telefon</TableHead>
+                    <TableHead className="hidden lg:table-cell">E-posta</TableHead>
+                    <TableHead className="hidden xl:table-cell">Kayıt Tarihi</TableHead>
+                    <TableHead className="hidden xl:table-cell">Yatırdığı Para</TableHead>
+                    <TableHead className="hidden lg:table-cell">Toplam Bakiye</TableHead>
+                    <TableHead className="hidden md:table-cell">Statü</TableHead>
+                    <TableHead className="text-right">İşlemler</TableHead>
+                  </TableRow>
+                )}
               </TableHeader>
               <TableBody>
                 {usersQuery.data?.items.map((user) => {
                   const assignedStatus = clientAssignedStatus(user);
+                  if (isPlatformAdmin) {
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.companyName || "Şirket adı yok"}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="size-8">
+                              {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+                              <AvatarFallback>{initials(user.name)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">{user.name}</p>
+                              <p className="truncate text-xs text-muted-foreground">{ROLE_LABELS[user.role]}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm">{user.phone || "—"}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{user.email}</TableCell>
+                        <TableCell className="hidden xl:table-cell text-sm">{shortDate(user.createdAt)}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {user.status === "active" ? <Badge variant="success">Aktif</Badge> : <Badge variant="destructive">Pasif</Badge>}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
+                            Düzenle
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
                   return (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium text-primary">
@@ -659,7 +719,7 @@ export function UserManagement() {
                 })}
                 {usersQuery.data && usersQuery.data.items.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={isPlatformAdmin ? 7 : 9} className="py-10 text-center text-sm text-muted-foreground">
                       Filtrelerle eşleşen kullanıcı bulunamadı.
                     </TableCell>
                   </TableRow>
@@ -693,6 +753,7 @@ export function UserManagement() {
       <CreateUserDialog
         open={createOpen}
         users={usersQuery.data?.items ?? []}
+        forcedRole={isPlatformAdmin ? "shift" : undefined}
         onOpenChange={setCreateOpen}
         onCreated={() => {
           setCreateOpen(false);
@@ -717,11 +778,13 @@ export function UserManagement() {
 function CreateUserDialog({
   open,
   users,
+  forcedRole,
   onOpenChange,
   onCreated,
 }: {
   open: boolean;
   users: UserDTO[];
+  forcedRole?: RoleId;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
 }) {
@@ -732,7 +795,8 @@ function CreateUserDialog({
   const [address, setAddress] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [image, setImage] = useState("");
-  const [role, setRole] = useState<RoleId>("user");
+  const [role, setRole] = useState<RoleId>(forcedRole ?? "user");
+  const [companyName, setCompanyName] = useState("");
   const [department, setDepartment] = useState<CrmDepartment>("client");
   const [saleStatus, setSaleStatus] = useState<CrmStatus>("new");
   const [saleStatusScheduledAt, setSaleStatusScheduledAt] = useState("");
@@ -740,6 +804,9 @@ function CreateUserDialog({
   const [retentionStatusScheduledAt, setRetentionStatusScheduledAt] = useState("");
   const [adSource, setAdSource] = useState("");
   const [managerId, setManagerId] = useState<string>(NO_MANAGER_VALUE);
+  useEffect(() => {
+    if (forcedRole) setRole(forcedRole);
+  }, [forcedRole]);
   const saleScheduleMissing = isScheduleMissingForClient(role, saleStatus, saleStatusScheduledAt);
   const retentionScheduleMissing = isScheduleMissingForClient(role, retentionStatus, retentionStatusScheduledAt);
 
@@ -753,13 +820,14 @@ function CreateUserDialog({
         address,
         dateOfBirth,
         image,
-        role,
+        role: forcedRole ?? role,
         department,
         saleStatus,
         saleStatusScheduledAt: fromDateTimeInputValue(saleStatusScheduledAt),
         retentionStatus,
         retentionStatusScheduledAt: fromDateTimeInputValue(retentionStatusScheduledAt),
         adSource,
+        companyName,
         managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
       }),
     onSuccess: () => {
@@ -771,7 +839,8 @@ function CreateUserDialog({
       setAddress("");
       setDateOfBirth("");
       setImage("");
-      setRole("user");
+      setRole(forcedRole ?? "user");
+      setCompanyName("");
       setDepartment("client");
       setSaleStatus("new");
       setSaleStatusScheduledAt("");
@@ -835,24 +904,39 @@ function CreateUserDialog({
           </div>
           <div className="grid gap-2">
             <Label>Rol</Label>
-            <Select value={role} onValueChange={(value) => setRole(value as RoleId)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ROLES.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {ROLE_LABELS[r]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {forcedRole ? (
+              <Input value={ROLE_LABELS[forcedRole]} disabled />
+            ) : (
+              <Select value={role} onValueChange={(value) => setRole(value as RoleId)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {ROLE_LABELS[r]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             {role === "user" ? (
               <p className="text-xs text-muted-foreground">
                 Client ID otomatik atanır ve yalnızca rakamlardan oluşur.
               </p>
             ) : null}
           </div>
+          {(forcedRole ?? role) === "shift" ? (
+            <div className="grid gap-2">
+              <Label htmlFor="new-user-company">Şirket adı</Label>
+              <Input
+                id="new-user-company"
+                value={companyName}
+                onChange={(event) => setCompanyName(event.target.value)}
+                placeholder="Örn. Atlas Capital"
+              />
+            </div>
+          ) : null}
           <div className="grid gap-2">
             <Label>Departman</Label>
             <Select value={department} onValueChange={(value) => setDepartment(value as CrmDepartment)}>
@@ -959,6 +1043,7 @@ function CreateUserDialog({
               !name ||
               !email ||
               password.length < 10 ||
+              ((forcedRole ?? role) === "shift" && !companyName.trim()) ||
               saleScheduleMissing ||
               retentionScheduleMissing
             }
@@ -996,6 +1081,7 @@ function EditUserDialog({
     toDateTimeInputValue(user?.retentionStatusScheduledAt),
   );
   const [adSource, setAdSource] = useState(user?.adSource ?? "");
+  const [companyName, setCompanyName] = useState(user?.companyName ?? "");
   const [managerId, setManagerId] = useState<string>(user?.managerId ?? NO_MANAGER_VALUE);
   const saleScheduleMissing = isScheduleMissingForClient(role, saleStatus, saleStatusScheduledAt);
   const retentionScheduleMissing = isScheduleMissingForClient(role, retentionStatus, retentionStatusScheduledAt);
@@ -1015,6 +1101,7 @@ function EditUserDialog({
     setRetentionStatus(user.retentionStatus);
     setRetentionStatusScheduledAt(toDateTimeInputValue(user.retentionStatusScheduledAt));
     setAdSource(user.adSource);
+    setCompanyName(user.companyName);
     setManagerId(user.managerId ?? NO_MANAGER_VALUE);
   }, [user]);
 
@@ -1033,6 +1120,7 @@ function EditUserDialog({
         retentionStatus,
         retentionStatusScheduledAt: fromDateTimeInputValue(retentionStatusScheduledAt),
         adSource,
+        companyName,
         managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
       }),
     onSuccess: () => {
@@ -1117,6 +1205,16 @@ function EditUserDialog({
               </SelectContent>
             </Select>
           </div>
+          {role === "shift" ? (
+            <div className="grid gap-2">
+              <Label htmlFor="edit-user-company">Şirket adı</Label>
+              <Input
+                id="edit-user-company"
+                value={companyName}
+                onChange={(event) => setCompanyName(event.target.value)}
+              />
+            </div>
+          ) : null}
           <div className="grid gap-2">
             <Label htmlFor="edit-user-ad-source">Reklam Kaynağı</Label>
             <Input

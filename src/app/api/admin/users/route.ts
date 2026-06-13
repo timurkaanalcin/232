@@ -13,7 +13,7 @@ import { adminCreateUserSchema, userSearchSchema } from "@/lib/validators";
 import { createUser, findUserByEmail, findUserById, listUsers, toUserDTO } from "@/services/users";
 
 export const GET = apiHandler(async (request: Request) => {
-  const { db } = await requirePermission("users.view");
+  const { user: actor, db } = await requirePermission("users.view");
   const url = new URL(request.url);
   const filter = userSearchSchema.parse({
     page: url.searchParams.get("page") ?? undefined,
@@ -22,7 +22,7 @@ export const GET = apiHandler(async (request: Request) => {
     role: url.searchParams.get("role") ?? undefined,
     status: url.searchParams.get("status") ?? undefined,
   });
-  return jsonOk(await listUsers(db, filter));
+  return jsonOk(await listUsers(db, actor.role === "super_admin" ? { ...filter, role: "shift" } : filter));
 });
 
 export const POST = apiHandler(async (request: Request) => {
@@ -32,6 +32,12 @@ export const POST = apiHandler(async (request: Request) => {
   const parsed = adminCreateUserSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     throw badRequest(parsed.error.issues[0]?.message ?? "Invalid user data");
+  }
+  if (actor.role === "super_admin" && parsed.data.role !== "shift") {
+    throw badRequest("Admin can only create Shift users");
+  }
+  if (parsed.data.role === "shift" && !parsed.data.companyName.trim()) {
+    throw badRequest("Shift users must represent a company");
   }
 
   const permissions = await getPermissions(db, actor.role);
@@ -68,6 +74,7 @@ export const POST = apiHandler(async (request: Request) => {
     retentionStatus: parsed.data.retentionStatus,
     retentionStatusScheduledAt: parsed.data.retentionStatusScheduledAt,
     adSource: parsed.data.adSource,
+    companyName: parsed.data.companyName,
     managerId: parsed.data.managerId,
     emailVerified: true,
   });
@@ -86,6 +93,7 @@ export const POST = apiHandler(async (request: Request) => {
       department: created.department,
       clientNumericId: created.client_numeric_id,
       adSource: created.ad_source,
+      companyName: created.company_name,
     },
   });
 

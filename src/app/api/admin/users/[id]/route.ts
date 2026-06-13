@@ -23,6 +23,9 @@ export const PATCH = apiHandler(
 
     const target = await findUserById(db, id);
     if (!target) throw notFound("User");
+    if (actor.role === "super_admin" && target.role_id !== "shift") {
+      throw forbidden();
+    }
 
     const parsed = adminUpdateUserSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) {
@@ -34,6 +37,7 @@ export const PATCH = apiHandler(
       if (!permissions.has("roles.assign")) throw forbidden();
       if (id === actor.id) throw badRequest("You cannot change your own role");
       if (!canAssignRole(actor.role, parsed.data.role)) throw forbidden();
+      if (actor.role === "super_admin" && parsed.data.role !== "shift") throw forbidden();
     }
     if (parsed.data.status === "disabled" && id === actor.id) {
       throw badRequest("You cannot disable your own account");

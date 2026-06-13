@@ -132,6 +132,7 @@ export const adminCreateUserSchema = z.object({
   retentionStatus: crmStatusSchema.default("new"),
   retentionStatusScheduledAt: optionalTimestampSchema,
   adSource: optionalTrimmedText(120),
+  companyName: optionalTrimmedText(160),
   managerId: managerIdSchema,
 });
 
@@ -151,6 +152,7 @@ export const adminUpdateUserSchema = z
     retentionStatus: crmStatusSchema.optional(),
     retentionStatusScheduledAt: updateTimestampSchema,
     adSource: updateTrimmedText(120),
+    companyName: updateTrimmedText(160),
     managerId: updateManagerIdSchema,
     status: z.enum(["active", "disabled"]).optional(),
   })

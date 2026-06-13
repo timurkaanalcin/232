@@ -184,6 +184,12 @@ export const createTradeOrderSchema = z.object({
 
 export const clientDetailUpdateSchema = z
   .object({
+    name: nameSchema.optional(),
+    phone: updateTrimmedText(32),
+    address: updateTrimmedText(300),
+    dateOfBirth: updateTrimmedText(10).refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+      message: "Birth date must use YYYY-MM-DD format",
+    }),
     extraInfo: updateTrimmedText(10_000),
     managerId: updateManagerIdSchema,
     saleStatus: crmStatusSchema.optional(),
@@ -196,4 +202,31 @@ export const clientDetailUpdateSchema = z
 
 export const clientCommentSchema = z.object({
   body: z.string().trim().min(1, "Comment is required").max(2_000),
+});
+
+export const clientTradeAccountSchema = z.object({
+  accountNo: z.string().trim().min(1, "Account number is required").max(64),
+  name: z.string().trim().max(120).optional().default(""),
+  accountType: z.enum(["live", "demo"]).default("live"),
+  currency: z.enum(["USD", "EUR", "TRY"]).default("USD"),
+});
+
+export const clientMoneyTransactionSchema = z.object({
+  txType: z.enum(["deposit", "withdrawal", "bonus", "commission", "swap", "transfer"]),
+  amount: z.number().min(0).max(100_000_000),
+  currency: z.enum(["USD", "EUR", "TRY"]).default("USD"),
+  method: z.string().trim().max(120).optional().default(""),
+  txStatus: z.enum(["pending", "approved", "rejected"]).default("pending"),
+  referenceNo: z.string().trim().max(120).optional().default(""),
+  note: z.string().trim().max(1_000).optional().default(""),
+});
+
+export const clientDocumentSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(160),
+  documentType: z.enum(["verification", "identity", "address", "other"]).default("verification"),
+  fileUrl: z.string().trim().max(1024).optional().default(""),
+});
+
+export const supportMessageSchema = z.object({
+  body: z.string().trim().min(1, "Message is required").max(2_000),
 });

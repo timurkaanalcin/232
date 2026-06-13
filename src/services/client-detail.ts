@@ -2,9 +2,14 @@ import { adminUpdateUser, findUserById, toUserDTO } from "@/services/users";
 import type {
   ClientCommentDTO,
   ClientDetailDTO,
+  ClientDocumentDTO,
+  ClientMoneyTransactionDTO,
   ClientManagerOptionDTO,
+  ClientSupportMessageDTO,
+  ClientTradeAccountDTO,
   CrmStatus,
   RetentionStatus,
+  RoleId,
 } from "@/types";
 
 interface CommentRow {
@@ -12,6 +17,49 @@ interface CommentRow {
   author_id: string | null;
   author_name: string;
   author_email: string;
+  body: string;
+  created_at: number;
+}
+
+interface TradeAccountRow {
+  id: string;
+  account_no: string;
+  name: string;
+  account_type: "live" | "demo";
+  currency: string;
+  balance: number;
+  credit: number;
+  status: "active" | "disabled";
+  created_at: number;
+}
+
+interface MoneyTransactionRow {
+  id: string;
+  tx_type: ClientMoneyTransactionDTO["txType"];
+  amount: number;
+  currency: string;
+  method: string;
+  tx_status: ClientMoneyTransactionDTO["txStatus"];
+  reference_no: string;
+  note: string;
+  created_at: number;
+}
+
+interface DocumentRow {
+  id: string;
+  title: string;
+  document_type: ClientDocumentDTO["documentType"];
+  file_url: string;
+  doc_status: ClientDocumentDTO["docStatus"];
+  created_at: number;
+}
+
+interface SupportMessageRow {
+  id: string;
+  sender_id: string | null;
+  sender_name: string;
+  sender_email: string;
+  sender_role: RoleId | string;
   body: string;
   created_at: number;
 }
@@ -27,7 +75,89 @@ function toCommentDTO(row: CommentRow): ClientCommentDTO {
   };
 }
 
-export async function getClientDetail(db: D1Database, clientId: string): Promise<ClientDetailDTO | null> {
+function toTradeAccountDTO(row: TradeAccountRow): ClientTradeAccountDTO {
+  return {
+    id: row.id,
+    accountNo: row.account_no,
+    name: row.name,
+    accountType: row.account_type,
+    currency: row.currency,
+    balance: row.balance,
+    credit: row.credit,
+    status: row.status,
+    createdAt: row.created_at,
+  };
+}
+
+function toMoneyTransactionDTO(row: MoneyTransactionRow): ClientMoneyTransactionDTO {
+  return {
+    id: row.id,
+    txType: row.tx_type,
+    amount: row.amount,
+    currency: row.currency,
+    method: row.method,
+    txStatus: row.tx_status,
+    referenceNo: row.reference_no,
+    note: row.note,
+    createdAt: row.created_at,
+  };
+}
+
+function toDocumentDTO(row: DocumentRow): ClientDocumentDTO {
+  return {
+    id: row.id,
+    title: row.title,
+    documentType: row.document_type,
+    fileUrl: row.file_url,
+    docStatus: row.doc_status,
+    createdAt: row.created_at,
+  };
+}
+
+function toSupportMessageDTO(row: SupportMessageRow, actorId?: string): ClientSupportMessageDTO {
+  return {
+    id: row.id,
+    senderId: row.sender_id,
+    senderName: row.sender_name,
+    senderEmail: row.sender_email,
+    senderRole: row.sender_role,
+    body: row.body,
+    createdAt: row.created_at,
+    mine: actorId ? row.sender_id === actorId : false,
+  };
+}
+
+export async function canAccessClientSupport(
+  db: D1Database,
+  clientId: string,
+  actor: { id: string; role: RoleId },
+): Promise<boolean> {
+  if (actor.role === "super_admin" || actor.role === "shift" || actor.role === "admin") return true;
+  if (actor.id === clientId) return true;
+
+  const client = await db
+    .prepare(
+      `SELECT c.manager_id, m.role_id AS manager_role, m.manager_id AS team_leader_id
+       FROM users c
+       LEFT JOIN users m ON m.id = c.manager_id
+       WHERE c.id = ? AND c.role_id = 'user'`,
+    )
+    .bind(clientId)
+    .first<{ manager_id: string | null; manager_role: RoleId | null; team_leader_id: string | null }>();
+
+  if (!client) return false;
+  if (client.manager_id === actor.id) return true;
+  if (client.team_leader_id === actor.id) return true;
+  if (client.manager_role === "sale" && actor.role === "viewer") return true;
+  if (client.manager_role === "retention" && actor.role === "operator") return true;
+  return false;
+}
+
+export async function getClientDetail(
+  db: D1Database,
+  clientId: string,
+  actor?: { id: string; role: RoleId },
+): Promise<ClientDetailDTO | null> {
   const row = await db
     .prepare(
       `WITH trade_stats AS (
@@ -61,7 +191,9 @@ export async function getClientDetail(db: D1Database, clientId: string): Promise
 
   if (!row) return null;
 
-  const [comments, managers] = await Promise.all([
+  const supportAllowed = actor ? await canAccessClientSupport(db, clientId, actor) : true;
+
+  const [comments, managers, tradeAccounts, moneyTransactions, documents, supportMessages] = await Promise.all([
     db
       .prepare(
         `SELECT id, author_id, author_name, author_email, body, created_at
@@ -91,12 +223,57 @@ export async function getClientDetail(db: D1Database, clientId: string): Promise
            name ASC`,
       )
       .all<ClientManagerOptionDTO>(),
+    db
+      .prepare(
+        `SELECT id, account_no, name, account_type, currency, balance, credit, status, created_at
+         FROM crm_trade_accounts
+         WHERE client_id = ?
+         ORDER BY created_at DESC`,
+      )
+      .bind(clientId)
+      .all<TradeAccountRow>(),
+    db
+      .prepare(
+        `SELECT id, tx_type, amount, currency, method, tx_status, reference_no, note, created_at
+         FROM crm_money_transactions
+         WHERE client_id = ?
+         ORDER BY created_at DESC
+         LIMIT 100`,
+      )
+      .bind(clientId)
+      .all<MoneyTransactionRow>(),
+    db
+      .prepare(
+        `SELECT id, title, document_type, file_url, doc_status, created_at
+         FROM crm_documents
+         WHERE client_id = ?
+         ORDER BY created_at DESC
+         LIMIT 100`,
+      )
+      .bind(clientId)
+      .all<DocumentRow>(),
+    supportAllowed
+      ? db
+          .prepare(
+            `SELECT id, sender_id, sender_name, sender_email, sender_role, body, created_at
+             FROM crm_support_messages
+             WHERE client_id = ?
+             ORDER BY created_at DESC
+             LIMIT 100`,
+          )
+          .bind(clientId)
+          .all<SupportMessageRow>()
+      : Promise.resolve({ results: [] as SupportMessageRow[] }),
   ]);
 
   return {
     user: toUserDTO(row),
     extraInfo: row.extra_info ?? "",
     comments: comments.results.map(toCommentDTO),
+    tradeAccounts: tradeAccounts.results.map(toTradeAccountDTO),
+    moneyTransactions: moneyTransactions.results.map(toMoneyTransactionDTO),
+    documents: documents.results.map(toDocumentDTO),
+    supportMessages: supportMessages.results.map((message) => toSupportMessageDTO(message, actor?.id)),
     managers: managers.results,
   };
 }
@@ -105,6 +282,10 @@ export async function updateClientDetail(
   db: D1Database,
   clientId: string,
   input: {
+    name?: string;
+    phone?: string;
+    address?: string;
+    dateOfBirth?: string;
     extraInfo?: string;
     managerId?: string | null;
     saleStatus?: CrmStatus;
@@ -122,6 +303,10 @@ export async function updateClientDetail(
   }
 
   await adminUpdateUser(db, clientId, {
+    name: input.name,
+    phone: input.phone,
+    address: input.address,
+    dateOfBirth: input.dateOfBirth,
     managerId: input.managerId,
     saleStatus: input.saleStatus,
     saleStatusScheduledAt: input.saleStatusScheduledAt,
@@ -158,6 +343,107 @@ export async function addClientComment(
     authorEmail: input.authorEmail,
     body: input.body,
     createdAt: now,
+  };
+}
+
+export async function addTradeAccount(
+  db: D1Database,
+  clientId: string,
+  input: { accountNo: string; name: string; accountType: "live" | "demo"; currency: string },
+): Promise<ClientTradeAccountDTO> {
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  await db
+    .prepare(
+      `INSERT INTO crm_trade_accounts (id, client_id, account_no, name, account_type, currency, balance, credit, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 0, 0, 'active', ?)`,
+    )
+    .bind(id, clientId, input.accountNo, input.name, input.accountType, input.currency, now)
+    .run();
+  return {
+    id,
+    accountNo: input.accountNo,
+    name: input.name,
+    accountType: input.accountType,
+    currency: input.currency,
+    balance: 0,
+    credit: 0,
+    status: "active",
+    createdAt: now,
+  };
+}
+
+export async function addMoneyTransaction(
+  db: D1Database,
+  clientId: string,
+  input: {
+    txType: ClientMoneyTransactionDTO["txType"];
+    amount: number;
+    currency: string;
+    method: string;
+    txStatus: ClientMoneyTransactionDTO["txStatus"];
+    referenceNo: string;
+    note: string;
+  },
+): Promise<ClientMoneyTransactionDTO> {
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  await db
+    .prepare(
+      `INSERT INTO crm_money_transactions (id, client_id, tx_type, amount, currency, method, tx_status, reference_no, note, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(id, clientId, input.txType, input.amount, input.currency, input.method, input.txStatus, input.referenceNo, input.note, now)
+    .run();
+  return { id, ...input, createdAt: now };
+}
+
+export async function addDocument(
+  db: D1Database,
+  clientId: string,
+  input: { title: string; documentType: ClientDocumentDTO["documentType"]; fileUrl: string },
+): Promise<ClientDocumentDTO> {
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  await db
+    .prepare(
+      `INSERT INTO crm_documents (id, client_id, title, document_type, file_url, doc_status, created_at)
+       VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
+    )
+    .bind(id, clientId, input.title, input.documentType, input.fileUrl, now)
+    .run();
+  return { id, title: input.title, documentType: input.documentType, fileUrl: input.fileUrl, docStatus: "pending", createdAt: now };
+}
+
+export async function addSupportMessage(
+  db: D1Database,
+  input: {
+    clientId: string;
+    senderId: string;
+    senderName: string;
+    senderEmail: string;
+    senderRole: RoleId;
+    body: string;
+  },
+): Promise<ClientSupportMessageDTO> {
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  await db
+    .prepare(
+      `INSERT INTO crm_support_messages (id, client_id, sender_id, sender_name, sender_email, sender_role, body, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(id, input.clientId, input.senderId, input.senderName, input.senderEmail, input.senderRole, input.body, now)
+    .run();
+  return {
+    id,
+    senderId: input.senderId,
+    senderName: input.senderName,
+    senderEmail: input.senderEmail,
+    senderRole: input.senderRole,
+    body: input.body,
+    createdAt: now,
+    mine: true,
   };
 }
 

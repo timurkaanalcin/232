@@ -392,6 +392,50 @@ export interface ClientCommentDTO {
   createdAt: number;
 }
 
+export interface ClientTradeAccountDTO {
+  id: string;
+  accountNo: string;
+  name: string;
+  accountType: "live" | "demo";
+  currency: string;
+  balance: number;
+  credit: number;
+  status: "active" | "disabled";
+  createdAt: number;
+}
+
+export interface ClientMoneyTransactionDTO {
+  id: string;
+  txType: "deposit" | "withdrawal" | "bonus" | "commission" | "swap" | "transfer";
+  amount: number;
+  currency: string;
+  method: string;
+  txStatus: "pending" | "approved" | "rejected";
+  referenceNo: string;
+  note: string;
+  createdAt: number;
+}
+
+export interface ClientDocumentDTO {
+  id: string;
+  title: string;
+  documentType: "verification" | "identity" | "address" | "other";
+  fileUrl: string;
+  docStatus: "pending" | "approved" | "rejected";
+  createdAt: number;
+}
+
+export interface ClientSupportMessageDTO {
+  id: string;
+  senderId: string | null;
+  senderName: string;
+  senderEmail: string;
+  senderRole: RoleId | string;
+  body: string;
+  createdAt: number;
+  mine?: boolean;
+}
+
 export interface ClientManagerOptionDTO {
   id: string;
   name: string;
@@ -402,6 +446,10 @@ export interface ClientDetailDTO {
   user: UserDTO;
   extraInfo: string;
   comments: ClientCommentDTO[];
+  tradeAccounts: ClientTradeAccountDTO[];
+  moneyTransactions: ClientMoneyTransactionDTO[];
+  documents: ClientDocumentDTO[];
+  supportMessages: ClientSupportMessageDTO[];
   managers: ClientManagerOptionDTO[];
 }
 

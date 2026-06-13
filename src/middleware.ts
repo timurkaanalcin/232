@@ -3,7 +3,7 @@ import { getToken } from "next-auth/jwt";
 import { ADMIN_ROLES } from "@/lib/constants";
 import type { RoleId } from "@/types";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/history", "/settings", "/admin"];
+const PROTECTED_PREFIXES = ["/dashboard", "/history", "/settings", "/support", "/admin"];
 const AUTH_PAGES = ["/login", "/register"];
 
 export async function middleware(request: NextRequest) {
@@ -38,5 +38,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/history/:path*", "/settings/:path*", "/admin/:path*", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/history/:path*", "/settings/:path*", "/support/:path*", "/admin/:path*", "/login", "/register"],
 };

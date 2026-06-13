@@ -11,6 +11,7 @@ import {
   LogOutIcon,
   MapIcon,
   MenuIcon,
+  MessageSquareIcon,
   ScrollTextIcon,
   SettingsIcon,
   ShieldAlertIcon,
@@ -53,6 +54,7 @@ interface NavItem {
 
 const USER_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
+  { href: "/support", label: "Canlı Destek", icon: MessageSquareIcon },
   { href: "/history", label: "History", icon: HistoryIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];

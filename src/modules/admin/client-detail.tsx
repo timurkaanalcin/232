@@ -10,14 +10,16 @@ import {
   BriefcaseBusinessIcon,
   ClipboardListIcon,
   CopyIcon,
+  CreditCardIcon,
   FileTextIcon,
   MailIcon,
   MessageSquareIcon,
   PhoneIcon,
+  PlusIcon,
   SaveIcon,
   SendIcon,
-  TicketIcon,
   TrendingUpIcon,
+  UploadIcon,
   UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -81,12 +83,32 @@ export function ClientDetail({ clientId }: { clientId: string }) {
   const queryClient = useQueryClient();
   const [extraInfo, setExtraInfo] = useState("");
   const [comment, setComment] = useState("");
+  const [supportMessage, setSupportMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [managerId, setManagerId] = useState(NO_MANAGER_VALUE);
   const [saleStatus, setSaleStatus] = useState<CrmStatus>("new");
   const [saleScheduledAt, setSaleScheduledAt] = useState("");
   const [retentionStatus, setRetentionStatus] = useState<RetentionStatus>("new");
   const [retentionScheduledAt, setRetentionScheduledAt] = useState("");
   const [adSource, setAdSource] = useState("");
+  const [accountNo, setAccountNo] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [accountType, setAccountType] = useState<"live" | "demo">("live");
+  const [accountCurrency, setAccountCurrency] = useState("USD");
+  const [txType, setTxType] = useState("deposit");
+  const [txAmount, setTxAmount] = useState("1000");
+  const [txCurrency, setTxCurrency] = useState("USD");
+  const [txMethod, setTxMethod] = useState("Banka Havalesi");
+  const [txStatus, setTxStatus] = useState("pending");
+  const [txReference, setTxReference] = useState("TXN-001");
+  const [txNote, setTxNote] = useState("");
+  const [documentTitle, setDocumentTitle] = useState("KYC");
+  const [documentType, setDocumentType] = useState("verification");
+  const [documentUrl, setDocumentUrl] = useState("");
 
   const detailQuery = useQuery({
     queryKey: ["admin", "client-detail", clientId],
@@ -98,6 +120,10 @@ export function ClientDetail({ clientId }: { clientId: string }) {
 
   useEffect(() => {
     if (!detail) return;
+    setName(detail.user.name);
+    setPhone(detail.user.phone);
+    setAddress(detail.user.address);
+    setDateOfBirth(detail.user.dateOfBirth);
     setExtraInfo(detail.extraInfo);
     setManagerId(detail.user.managerId ?? NO_MANAGER_VALUE);
     setSaleStatus(detail.user.saleStatus);
@@ -111,6 +137,10 @@ export function ClientDetail({ clientId }: { clientId: string }) {
     mutationFn: () =>
       apiPatch(`/api/admin/clients/${clientId}`, {
         extraInfo,
+        name,
+        phone,
+        address,
+        dateOfBirth,
         managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
         saleStatus,
         saleStatusScheduledAt: fromDateTimeInputValue(saleScheduledAt),
@@ -132,6 +162,68 @@ export function ClientDetail({ clientId }: { clientId: string }) {
     onSuccess: () => {
       toast.success("Yorum eklendi");
       setComment("");
+      void queryClient.invalidateQueries({ queryKey: ["admin", "client-detail", clientId] });
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
+
+  const sendSupportMessage = useMutation({
+    mutationFn: () => apiPost(`/api/admin/clients/${clientId}?action=support`, { body: supportMessage }),
+    onSuccess: () => {
+      toast.success("Destek mesajı gönderildi");
+      setSupportMessage("");
+      void queryClient.invalidateQueries({ queryKey: ["admin", "client-detail", clientId] });
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
+
+  const addTradeAccount = useMutation({
+    mutationFn: () =>
+      apiPost(`/api/admin/clients/${clientId}?action=trade-account`, {
+        accountNo,
+        name: accountName,
+        accountType,
+        currency: accountCurrency,
+      }),
+    onSuccess: () => {
+      toast.success("Ticaret hesabı eklendi");
+      setAccountNo("");
+      setAccountName("");
+      void queryClient.invalidateQueries({ queryKey: ["admin", "client-detail", clientId] });
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
+
+  const addMoneyTransaction = useMutation({
+    mutationFn: () =>
+      apiPost(`/api/admin/clients/${clientId}?action=money`, {
+        txType,
+        amount: Number(txAmount),
+        currency: txCurrency,
+        method: txMethod,
+        txStatus,
+        referenceNo: txReference,
+        note: txNote,
+      }),
+    onSuccess: () => {
+      toast.success("Para işlemi eklendi");
+      setTxNote("");
+      void queryClient.invalidateQueries({ queryKey: ["admin", "client-detail", clientId] });
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
+
+  const addDocument = useMutation({
+    mutationFn: () =>
+      apiPost(`/api/admin/clients/${clientId}?action=document`, {
+        title: documentTitle,
+        documentType,
+        fileUrl: documentUrl,
+      }),
+    onSuccess: () => {
+      toast.success("Belge kaydı eklendi");
+      setDocumentTitle("KYC");
+      setDocumentUrl("");
       void queryClient.invalidateQueries({ queryKey: ["admin", "client-detail", clientId] });
     },
     onError: (error) => toast.error(errorMessage(error)),
@@ -203,7 +295,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="overview" className="overflow-x-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="overflow-x-auto">
           <TabsList className="bg-background">
             <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
             <TabsTrigger value="contact">İletişim</TabsTrigger>
@@ -212,7 +304,6 @@ export function ClientDetail({ clientId }: { clientId: string }) {
             <TabsTrigger value="positions">Pozisyonlar</TabsTrigger>
             <TabsTrigger value="money">Para İşlemleri</TabsTrigger>
             <TabsTrigger value="docs">Belgeler</TabsTrigger>
-            <TabsTrigger value="tickets">Biletler</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -412,8 +503,256 @@ export function ClientDetail({ clientId }: { clientId: string }) {
           <SmallModule icon={BriefcaseBusinessIcon} title="Ticaret Hesapları" value={`${client.tradingSummary.orderCount} emir`} />
           <SmallModule icon={TrendingUpIcon} title="Pozisyonlar" value={`${client.tradingSummary.openPositions} açık`} />
           <SmallModule icon={BadgeDollarSignIcon} title="Para İşlemleri" value={money(client.tradingSummary.totalNotional)} />
-          <SmallModule icon={TicketIcon} title="Biletler" value={`${detail.comments.length} yorum`} />
+          <SmallModule icon={FileTextIcon} title="Belgeler" value={`${detail.documents.length} belge`} />
         </div>
+
+        {activeTab === "personal" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Kişisel Bilgiler</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-5 md:grid-cols-3">
+              <div className="grid gap-2">
+                <Label>Ad Soyad</Label>
+                <Input value={name} onChange={(event) => setName(event.target.value)} />
+              </div>
+              <div className="grid gap-2">
+                <Label>E-posta</Label>
+                <Input value={client.email} disabled />
+              </div>
+              <div className="grid gap-2">
+                <Label>Telefon</Label>
+                <Input value={phone} onChange={(event) => setPhone(event.target.value)} />
+              </div>
+              <div className="grid gap-2 md:col-span-2">
+                <Label>Adres</Label>
+                <Input value={address} onChange={(event) => setAddress(event.target.value)} />
+              </div>
+              <div className="grid gap-2">
+                <Label>Doğum Tarihi</Label>
+                <Input type="date" value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} />
+              </div>
+              <div className="md:col-span-3">
+                <Button className="bg-amber-500 hover:bg-amber-600" onClick={() => saveDetail.mutate()} disabled={saveDetail.isPending}>
+                  <SaveIcon /> Güncelle
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {activeTab === "trading" ? (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Ticaret Hesapları</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-5">
+              <div className="grid gap-3 md:grid-cols-4">
+                <Input placeholder="Hesap Numarası *" value={accountNo} onChange={(event) => setAccountNo(event.target.value)} />
+                <Input placeholder="Hesap Adı" value={accountName} onChange={(event) => setAccountName(event.target.value)} />
+                <Select value={accountType} onValueChange={(value) => setAccountType(value as "live" | "demo")}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="live">Live</SelectItem>
+                    <SelectItem value="demo">Demo</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={accountCurrency} onValueChange={setAccountCurrency}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="TRY">TRY</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button className="w-fit" disabled={addTradeAccount.isPending || !accountNo.trim()} onClick={() => addTradeAccount.mutate()}>
+                  <PlusIcon /> Yeni hesap aç
+                </Button>
+              </div>
+              <ModuleTable
+                empty="Henüz ticaret hesabı yok"
+                headers={["Hesap", "İsim", "Tip", "Bakiye", "Kredi", "Durum"]}
+                rows={detail.tradeAccounts.map((account) => [
+                  account.accountNo,
+                  account.name || "-",
+                  account.accountType === "live" ? "Live" : "Demo",
+                  `${money(account.balance, "")} ${account.currency}`,
+                  `${money(account.credit, "")} ${account.currency}`,
+                  account.status === "active" ? "Aktif" : "Pasif",
+                ])}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {activeTab === "positions" ? (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Pozisyonlar</CardTitle>
+                <Button asChild className="bg-amber-500 hover:bg-amber-600">
+                  <Link href={`/admin/trading?clientId=${client.id}`}>
+                    <PlusIcon /> Yeni Pozisyon
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6 flex flex-wrap gap-5 text-sm">
+                <span>Açık: <b className="text-emerald-600">{money(client.tradingSummary.totalNotional)}</b></span>
+                <span>Kapalı: <b className="text-emerald-600">$0.00</b></span>
+                <span>Toplam: {client.tradingSummary.openPositions} pozisyon</span>
+              </div>
+              <div className="grid place-items-center py-12 text-sm text-muted-foreground">
+                Pozisyon detayları trading terminalde canlı hesaplanır.
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {activeTab === "money" ? (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Para İşlemleri</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-5">
+              <div className="grid gap-3 md:grid-cols-3">
+                <Select value={txType} onValueChange={setTxType}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="deposit">Yatırım</SelectItem>
+                    <SelectItem value="withdrawal">Çekim</SelectItem>
+                    <SelectItem value="bonus">Bonus</SelectItem>
+                    <SelectItem value="commission">Komisyon</SelectItem>
+                    <SelectItem value="swap">Swap</SelectItem>
+                    <SelectItem value="transfer">Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input type="number" value={txAmount} onChange={(event) => setTxAmount(event.target.value)} placeholder="Miktar" />
+                <Select value={txCurrency} onValueChange={setTxCurrency}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="TRY">TRY</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input value={txMethod} onChange={(event) => setTxMethod(event.target.value)} placeholder="Yöntem" />
+                <Select value={txStatus} onValueChange={setTxStatus}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Beklemede</SelectItem>
+                    <SelectItem value="approved">Onaylandı</SelectItem>
+                    <SelectItem value="rejected">Reddedildi</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input value={txReference} onChange={(event) => setTxReference(event.target.value)} placeholder="Referans No" />
+                <Input className="md:col-span-2" value={txNote} onChange={(event) => setTxNote(event.target.value)} placeholder="Not" />
+                <Button className="w-fit" disabled={addMoneyTransaction.isPending} onClick={() => addMoneyTransaction.mutate()}>
+                  <PlusIcon /> Yeni İşlem
+                </Button>
+              </div>
+              <ModuleTable
+                empty="Henüz para işlemi yok"
+                headers={["Tür", "Miktar", "Para Birimi", "Yöntem", "Durum", "Referans"]}
+                rows={detail.moneyTransactions.map((tx) => [
+                  tx.txType,
+                  money(tx.amount, ""),
+                  tx.currency,
+                  tx.method || "-",
+                  tx.txStatus,
+                  tx.referenceNo || "-",
+                ])}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {activeTab === "docs" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Belgeler</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-5">
+              <div className="grid gap-3 md:grid-cols-4">
+                <Input value={documentTitle} onChange={(event) => setDocumentTitle(event.target.value)} placeholder="Başlık" />
+                <Select value={documentType} onValueChange={setDocumentType}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="verification">Doğrulama Belgesi</SelectItem>
+                    <SelectItem value="identity">Kimlik</SelectItem>
+                    <SelectItem value="address">Adres Kanıtı</SelectItem>
+                    <SelectItem value="other">Diğer</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input className="md:col-span-2" value={documentUrl} onChange={(event) => setDocumentUrl(event.target.value)} placeholder="Dosya URL (opsiyonel)" />
+                <Button className="w-fit" disabled={addDocument.isPending || !documentTitle.trim()} onClick={() => addDocument.mutate()}>
+                  <UploadIcon /> Belge Yükle
+                </Button>
+              </div>
+              <ModuleTable
+                empty="Henüz belge yok"
+                headers={["Başlık", "Tür", "Durum", "Tarih"]}
+                rows={detail.documents.map((doc) => [
+                  doc.title,
+                  doc.documentType,
+                  doc.docStatus,
+                  new Intl.DateTimeFormat("tr-TR", { dateStyle: "short" }).format(new Date(doc.createdAt)),
+                ])}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {activeTab === "contact" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="border-l-4 border-amber-500 pl-3 text-base">Canlı Destek Mesajları</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <textarea
+                value={supportMessage}
+                onChange={(event) => setSupportMessage(event.target.value)}
+                className="min-h-20 rounded-lg border bg-background p-3 text-sm outline-none ring-ring focus:ring-2"
+                placeholder="Client ile canlı destek mesajı..."
+              />
+              <Button className="w-fit" disabled={sendSupportMessage.isPending || !supportMessage.trim()} onClick={() => sendSupportMessage.mutate()}>
+                <SendIcon /> Destek mesajı gönder
+              </Button>
+              <div className="grid gap-3">
+                {detail.supportMessages.length > 0 ? (
+                  detail.supportMessages.map((message) => (
+                    <div key={message.id} className={`rounded-lg border p-3 ${message.mine ? "bg-primary/10" : "bg-muted/30"}`}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium">{message.senderName || message.senderEmail}</p>
+                        <span className="text-xs text-muted-foreground">{formatRelative(message.createdAt)}</span>
+                      </div>
+                      <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{message.body}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="py-8 text-center text-sm text-muted-foreground">Henüz canlı destek mesajı yok.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </div>
   );
@@ -453,5 +792,42 @@ function SmallModule({ icon: Icon, title, value }: { icon: typeof FileTextIcon; 
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function ModuleTable({ headers, rows, empty }: { headers: string[]; rows: string[][]; empty: string }) {
+  return (
+    <div className="overflow-x-auto rounded-xl border">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+          <tr>
+            {headers.map((header) => (
+              <th key={header} className="px-4 py-3 text-left font-semibold">
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length > 0 ? (
+            rows.map((row, rowIndex) => (
+              <tr key={rowIndex} className="border-t">
+                {row.map((cell, cellIndex) => (
+                  <td key={`${rowIndex}-${cellIndex}`} className="px-4 py-3">
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={headers.length} className="px-4 py-12 text-center text-muted-foreground">
+                {empty}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }

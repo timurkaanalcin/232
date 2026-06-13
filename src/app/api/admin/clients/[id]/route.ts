@@ -1,14 +1,31 @@
 import { apiHandler, assertSameOrigin, badRequest, jsonOk, notFound, requirePermission } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { requiresStatusSchedule } from "@/lib/constants";
-import { clientCommentSchema, clientDetailUpdateSchema } from "@/lib/validators";
-import { addClientComment, ensureClientExists, getClientDetail, updateClientDetail } from "@/services/client-detail";
+import {
+  clientCommentSchema,
+  clientDetailUpdateSchema,
+  clientDocumentSchema,
+  clientMoneyTransactionSchema,
+  clientTradeAccountSchema,
+  supportMessageSchema,
+} from "@/lib/validators";
+import {
+  addClientComment,
+  addDocument,
+  addMoneyTransaction,
+  addSupportMessage,
+  addTradeAccount,
+  canAccessClientSupport,
+  ensureClientExists,
+  getClientDetail,
+  updateClientDetail,
+} from "@/services/client-detail";
 import { findUserById } from "@/services/users";
 
 export const GET = apiHandler(async (_request: Request, { params }: { params: Promise<{ id: string }> }) => {
-  const { db } = await requirePermission("customers.manage");
+  const { user, db } = await requirePermission("customers.manage");
   const { id } = await params;
-  const detail = await getClientDetail(db, id);
+  const detail = await getClientDetail(db, id, { id: user.id, role: user.role });
   if (!detail) throw notFound("Client");
   return jsonOk({ detail });
 });
@@ -59,7 +76,7 @@ export const PATCH = apiHandler(async (request: Request, { params }: { params: P
     metadata: { changes: parsed.data },
   });
 
-  const detail = await getClientDetail(db, id);
+  const detail = await getClientDetail(db, id, { id: actor.id, role: actor.role });
   return jsonOk({ detail });
 });
 
@@ -68,8 +85,49 @@ export const POST = apiHandler(async (request: Request, { params }: { params: Pr
   const { user: actor, db, meta } = await requirePermission("customers.manage");
   const { id } = await params;
   if (!(await ensureClientExists(db, id))) throw notFound("Client");
+  const url = new URL(request.url);
+  const action = url.searchParams.get("action") ?? "comment";
+  const body = await request.json().catch(() => null);
 
-  const parsed = clientCommentSchema.safeParse(await request.json().catch(() => null));
+  if (action === "trade-account") {
+    const parsed = clientTradeAccountSchema.safeParse(body);
+    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? "Invalid account");
+    const account = await addTradeAccount(db, id, parsed.data);
+    return jsonOk({ account }, { status: 201 });
+  }
+
+  if (action === "money") {
+    const parsed = clientMoneyTransactionSchema.safeParse(body);
+    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? "Invalid transaction");
+    const transaction = await addMoneyTransaction(db, id, parsed.data);
+    return jsonOk({ transaction }, { status: 201 });
+  }
+
+  if (action === "document") {
+    const parsed = clientDocumentSchema.safeParse(body);
+    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? "Invalid document");
+    const document = await addDocument(db, id, parsed.data);
+    return jsonOk({ document }, { status: 201 });
+  }
+
+  if (action === "support") {
+    if (!(await canAccessClientSupport(db, id, { id: actor.id, role: actor.role }))) {
+      throw notFound("Client");
+    }
+    const parsed = supportMessageSchema.safeParse(body);
+    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? "Invalid message");
+    const message = await addSupportMessage(db, {
+      clientId: id,
+      senderId: actor.id,
+      senderName: actor.name,
+      senderEmail: actor.email,
+      senderRole: actor.role,
+      body: parsed.data.body,
+    });
+    return jsonOk({ message }, { status: 201 });
+  }
+
+  const parsed = clientCommentSchema.safeParse(body);
   if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? "Invalid comment");
 
   const comment = await addClientComment(db, {

@@ -3,14 +3,19 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlarmClockIcon,
+  BarChart3Icon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CrownIcon,
+  DownloadIcon,
   FileTextIcon,
   HeadphonesIcon,
+  MegaphoneIcon,
   PlusIcon,
   SearchIcon,
   ShieldIcon,
+  TrendingUpIcon,
   UserRoundIcon,
   UsersIcon,
   type LucideIcon,
@@ -42,7 +47,18 @@ import {
 } from "@/lib/constants";
 import { formatRelative, initials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { CrmDepartment, CrmStatus, Paginated, Permission, RetentionStatus, RoleId, UserDTO, UserStatus } from "@/types";
+import type {
+  AnalyticsBreakdownItem,
+  CrmDepartment,
+  CrmOverviewDTO,
+  CrmStatus,
+  Paginated,
+  Permission,
+  RetentionStatus,
+  RoleId,
+  UserDTO,
+  UserStatus,
+} from "@/types";
 
 const ROLES: RoleId[] = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale", "user"];
 const DEPARTMENTS: CrmDepartment[] = ["management", "retention", "sale", "client"];
@@ -162,6 +178,67 @@ function isScheduleMissingForClient(role: RoleId, status: CrmStatus, scheduledAt
   return role === "user" && requiresStatusSchedule(status) && !scheduledAt;
 }
 
+function formatDateTime(value: number | null | undefined): string {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("tr-TR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function csvCell(value: unknown): string {
+  const text = String(value ?? "");
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function downloadVisibleUsersCsv(users: UserDTO[]): void {
+  if (users.length === 0) {
+    toast.info("Dışa aktarılacak kullanıcı yok");
+    return;
+  }
+
+  const headers = [
+    "Client ID",
+    "Ad Soyad",
+    "E-posta",
+    "Telefon",
+    "Rol",
+    "Departman",
+    "Reklam Kaynağı",
+    "Sale Statüsü",
+    "Sale Tarih/Saat",
+    "Retention Statüsü",
+    "Retention Tarih/Saat",
+    "Yönetici",
+    "Durum",
+  ];
+  const rows = users.map((user) => [
+    user.clientNumericId,
+    user.name,
+    user.email,
+    user.phone,
+    ROLE_LABELS[user.role],
+    CRM_DEPARTMENT_LABELS[user.department],
+    user.adSource,
+    CRM_STATUS_LABELS[user.saleStatus],
+    formatDateTime(user.saleStatusScheduledAt),
+    CRM_STATUS_LABELS[user.retentionStatus],
+    formatDateTime(user.retentionStatusScheduledAt),
+    user.managerName ?? "",
+    user.status === "active" ? "Aktif" : "Pasif",
+  ]);
+  const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `crm-kullanicilar-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function RolePermissionCards() {
   return (
     <Card>
@@ -201,6 +278,123 @@ function RolePermissionCards() {
   );
 }
 
+function CrmOverviewPanel({ overview, loading }: { overview?: CrmOverviewDTO; loading: boolean }) {
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <OverviewStatCard
+          title="Toplam Client"
+          value={overview?.totalClients}
+          description={`${overview?.activeClients ?? 0} aktif client`}
+          icon={UsersIcon}
+          loading={loading}
+        />
+        <OverviewStatCard
+          title="Bugünkü Yeni Client"
+          value={overview?.newClientsToday}
+          description="Bugün oluşturulan kayıtlar"
+          icon={TrendingUpIcon}
+          loading={loading}
+        />
+        <OverviewStatCard
+          title="Bugünkü Takip"
+          value={overview?.followUps.today}
+          description={`${overview?.followUps.overdue ?? 0} gecikmiş takip`}
+          icon={AlarmClockIcon}
+          loading={loading}
+          tone={overview && overview.followUps.overdue > 0 ? "warning" : "default"}
+        />
+        <OverviewStatCard
+          title="Kaynak Eksik"
+          value={overview?.missingAdSource}
+          description="Reklam kaynağı girilmemiş"
+          icon={MegaphoneIcon}
+          loading={loading}
+          tone={overview && overview.missingAdSource > 0 ? "warning" : "default"}
+        />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-4">
+        <BreakdownCard title="Sale Pipeline" items={overview?.saleStatusBreakdown} loading={loading} />
+        <BreakdownCard title="Retention Pipeline" items={overview?.retentionStatusBreakdown} loading={loading} />
+        <BreakdownCard title="Reklam Kaynakları" items={overview?.adSourceBreakdown} loading={loading} />
+        <BreakdownCard title="Ekip Dağılımı" items={overview?.teamRoleBreakdown} loading={loading} />
+      </div>
+    </div>
+  );
+}
+
+function OverviewStatCard({
+  title,
+  value,
+  description,
+  icon: Icon,
+  loading,
+  tone = "default",
+}: {
+  title: string;
+  value: number | undefined;
+  description: string;
+  icon: LucideIcon;
+  loading: boolean;
+  tone?: "default" | "warning";
+}) {
+  return (
+    <Card className={tone === "warning" ? "border-amber-200 bg-amber-50/70" : undefined}>
+      <CardContent className="flex items-center justify-between p-5">
+        <div>
+          <p className="text-sm text-muted-foreground">{title}</p>
+          {loading ? <Skeleton className="mt-2 h-8 w-16" /> : <p className="mt-1 text-3xl font-semibold">{value ?? 0}</p>}
+          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+        </div>
+        <div className={tone === "warning" ? "rounded-lg bg-amber-100 p-2 text-amber-700" : "rounded-lg bg-primary/10 p-2 text-primary"}>
+          <Icon className="size-5" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BreakdownCard({
+  title,
+  items,
+  loading,
+}: {
+  title: string;
+  items?: AnalyticsBreakdownItem[];
+  loading: boolean;
+}) {
+  const max = Math.max(1, ...(items ?? []).map((item) => item.count));
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <BarChart3Icon className="size-4" /> {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        {loading ? (
+          <Skeleton className="h-28" />
+        ) : items && items.length > 0 ? (
+          items.map((item) => (
+            <div key={item.label} className="grid gap-1">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="truncate text-muted-foreground">{item.label}</span>
+                <span className="font-medium tabular-nums">{item.count}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(8, (item.count / max) * 100)}%` }} />
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="py-4 text-sm text-muted-foreground">Henüz veri yok.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function UserManagement() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -220,7 +414,16 @@ export function UserManagement() {
     queryFn: () => apiGet<Paginated<UserDTO>>(`/api/admin/users?${params.toString()}`),
   });
 
-  const invalidate = () => void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+  const overviewQuery = useQuery({
+    queryKey: ["admin", "crm", "overview"],
+    queryFn: () => apiGet<{ overview: CrmOverviewDTO }>("/api/admin/crm/overview"),
+    refetchInterval: 30_000,
+  });
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    void queryClient.invalidateQueries({ queryKey: ["admin", "crm", "overview"] });
+  };
 
   const updateUser = useMutation({
     mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
@@ -243,10 +446,21 @@ export function UserManagement() {
             Çalışanları oluşturun, yönetici atayın ve Sale/Retention yetkilerini yönetin.
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <PlusIcon /> Yeni kullanıcı
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => downloadVisibleUsersCsv(usersQuery.data?.items ?? [])}
+            disabled={usersQuery.isLoading || (usersQuery.data?.items.length ?? 0) === 0}
+          >
+            <DownloadIcon /> CSV indir
+          </Button>
+          <Button onClick={() => setCreateOpen(true)}>
+            <PlusIcon /> Yeni kullanıcı
+          </Button>
+        </div>
       </div>
+
+      <CrmOverviewPanel overview={overviewQuery.data?.overview} loading={overviewQuery.isLoading} />
 
       <RolePermissionCards />
 

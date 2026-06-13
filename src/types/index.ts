@@ -245,6 +245,22 @@ export interface AdminAnalyticsDTO {
   activeSessionCount: number;
 }
 
+export interface CrmOverviewDTO {
+  totalClients: number;
+  activeClients: number;
+  newClientsToday: number;
+  missingAdSource: number;
+  followUps: {
+    overdue: number;
+    today: number;
+    upcoming: number;
+  };
+  saleStatusBreakdown: AnalyticsBreakdownItem[];
+  retentionStatusBreakdown: AnalyticsBreakdownItem[];
+  adSourceBreakdown: AnalyticsBreakdownItem[];
+  teamRoleBreakdown: AnalyticsBreakdownItem[];
+}
+
 export interface Paginated<T> {
   items: T[];
   total: number;

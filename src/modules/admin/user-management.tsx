@@ -187,6 +187,10 @@ function formatDateTime(value: number | null | undefined): string {
   }).format(new Date(value));
 }
 
+function money(value: number, currency = "$"): string {
+  return `${currency}${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 function csvCell(value: unknown): string {
   const text = String(value ?? "");
   return `"${text.replaceAll('"', '""')}"`;
@@ -211,6 +215,10 @@ function downloadVisibleUsersCsv(users: UserDTO[]): void {
     "Retention Statüsü",
     "Retention Tarih/Saat",
     "Yönetici",
+    "Trading Emir",
+    "Trading Hacim",
+    "Açık Pozisyon",
+    "Son Trading",
     "Durum",
   ];
   const rows = users.map((user) => [
@@ -226,6 +234,10 @@ function downloadVisibleUsersCsv(users: UserDTO[]): void {
     CRM_STATUS_LABELS[user.retentionStatus],
     formatDateTime(user.retentionStatusScheduledAt),
     user.managerName ?? "",
+    user.tradingSummary.orderCount,
+    user.tradingSummary.totalNotional,
+    user.tradingSummary.openPositions,
+    formatDateTime(user.tradingSummary.lastTradeAt),
     user.status === "active" ? "Aktif" : "Pasif",
   ]);
   const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
@@ -282,7 +294,7 @@ function RolePermissionCards() {
 function CrmOverviewPanel({ overview, loading }: { overview?: CrmOverviewDTO; loading: boolean }) {
   return (
     <div className="grid gap-4">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         <OverviewStatCard
           title="Toplam Client"
           value={overview?.totalClients}
@@ -313,6 +325,21 @@ function CrmOverviewPanel({ overview, loading }: { overview?: CrmOverviewDTO; lo
           loading={loading}
           tone={overview && overview.missingAdSource > 0 ? "warning" : "default"}
         />
+        <OverviewStatCard
+          title="Trading Client"
+          value={overview?.tradingActiveClients}
+          description={`${overview?.tradingOrderCount ?? 0} demo emir`}
+          icon={TrendingUpIcon}
+          loading={loading}
+        />
+        <OverviewStatCard
+          title="Demo Hacim"
+          value={overview?.tradingVolume}
+          valueFormatter={(value) => money(value)}
+          description="Toplam işlem tutarı"
+          icon={BarChart3Icon}
+          loading={loading}
+        />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-4">
@@ -328,6 +355,7 @@ function CrmOverviewPanel({ overview, loading }: { overview?: CrmOverviewDTO; lo
 function OverviewStatCard({
   title,
   value,
+  valueFormatter,
   description,
   icon: Icon,
   loading,
@@ -335,6 +363,7 @@ function OverviewStatCard({
 }: {
   title: string;
   value: number | undefined;
+  valueFormatter?: (value: number) => string;
   description: string;
   icon: LucideIcon;
   loading: boolean;
@@ -345,7 +374,11 @@ function OverviewStatCard({
       <CardContent className="flex items-center justify-between p-5">
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
-          {loading ? <Skeleton className="mt-2 h-8 w-16" /> : <p className="mt-1 text-3xl font-semibold">{value ?? 0}</p>}
+          {loading ? (
+            <Skeleton className="mt-2 h-8 w-16" />
+          ) : (
+            <p className="mt-1 text-3xl font-semibold">{valueFormatter ? valueFormatter(value ?? 0) : (value ?? 0)}</p>
+          )}
           <p className="mt-1 text-xs text-muted-foreground">{description}</p>
         </div>
         <div className={tone === "warning" ? "rounded-lg bg-amber-100 p-2 text-amber-700" : "rounded-lg bg-primary/10 p-2 text-primary"}>
@@ -583,6 +616,12 @@ export function UserManagement() {
                           Retention Tarih/Saat: {user.retentionStatusScheduledAt ? formatRelative(user.retentionStatusScheduledAt) : "—"}
                         </span>
                         <span className="text-muted-foreground">Yönetici: {user.managerName || "—"}</span>
+                        {user.role === "user" ? (
+                          <span className="text-muted-foreground">
+                            Trading: {user.tradingSummary.orderCount} emir · {money(user.tradingSummary.totalNotional)} ·{" "}
+                            {user.tradingSummary.openPositions} pozisyon
+                          </span>
+                        ) : null}
                       </div>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
@@ -614,6 +653,11 @@ export function UserManagement() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {user.role === "user" ? (
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/admin/trading?clientId=${user.id}`}>Terminal</Link>
+                          </Button>
+                        ) : null}
                         <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
                           Düzenle
                         </Button>

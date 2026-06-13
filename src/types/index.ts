@@ -170,6 +170,12 @@ export interface UserDTO {
   emailVerified: boolean;
   createdAt: number;
   lastLoginAt: number | null;
+  tradingSummary: {
+    orderCount: number;
+    totalNotional: number;
+    openPositions: number;
+    lastTradeAt: number | null;
+  };
 }
 
 export interface DeviceSessionDTO {
@@ -258,6 +264,9 @@ export interface CrmOverviewDTO {
   activeClients: number;
   newClientsToday: number;
   missingAdSource: number;
+  tradingOrderCount: number;
+  tradingVolume: number;
+  tradingActiveClients: number;
   followUps: {
     overdue: number;
     today: number;

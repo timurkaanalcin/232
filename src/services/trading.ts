@@ -176,6 +176,19 @@ export async function createTradeOrder(db: D1Database, input: CreateTradeOrderIn
     )
     .run();
 
+  if (input.side === "buy") {
+    await db
+      .prepare(
+        `UPDATE users
+         SET sale_status = 'depositor',
+             retention_status = 'active',
+             updated_at = ?
+         WHERE id = ?`,
+      )
+      .bind(now, input.clientId)
+      .run();
+  }
+
   const order = await getTradeOrderById(db, id);
   if (!order) throw new Error("Failed to create order");
   return order;

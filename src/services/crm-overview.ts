@@ -42,6 +42,9 @@ export async function getCrmOverview(db: D1Database): Promise<CrmOverviewDTO> {
     activeClients,
     newClientsToday,
     missingAdSource,
+    tradingOrderCount,
+    tradingVolume,
+    tradingActiveClients,
     overdueFollowUps,
     todayFollowUps,
     upcomingFollowUps,
@@ -54,6 +57,9 @@ export async function getCrmOverview(db: D1Database): Promise<CrmOverviewDTO> {
     firstNumber(db, `SELECT COUNT(*) AS value FROM users WHERE role_id = 'user' AND status = 'active'`),
     firstNumber(db, `SELECT COUNT(*) AS value FROM users WHERE role_id = 'user' AND created_at >= ?`, todayStart),
     firstNumber(db, `SELECT COUNT(*) AS value FROM users WHERE role_id = 'user' AND TRIM(ad_source) = ''`),
+    firstNumber(db, `SELECT COUNT(*) AS value FROM crm_trade_orders`),
+    firstNumber(db, `SELECT COALESCE(SUM(notional), 0) AS value FROM crm_trade_orders`),
+    firstNumber(db, `SELECT COUNT(DISTINCT client_id) AS value FROM crm_trade_orders`),
     firstNumber(
       db,
       `SELECT COUNT(*) AS value
@@ -133,6 +139,9 @@ export async function getCrmOverview(db: D1Database): Promise<CrmOverviewDTO> {
     activeClients,
     newClientsToday,
     missingAdSource,
+    tradingOrderCount,
+    tradingVolume,
+    tradingActiveClients,
     followUps: {
       overdue: overdueFollowUps,
       today: todayFollowUps,

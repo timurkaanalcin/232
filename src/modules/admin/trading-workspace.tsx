@@ -139,9 +139,9 @@ function MarketChart({ symbol }: { symbol: TradingSymbolDTO }) {
   );
 }
 
-export function TradingWorkspace() {
+export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: string }) {
   const queryClient = useQueryClient();
-  const [selectedClientId, setSelectedClientId] = useState("");
+  const [selectedClientId, setSelectedClientId] = useState(initialClientId);
   const [selectedSymbol, setSelectedSymbol] = useState("TCELL");
   const [side, setSide] = useState<TradeSide>("buy");
   const [orderType, setOrderType] = useState<TradeOrderType>("market");
@@ -163,6 +163,10 @@ export function TradingWorkspace() {
   const selectedSymbolData = symbols.find((symbol) => symbol.symbol === selectedSymbol) ?? symbols[0];
   const clients = workspace?.clients ?? [];
   const selectedClient = clients.find((client) => client.id === selectedClientId) ?? clients[0];
+
+  useEffect(() => {
+    setSelectedClientId(initialClientId);
+  }, [initialClientId]);
 
   useEffect(() => {
     if (!selectedClientId && clients[0]) setSelectedClientId(clients[0].id);
@@ -197,6 +201,8 @@ export function TradingWorkspace() {
         description: `${selectedSymbol} ${side === "buy" ? "AL" : "SAT"} emri CRM client hesabına kaydedildi.`,
       });
       void queryClient.invalidateQueries({ queryKey: ["admin", "trading"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin", "crm", "overview"] });
     },
     onError: (error) => toast.error(errorMessage(error)),
   });

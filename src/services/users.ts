@@ -1,7 +1,13 @@
 import { hashPassword } from "@/lib/crypto";
 import type { CrmDepartment, CrmStatus, Paginated, RetentionStatus, RoleId, UserDTO, UserRow, UserStatus } from "@/types";
 
-type UserRowWithManager = UserRow & { manager_name?: string | null };
+type UserRowWithManager = UserRow & {
+  manager_name?: string | null;
+  trade_order_count?: number | null;
+  trade_total_notional?: number | null;
+  trade_open_positions?: number | null;
+  trade_last_at?: number | null;
+};
 
 export function toUserDTO(row: UserRowWithManager): UserDTO {
   return {
@@ -26,6 +32,12 @@ export function toUserDTO(row: UserRowWithManager): UserDTO {
     emailVerified: row.email_verified === 1,
     createdAt: row.created_at,
     lastLoginAt: row.last_login_at,
+    tradingSummary: {
+      orderCount: row.trade_order_count ?? 0,
+      totalNotional: row.trade_total_notional ?? 0,
+      openPositions: row.trade_open_positions ?? 0,
+      lastTradeAt: row.trade_last_at ?? null,
+    },
   };
 }
 
@@ -256,9 +268,30 @@ export async function listUsers(db: D1Database, filter: ListUsersFilter): Promis
   const offset = (filter.page - 1) * filter.pageSize;
   const rows = await db
     .prepare(
-      `SELECT u.*, m.name AS manager_name
+      `WITH trade_stats AS (
+         SELECT client_id, COUNT(*) AS order_count, COALESCE(SUM(notional), 0) AS total_notional, MAX(created_at) AS last_trade_at
+         FROM crm_trade_orders
+         GROUP BY client_id
+       ),
+       open_position_stats AS (
+         SELECT client_id, COUNT(*) AS open_positions
+         FROM (
+           SELECT client_id, symbol, SUM(CASE WHEN side = 'buy' THEN quantity ELSE -quantity END) AS quantity
+           FROM crm_trade_orders
+           GROUP BY client_id, symbol
+           HAVING ABS(quantity) > 0.000001
+         )
+         GROUP BY client_id
+       )
+       SELECT u.*, m.name AS manager_name,
+              COALESCE(ts.order_count, 0) AS trade_order_count,
+              COALESCE(ts.total_notional, 0) AS trade_total_notional,
+              COALESCE(ops.open_positions, 0) AS trade_open_positions,
+              ts.last_trade_at AS trade_last_at
        FROM users u
        LEFT JOIN users m ON m.id = u.manager_id
+       LEFT JOIN trade_stats ts ON ts.client_id = u.id
+       LEFT JOIN open_position_stats ops ON ops.client_id = u.id
        ${whereSql}
        ORDER BY u.created_at DESC
        LIMIT ? OFFSET ?`,
@@ -281,7 +314,7 @@ export async function deleteUserAccount(db: D1Database, id: string): Promise<voi
 
 /** GDPR/KVKK access: exports all personal data held for a user. */
 export async function exportUserData(db: D1Database, id: string) {
-  const [user, sessions, locationSessions, locations, audit] = await Promise.all([
+  const [user, sessions, locationSessions, locations, audit, tradeOrders] = await Promise.all([
     db
       .prepare(
         `SELECT id, email, name, image, role_id, client_numeric_id, sale_status, sale_status_scheduled_at,
@@ -316,6 +349,13 @@ export async function exportUserData(db: D1Database, id: string) {
       )
       .bind(id)
       .all(),
+    db
+      .prepare(
+        `SELECT symbol, market, side, order_type, quantity, price, status, notional, pnl, created_at
+         FROM crm_trade_orders WHERE client_id = ? ORDER BY created_at DESC LIMIT 10000`,
+      )
+      .bind(id)
+      .all(),
   ]);
 
   return {
@@ -325,5 +365,6 @@ export async function exportUserData(db: D1Database, id: string) {
     locationSessions: locationSessions.results,
     locationPoints: locations.results,
     auditTrail: audit.results,
+    tradeOrders: tradeOrders.results,
   };
 }

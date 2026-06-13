@@ -103,56 +103,56 @@ const ROLE_CARDS: {
     role: "super_admin",
     title: "Admin",
     description: "Tam yetki - tüm modüllere erişim ve site ayarları",
-    tone: "border-red-200 bg-red-50 text-red-700",
+    tone: "border-red-300 bg-red-50 text-red-950",
     icon: CrownIcon,
   },
   {
     role: "shift",
     title: "Shift",
     description: "Admin yetkisi; Head ve altını yönetir, site ayarlarını değiştiremez",
-    tone: "border-amber-200 bg-amber-50 text-amber-700",
+    tone: "border-amber-300 bg-amber-50 text-amber-950",
     icon: ShieldIcon,
   },
   {
     role: "admin",
     title: "Head",
     description: "Sale ve Retention ekiplerini, Team Leader'ları yönetir",
-    tone: "border-purple-200 bg-purple-50 text-purple-700",
+    tone: "border-purple-300 bg-purple-50 text-purple-950",
     icon: ShieldIcon,
   },
   {
     role: "operator",
     title: "Retention TL",
     description: "Retention çalışanlarını yönetir ve takip eder",
-    tone: "border-blue-200 bg-blue-50 text-blue-700",
+    tone: "border-blue-300 bg-blue-50 text-blue-950",
     icon: HeadphonesIcon,
   },
   {
     role: "viewer",
     title: "Sale TL",
     description: "Sale çalışanlarını ve müşteri iletişimini yönetir",
-    tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    tone: "border-emerald-300 bg-emerald-50 text-emerald-950",
     icon: UsersIcon,
   },
   {
     role: "retention",
     title: "Retention",
     description: "Müşteri tutma ve bilet süreçlerinde çalışır",
-    tone: "border-sky-200 bg-sky-50 text-sky-700",
+    tone: "border-sky-300 bg-sky-50 text-sky-950",
     icon: HeadphonesIcon,
   },
   {
     role: "sale",
     title: "Sale",
     description: "Satış ve müşteri iletişimi süreçlerinde çalışır",
-    tone: "border-green-200 bg-green-50 text-green-700",
+    tone: "border-green-300 bg-green-50 text-green-950",
     icon: UserRoundIcon,
   },
   {
     role: "user",
     title: "Client",
     description: "Sadece okuma yetkisi",
-    tone: "border-slate-200 bg-slate-50 text-slate-700",
+    tone: "border-slate-300 bg-slate-50 text-slate-950",
     icon: FileTextIcon,
   },
 ];
@@ -269,14 +269,18 @@ function RolePermissionCards() {
                 <Icon className="size-4" />
                 <h3 className="font-semibold">{card.title}</h3>
               </div>
-              <p className="min-h-10 text-xs opacity-75">{card.description}</p>
-              <div className="mt-4 grid gap-1 text-sm text-foreground">
+              <p className="min-h-10 text-xs font-medium leading-5 text-current/85">{card.description}</p>
+              <div className="mt-4 grid gap-1 text-sm">
                 {PERMISSION_AREAS.map((area) => {
                   const enabled = permissions.has(area.permission);
                   return (
                     <div
                       key={area.permission}
-                      className={enabled ? "font-medium" : "text-muted-foreground line-through opacity-45"}
+                      className={
+                        enabled
+                          ? "font-semibold text-slate-950"
+                          : "font-medium text-slate-500 line-through decoration-slate-500/80"
+                      }
                     >
                       {area.label}
                     </div>

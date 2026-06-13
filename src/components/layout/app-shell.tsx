@@ -17,6 +17,7 @@ import {
   ShieldIcon,
   SirenIcon,
   UsersIcon,
+  WalletIcon,
   XIcon,
 } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
@@ -65,6 +66,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin/audit", label: "Audit Logs", icon: ScrollTextIcon, permission: "audit.view" },
   { href: "/admin/security", label: "Security", icon: ShieldAlertIcon, permission: "audit.view" },
   { href: "/admin/risk", label: "Risk", icon: SirenIcon, permission: "risk.view" },
+  { href: "/admin/wallets", label: "Wallets", icon: WalletIcon, permission: "wallets.view" },
 ];
 
 function NavLinks({ user, onNavigate }: { user: ShellUser; onNavigate?: () => void }) {

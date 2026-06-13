@@ -22,11 +22,27 @@ export type Permission =
   | "roles.assign"
   | "audit.view"
   | "risk.view"
-  | "risk.manage";
+  | "risk.manage"
+  | "wallets.view"
+  | "wallets.manage";
 
 export type RiskEventSeverity = "info" | "warning" | "critical";
 
 export type RiskEventStatus = "open" | "acknowledged" | "resolved";
+
+export type WalletType = "main" | "trading" | "bonus" | "credit" | "crypto" | "multi_currency";
+
+export type WalletStatus = "active" | "frozen" | "archived";
+
+export type WalletTransferStatus = "posted" | "reversed";
+
+export type WalletTransactionType =
+  | "wallet.created"
+  | "wallet.status_changed"
+  | "transfer"
+  | "transfer.reversal";
+
+export type WalletTransactionDirection = "credit" | "debit" | "neutral";
 
 // ----------------------------------------------------------------------------
 // Database rows
@@ -122,6 +138,50 @@ export interface RiskEventRow {
   resolved_at: number | null;
   created_at: number;
   updated_at: number;
+}
+
+export interface WalletRow {
+  id: string;
+  user_id: string;
+  wallet_type: WalletType;
+  currency: string;
+  status: WalletStatus;
+  balance_minor: number;
+  created_at: number;
+  updated_at: number;
+  user_email?: string;
+  user_name?: string;
+}
+
+export interface WalletTransferRow {
+  id: string;
+  from_wallet_id: string;
+  to_wallet_id: string;
+  amount_minor: number;
+  currency: string;
+  status: WalletTransferStatus;
+  memo: string;
+  created_by: string | null;
+  reversed_by: string | null;
+  reversed_at: number | null;
+  created_at: number;
+}
+
+export interface WalletTransactionRow {
+  id: string;
+  wallet_id: string;
+  user_id: string;
+  transfer_id: string | null;
+  transaction_type: WalletTransactionType;
+  direction: WalletTransactionDirection;
+  amount_minor: number;
+  currency: string;
+  balance_after_minor: number;
+  related_wallet_id: string | null;
+  actor_id: string | null;
+  memo: string;
+  metadata: string;
+  created_at: number;
 }
 
 // ----------------------------------------------------------------------------
@@ -280,6 +340,50 @@ export interface RiskEventDTO {
   resolvedAt: number | null;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface WalletDTO {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  walletType: WalletType;
+  currency: string;
+  status: WalletStatus;
+  balanceMinor: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface WalletTransferDTO {
+  id: string;
+  fromWalletId: string;
+  toWalletId: string;
+  amountMinor: number;
+  currency: string;
+  status: WalletTransferStatus;
+  memo: string;
+  createdBy: string | null;
+  reversedBy: string | null;
+  reversedAt: number | null;
+  createdAt: number;
+}
+
+export interface WalletTransactionDTO {
+  id: string;
+  walletId: string;
+  userId: string;
+  transferId: string | null;
+  transactionType: WalletTransactionType;
+  direction: WalletTransactionDirection;
+  amountMinor: number;
+  currency: string;
+  balanceAfterMinor: number;
+  relatedWalletId: string | null;
+  actorId: string | null;
+  memo: string;
+  metadata: Record<string, unknown>;
+  createdAt: number;
 }
 
 // ----------------------------------------------------------------------------

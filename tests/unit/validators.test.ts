@@ -4,8 +4,11 @@ import {
   passwordSchema,
   positionSchema,
   createRiskEventSchema,
+  createWalletSchema,
   riskEventActionSchema,
   riskEventQuerySchema,
+  updateWalletStatusSchema,
+  walletTransferSchema,
   registerSchema,
   startLocationSessionSchema,
 } from "@/lib/validators";
@@ -98,5 +101,40 @@ describe("risk event validators", () => {
   it("limits operator notes for risk event actions", () => {
     expect(riskEventActionSchema.safeParse({ note: "Reviewed by desk" }).success).toBe(true);
     expect(riskEventActionSchema.safeParse({ note: "x".repeat(1_001) }).success).toBe(false);
+  });
+});
+
+describe("wallet validators", () => {
+  it("normalizes wallet currencies to uppercase", () => {
+    const result = createWalletSchema.parse({
+      userId: "00000000-0000-4000-8000-000000000001",
+      walletType: "trading",
+      currency: "usd",
+    });
+
+    expect(result.currency).toBe("USD");
+  });
+
+  it("rejects invalid transfer amounts", () => {
+    expect(
+      walletTransferSchema.safeParse({
+        fromWalletId: "00000000-0000-4000-8000-000000000001",
+        toWalletId: "00000000-0000-4000-8000-000000000002",
+        amountMinor: 1,
+      }).success,
+    ).toBe(true);
+
+    expect(
+      walletTransferSchema.safeParse({
+        fromWalletId: "00000000-0000-4000-8000-000000000001",
+        toWalletId: "00000000-0000-4000-8000-000000000002",
+        amountMinor: 0,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts archive as a wallet status change", () => {
+    expect(updateWalletStatusSchema.safeParse({ status: "archived", memo: "closed by admin" }).success).toBe(true);
+    expect(updateWalletStatusSchema.safeParse({ status: "deleted" }).success).toBe(false);
   });
 });

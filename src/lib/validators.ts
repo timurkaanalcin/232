@@ -116,3 +116,39 @@ export const createRiskEventSchema = z.object({
 export const riskEventActionSchema = z.object({
   note: z.string().trim().max(1_000).optional().default(""),
 });
+
+export const walletCurrencySchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z0-9]{3,10}$/, "Currency must be 3-10 uppercase letters or digits");
+
+export const walletQuerySchema = paginationSchema.extend({
+  q: z.string().trim().max(254).optional(),
+  userId: z.string().uuid().optional(),
+  type: z.enum(["main", "trading", "bonus", "credit", "crypto", "multi_currency"]).optional(),
+  status: z.enum(["active", "frozen", "archived"]).optional(),
+  currency: walletCurrencySchema.optional(),
+});
+
+export const createWalletSchema = z.object({
+  userId: z.string().uuid(),
+  walletType: z.enum(["main", "trading", "bonus", "credit", "crypto", "multi_currency"]),
+  currency: walletCurrencySchema,
+});
+
+export const updateWalletStatusSchema = z.object({
+  status: z.enum(["active", "frozen", "archived"]),
+  memo: z.string().trim().max(500).optional().default(""),
+});
+
+export const walletTransferSchema = z.object({
+  fromWalletId: z.string().uuid(),
+  toWalletId: z.string().uuid(),
+  amountMinor: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  memo: z.string().trim().max(500).optional().default(""),
+});
+
+export const reverseWalletTransferSchema = z.object({
+  memo: z.string().trim().max(500).optional().default(""),
+});

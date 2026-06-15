@@ -4,8 +4,9 @@
 # Required - generate with: openssl rand -base64 32
 AUTH_SECRET=
 
-# The canonical URL of the app (http://localhost:8787 for wrangler dev)
-AUTH_URL=http://localhost:8787
+# The canonical URL of the app
+AUTH_URL=https://alsyatirim.login.org.tr
+NEXT_PUBLIC_SITE_URL=https://alsyatirim.login.org.tr
 
 # Google OAuth (optional - email/password login works without it)
 # https://console.cloud.google.com/apis/credentials
@@ -15,7 +16,7 @@ GOOGLE_MAPS_API_KEY=
 
 # Transactional email for password resets (optional - https://resend.com)
 RESEND_API_KEY=
-EMAIL_FROM="LiveTrack <noreply@yourdomain.com>"
+EMAIL_FROM="ALS Yatırım <noreply@alsyatirim.login.org.tr>"
 
 # Live broker integration (required for real exchange orders)
 BROKER_API_URL=

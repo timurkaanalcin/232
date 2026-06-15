@@ -278,7 +278,24 @@ export interface ListUsersFilter {
   pageSize: number;
 }
 
-export async function listUsers(db: D1Database, filter: ListUsersFilter): Promise<Paginated<UserDTO>> {
+export interface UserScope {
+  id: string;
+  role: RoleId;
+}
+
+function applyUserScope(scope: UserScope | undefined, where: string[], binds: unknown[]): void {
+  if (!scope || scope.role === "super_admin") return;
+  where.push(
+    `(u.id = ? OR u.manager_id = ? OR m.manager_id = ? OR m2.manager_id = ? OR m3.manager_id = ?)`,
+  );
+  binds.push(scope.id, scope.id, scope.id, scope.id, scope.id);
+}
+
+export async function listUsers(
+  db: D1Database,
+  filter: ListUsersFilter,
+  scope?: UserScope,
+): Promise<Paginated<UserDTO>> {
   const where: string[] = [];
   const binds: unknown[] = [];
   if (filter.q) {
@@ -294,10 +311,18 @@ export async function listUsers(db: D1Database, filter: ListUsersFilter): Promis
     where.push("u.status = ?");
     binds.push(filter.status);
   }
+  applyUserScope(scope, where, binds);
   const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
 
   const countRow = await db
-    .prepare(`SELECT COUNT(*) AS total FROM users u ${whereSql}`)
+    .prepare(
+      `SELECT COUNT(*) AS total
+       FROM users u
+       LEFT JOIN users m ON m.id = u.manager_id
+       LEFT JOIN users m2 ON m2.id = m.manager_id
+       LEFT JOIN users m3 ON m3.id = m2.manager_id
+       ${whereSql}`,
+    )
     .bind(...binds)
     .first<{ total: number }>();
 
@@ -345,6 +370,8 @@ export async function listUsers(db: D1Database, filter: ListUsersFilter): Promis
               ts.last_trade_at AS trade_last_at
        FROM users u
        LEFT JOIN users m ON m.id = u.manager_id
+       LEFT JOIN users m2 ON m2.id = m.manager_id
+       LEFT JOIN users m3 ON m3.id = m2.manager_id
        LEFT JOIN trade_stats ts ON ts.client_id = u.id
        LEFT JOIN open_position_stats ops ON ops.client_id = u.id
        LEFT JOIN money_stats ms ON ms.client_id = u.id

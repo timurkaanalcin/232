@@ -192,6 +192,11 @@ export async function getClientDetail(
   if (!row) return null;
 
   const supportAllowed = actor ? await canAccessClientSupport(db, clientId, actor) : true;
+  const managerScopeSql =
+    actor && actor.role !== "super_admin"
+      ? `AND (u.id = ? OR u.manager_id = ? OR m1.manager_id = ? OR m2.manager_id = ?)`
+      : "";
+  const managerScopeBinds = managerScopeSql && actor ? [actor.id, actor.id, actor.id, actor.id] : [];
 
   const [comments, managers, tradeAccounts, moneyTransactions, documents, supportMessages] = await Promise.all([
     db
@@ -206,11 +211,14 @@ export async function getClientDetail(
       .all<CommentRow>(),
     db
       .prepare(
-        `SELECT id, name, role_id AS role
-         FROM users
-         WHERE role_id <> 'user' AND status = 'active'
+        `SELECT u.id, u.name, u.role_id AS role
+         FROM users u
+         LEFT JOIN users m1 ON m1.id = u.manager_id
+         LEFT JOIN users m2 ON m2.id = m1.manager_id
+         WHERE u.role_id <> 'user' AND u.status = 'active'
+         ${managerScopeSql}
          ORDER BY
-           CASE role_id
+           CASE u.role_id
              WHEN 'super_admin' THEN 1
              WHEN 'shift' THEN 2
              WHEN 'admin' THEN 3
@@ -220,8 +228,9 @@ export async function getClientDetail(
              WHEN 'sale' THEN 7
              ELSE 8
            END,
-           name ASC`,
+           u.name ASC`,
       )
+      .bind(...managerScopeBinds)
       .all<ClientManagerOptionDTO>(),
     db
       .prepare(

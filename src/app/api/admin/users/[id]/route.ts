@@ -15,6 +15,23 @@ import { adminUpdateUser, findUserById, generateClientNumericId, toUserDTO } fro
 import { revokeAllDeviceSessions } from "@/services/device-sessions";
 import { endLocationSession, getActiveSessionForUser } from "@/services/location-sessions";
 
+async function canAssignManager(db: D1Database, actorId: string, actorRole: string, managerId: string): Promise<boolean> {
+  if (actorRole === "super_admin") return true;
+  if (managerId === actorId) return true;
+  const row = await db
+    .prepare(
+      `SELECT u.id
+       FROM users u
+       LEFT JOIN users m1 ON m1.id = u.manager_id
+       LEFT JOIN users m2 ON m2.id = m1.manager_id
+       LEFT JOIN users m3 ON m3.id = m2.manager_id
+       WHERE u.id = ? AND (u.manager_id = ? OR m1.manager_id = ? OR m2.manager_id = ? OR m3.manager_id = ?)`,
+    )
+    .bind(managerId, actorId, actorId, actorId, actorId)
+    .first<{ id: string }>();
+  return Boolean(row);
+}
+
 export const PATCH = apiHandler(
   async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
     await assertSameOrigin(request);
@@ -49,6 +66,7 @@ export const PATCH = apiHandler(
     if (parsed.data.managerId) {
       const manager = await findUserById(db, parsed.data.managerId);
       if (!manager) throw badRequest("Selected manager does not exist");
+      if (!(await canAssignManager(db, actor.id, actor.role, parsed.data.managerId))) throw forbidden();
     }
     const nextRole = parsed.data.role ?? target.role_id;
     const nextSaleStatus = parsed.data.saleStatus ?? target.sale_status;

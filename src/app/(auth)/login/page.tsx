@@ -5,13 +5,13 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { LoginForm } from "@/modules/auth/login-form";
 import { isGoogleEnabled } from "@/lib/auth-config";
 
-export const metadata: Metadata = { title: "CRM Giriş" };
+export const metadata: Metadata = { title: "ALS Yatırım Giriş" };
 
 export default function LoginPage() {
   return (
     <AuthShell
-      title="CRM paneline giriş"
-      description="Client, Sale, Retention ve takip operasyonlarını yönetmek için giriş yapın."
+      title="ALS Yatırım paneline giriş"
+      description="CRM, Shift şirketleri, client takipleri ve canlı broker operasyonları için güvenli oturum açın."
       footer={
         <>
           Yeni hesap mı gerekiyor?{" "}

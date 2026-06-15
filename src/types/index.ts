@@ -355,6 +355,9 @@ export interface TradingOrderDTO {
   quantity: number;
   price: number;
   status: TradeOrderStatus;
+  brokerOrderId: string;
+  brokerMessage: string;
+  executionMode: "live";
   notional: number;
   pnl: number;
   createdAt: number;

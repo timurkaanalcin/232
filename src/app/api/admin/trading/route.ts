@@ -9,6 +9,7 @@ import {
 } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
 import { createTradeOrderSchema } from "@/lib/validators";
+import { getBrokerConfig, submitBrokerOrder } from "@/services/broker";
 import { createTradeOrder, getTradingWorkspace } from "@/services/trading";
 
 export const GET = apiHandler(async (request: Request) => {
@@ -20,7 +21,7 @@ export const GET = apiHandler(async (request: Request) => {
 
 export const POST = apiHandler(async (request: Request) => {
   await assertSameOrigin(request);
-  const { user: actor, db, meta } = await requirePermission("trading.access");
+  const { user: actor, db, env, meta } = await requirePermission("trading.access");
   const permissions = await getPermissions(db, actor.role);
   if (!permissions.has("trading.order")) throw forbidden();
 
@@ -30,8 +31,17 @@ export const POST = apiHandler(async (request: Request) => {
   }
 
   try {
+    const brokerConfig = getBrokerConfig(env);
+    if (!brokerConfig) {
+      throw new Error("Gerçek broker bağlantısı yapılandırılmadı. BROKER_API_URL ve BROKER_API_KEY ayarlanmalı.");
+    }
+    const brokerResult = await submitBrokerOrder(brokerConfig, parsed.data);
     const order = await createTradeOrder(db, {
       ...parsed.data,
+      price: brokerResult.filledPrice,
+      status: brokerResult.status,
+      brokerOrderId: brokerResult.brokerOrderId,
+      brokerMessage: brokerResult.message,
       actorId: actor.id,
       actorEmail: actor.email,
     });
@@ -51,6 +61,8 @@ export const POST = apiHandler(async (request: Request) => {
         quantity: order.quantity,
         price: order.price,
         notional: order.notional,
+        brokerOrderId: order.brokerOrderId,
+        brokerMessage: order.brokerMessage,
       },
     });
     return jsonOk({ order }, { status: 201 });

@@ -355,12 +355,12 @@ function CrmOverviewPanel({ overview, loading }: { overview?: CrmOverviewDTO; lo
         <OverviewStatCard
           title="Trading Client"
           value={overview?.tradingActiveClients}
-          description={`${overview?.tradingOrderCount ?? 0} demo emir`}
+          description={`${overview?.tradingOrderCount ?? 0} broker emri`}
           icon={TrendingUpIcon}
           loading={loading}
         />
         <OverviewStatCard
-          title="Demo Hacim"
+          title="Canlı Hacim"
           value={overview?.tradingVolume}
           valueFormatter={(value) => money(value)}
           description="Toplam işlem tutarı"

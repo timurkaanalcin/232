@@ -82,8 +82,8 @@ export default function LandingPage() {
           <a href="#roles" className="hover:text-foreground">
             Yetkiler
           </a>
-          <a href="#demo" className="hover:text-foreground">
-            Demo
+          <a href="#platform" className="hover:text-foreground">
+            Platform
           </a>
         </nav>
         <Button asChild>
@@ -110,7 +110,7 @@ export default function LandingPage() {
           <div className="flex flex-wrap gap-3">
             <Button size="lg" asChild>
               <Link href="/login">
-                Demo panele gir <ArrowRightIcon />
+                Canlı panele gir <ArrowRightIcon />
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
@@ -207,14 +207,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="demo" className="mx-auto w-full max-w-7xl px-6 py-16">
+      <section id="platform" className="mx-auto w-full max-w-7xl px-6 py-16">
         <div className="rounded-3xl border bg-primary p-8 text-primary-foreground shadow-xl md:p-10">
           <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
             <div>
               <h2 className="text-3xl font-semibold">CRM panelini şimdi inceleyin</h2>
               <p className="mt-2 text-primary-foreground/80">
-                Demo admin hesabıyla giriş yapın ve client, statü, reklam kaynağı, takip zamanı, KPI ekranları
-                ve CRM'e bağlı trading terminalini görün.
+                Admin hesabıyla giriş yapın ve client, statü, reklam kaynağı, takip zamanı, KPI ekranları
+                ve CRM'e bağlı canlı broker terminalini yönetin.
               </p>
             </div>
             <Button size="lg" variant="secondary" asChild>

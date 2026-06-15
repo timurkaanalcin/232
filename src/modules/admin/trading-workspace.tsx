@@ -110,7 +110,7 @@ function MarketChart({ symbol }: { symbol: TradingSymbolDTO }) {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:42px_42px]" />
       <div className="relative z-10 flex items-center justify-between border-b border-white/10 p-4">
         <div>
-          <p className="text-sm text-zinc-400">{symbol.symbol} · Canlı demo grafik</p>
+          <p className="text-sm text-zinc-400">{symbol.symbol} · Broker fiyat ekranı</p>
           <h2 className="text-xl font-semibold text-white">{symbol.name}</h2>
         </div>
         <div className={symbol.change >= 0 ? "text-right text-emerald-400" : "text-right text-red-400"}>
@@ -133,7 +133,7 @@ function MarketChart({ symbol }: { symbol: TradingSymbolDTO }) {
         })}
       </div>
       <div className="absolute bottom-4 left-4 z-10 rounded bg-white/5 px-2 py-1 text-xs text-zinc-500">
-        Demo fiyat akışı · gerçek piyasaya bağlı değildir
+        Fiyat sağlayıcı/broker entegrasyonu ile güncellenir
       </div>
     </div>
   );
@@ -198,7 +198,7 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
       }),
     onSuccess: () => {
       toast.success("Emir işlendi", {
-        description: `${selectedSymbol} ${side === "buy" ? "AL" : "SAT"} emri CRM client hesabına kaydedildi.`,
+        description: `${selectedSymbol} ${side === "buy" ? "AL" : "SAT"} emri broker API'ye iletildi ve CRM'e kaydedildi.`,
       });
       void queryClient.invalidateQueries({ queryKey: ["admin", "trading"] });
       void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
@@ -222,12 +222,12 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
             </Button>
             <div>
               <h1 className="text-lg font-semibold">CRM Trading Terminal</h1>
-              <p className="text-xs text-zinc-500">Client bağlantılı demo işlem paneli</p>
+              <p className="text-xs text-zinc-500">Client bağlantılı canlı broker işlem paneli</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-300">
-              Demo Active
+              Canlı Broker Modu
             </Badge>
             <Button
               variant="outline"
@@ -399,7 +399,7 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
           <div className="rounded-2xl border border-white/10 bg-[#0b0d10] p-4">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-semibold">Emir Paneli</h2>
-              <Badge variant="secondary" className="bg-white/10 text-zinc-300">Demo</Badge>
+              <Badge variant="secondary" className="bg-white/10 text-zinc-300">Live</Badge>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <Button
@@ -467,7 +467,7 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
                 {side === "buy" ? "Alış emrini gönder" : "Satış emrini gönder"}
               </Button>
               <p className="text-xs text-zinc-500">
-                Bu panel CRM demo işlem terminalidir; gerçek piyasa emri veya para hareketi oluşturmaz.
+                Emirler sadece canlı broker API anahtarları yapılandırıldığında gerçek borsaya/aracı kuruma iletilir.
               </p>
             </div>
           </div>

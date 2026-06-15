@@ -17,6 +17,11 @@ GOOGLE_MAPS_API_KEY=
 RESEND_API_KEY=
 EMAIL_FROM="LiveTrack <noreply@yourdomain.com>"
 
+# Live broker integration (required for real exchange orders)
+BROKER_API_URL=
+BROKER_API_KEY=
+BROKER_ACCOUNT_ID=
+
 # Optional — consent-based admin alerts when a user starts sharing (Telegram Bot API)
 # Create a bot via @BotFather, get chat id from @userinfobot or group admin
 TELEGRAM_BOT_TOKEN=

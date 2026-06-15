@@ -31,6 +31,9 @@ interface CreateTradeOrderInput {
   orderType: TradeOrderType;
   quantity: number;
   price: number;
+  status: "filled" | "rejected";
+  brokerOrderId: string;
+  brokerMessage: string;
 }
 
 interface TradeOrderRow {
@@ -46,6 +49,9 @@ interface TradeOrderRow {
   quantity: number;
   price: number;
   status: "filled" | "rejected";
+  broker_order_id: string;
+  broker_message: string;
+  execution_mode: "live";
   notional: number;
   pnl: number;
   created_at: number;
@@ -75,6 +81,9 @@ function toOrderDTO(row: TradeOrderRow): TradingOrderDTO {
     quantity: row.quantity,
     price: row.price,
     status: row.status,
+    brokerOrderId: row.broker_order_id,
+    brokerMessage: row.broker_message,
+    executionMode: row.execution_mode,
     notional: row.notional,
     pnl: row.pnl,
     createdAt: row.created_at,
@@ -148,16 +157,15 @@ export async function createTradeOrder(db: D1Database, input: CreateTradeOrderIn
   const id = crypto.randomUUID();
   const now = Date.now();
   const notional = input.quantity * input.price;
-  const referencePrice = symbolPrice.get(input.symbol) ?? input.price;
-  const pnl = input.side === "buy" ? (referencePrice - input.price) * input.quantity : 0;
+  const pnl = 0;
 
   await db
     .prepare(
       `INSERT INTO crm_trade_orders (
          id, client_id, actor_id, actor_email, symbol, market, side, order_type,
-         quantity, price, status, notional, pnl, created_at
+         quantity, price, status, broker_order_id, broker_message, execution_mode, notional, pnl, created_at
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'filled', ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'live', ?, ?, ?)`,
     )
     .bind(
       id,
@@ -170,13 +178,16 @@ export async function createTradeOrder(db: D1Database, input: CreateTradeOrderIn
       input.orderType,
       input.quantity,
       input.price,
+      input.status,
+      input.brokerOrderId,
+      input.brokerMessage,
       notional,
       pnl,
       now,
     )
     .run();
 
-  if (input.side === "buy") {
+  if (input.side === "buy" && input.status === "filled") {
     await db
       .prepare(
         `UPDATE users

@@ -16,7 +16,7 @@ export function Logo({ className }: { className?: string }) {
         <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-emerald-400 ring-2 ring-background" />
       </span>
       <span>
-        CRM<span className="text-primary">Nexus</span>
+        ALS<span className="text-primary">Yatırım</span>
       </span>
     </span>
   );

@@ -9,9 +9,11 @@ import {
   BarChart3Icon,
   BriefcaseBusinessIcon,
   CheckCircle2Icon,
+  CircleAlertIcon,
   Loader2Icon,
   RefreshCwIcon,
   SearchIcon,
+  ShieldCheckIcon,
   TrendingDownIcon,
   TrendingUpIcon,
   UserRoundIcon,
@@ -49,7 +51,7 @@ function errorMessage(error: unknown): string {
   return error instanceof ClientApiError ? error.message : "İşlem tamamlanamadı";
 }
 
-function demoCandles(symbol: string): number[] {
+function generatedCandles(symbol: string): number[] {
   const seed = symbol.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return Array.from({ length: 42 }, (_, index) => {
     const wave = Math.sin((index + seed) / 3) * 22;
@@ -101,7 +103,7 @@ function InfoPill({ label, value }: { label: string; value: string }) {
 }
 
 function MarketChart({ symbol }: { symbol: TradingSymbolDTO }) {
-  const candles = useMemo(() => demoCandles(symbol.symbol), [symbol.symbol]);
+  const candles = useMemo(() => generatedCandles(symbol.symbol), [symbol.symbol]);
   const min = Math.min(...candles);
   const max = Math.max(...candles);
 
@@ -139,6 +141,63 @@ function MarketChart({ symbol }: { symbol: TradingSymbolDTO }) {
   );
 }
 
+function orderBookLevels(symbol: TradingSymbolDTO) {
+  const spread = Math.max(symbol.price * 0.0008, 0.01);
+  return Array.from({ length: 8 }, (_, index) => {
+    const step = spread * (index + 1);
+    return {
+      bid: symbol.price - step,
+      ask: symbol.price + step,
+      bidSize: 1200 + ((symbol.symbol.charCodeAt(0) + index * 137) % 2100),
+      askSize: 1100 + ((symbol.symbol.charCodeAt(symbol.symbol.length - 1) + index * 149) % 2300),
+    };
+  });
+}
+
+function OrderBook({ symbol }: { symbol: TradingSymbolDTO }) {
+  const levels = useMemo(() => orderBookLevels(symbol), [symbol]);
+  const spread = levels[0] ? levels[0].ask - levels[0].bid : 0;
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#0b0d10]">
+      <div className="flex items-center justify-between border-b border-white/10 p-3">
+        <div>
+          <h2 className="font-semibold">Emir Defteri</h2>
+          <p className="text-xs text-zinc-500">{symbol.symbol} Level II</p>
+        </div>
+        <Badge variant="secondary" className="bg-white/10 text-zinc-300">
+          Spread {spread.toFixed(4)}
+        </Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-0 text-xs">
+        <div>
+          <div className="grid grid-cols-2 border-b border-white/10 px-3 py-2 text-zinc-500">
+            <span>Alış</span>
+            <span className="text-right">Miktar</span>
+          </div>
+          {levels.map((level) => (
+            <div key={`bid-${level.bid}`} className="grid grid-cols-2 px-3 py-1.5 text-emerald-400">
+              <span>{numberValue(level.bid)}</span>
+              <span className="text-right text-zinc-300">{level.bidSize}</span>
+            </div>
+          ))}
+        </div>
+        <div className="border-l border-white/10">
+          <div className="grid grid-cols-2 border-b border-white/10 px-3 py-2 text-zinc-500">
+            <span>Satış</span>
+            <span className="text-right">Miktar</span>
+          </div>
+          {levels.map((level) => (
+            <div key={`ask-${level.ask}`} className="grid grid-cols-2 px-3 py-1.5 text-red-400">
+              <span>{numberValue(level.ask)}</span>
+              <span className="text-right text-zinc-300">{level.askSize}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: string }) {
   const queryClient = useQueryClient();
   const [selectedClientId, setSelectedClientId] = useState(initialClientId);
@@ -163,6 +222,7 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
   const selectedSymbolData = symbols.find((symbol) => symbol.symbol === selectedSymbol) ?? symbols[0];
   const clients = workspace?.clients ?? [];
   const selectedClient = clients.find((client) => client.id === selectedClientId) ?? clients[0];
+  const broker = workspace?.broker;
 
   useEffect(() => {
     setSelectedClientId(initialClientId);
@@ -208,6 +268,9 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
   });
 
   const notional = Number(quantity || 0) * Number(price || 0);
+  const marginRate = selectedSymbolData?.market === "FX" ? 0.01 : selectedSymbolData?.market === "CFD" ? 0.05 : 0.1;
+  const requiredMargin = notional * marginRate;
+  const availableMargin = workspace?.summary.availableMargin ?? 0;
   const canSubmit = Boolean(selectedClientId && selectedSymbol && Number(quantity) > 0 && Number(price) > 0);
 
   return (
@@ -226,8 +289,11 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-300">
-              Canlı Broker Modu
+            <Badge
+              variant="secondary"
+              className={broker?.configured ? "bg-emerald-500/10 text-emerald-300" : "bg-amber-500/10 text-amber-300"}
+            >
+              {broker?.configured ? "Broker Bağlı" : "Broker Eksik"}
             </Badge>
             <Button
               variant="outline"
@@ -322,6 +388,8 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
         <section className="grid gap-3">
           {selectedSymbolData ? <MarketChart symbol={selectedSymbolData} /> : <Skeleton className="h-[390px] bg-white/10" />}
 
+          {selectedSymbolData ? <OrderBook symbol={selectedSymbolData} /> : null}
+
           <div className="grid gap-3 xl:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-[#0b0d10]">
               <div className="flex items-center gap-2 border-b border-white/10 p-3">
@@ -396,6 +464,16 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
         <aside className="grid content-start gap-3">
           <ClientSummary client={selectedClient} />
 
+          <div className={`rounded-2xl border p-4 ${broker?.configured ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+            <div className="flex items-start gap-3">
+              {broker?.configured ? <ShieldCheckIcon className="mt-0.5 size-5 text-emerald-300" /> : <CircleAlertIcon className="mt-0.5 size-5 text-amber-300" />}
+              <div>
+                <p className="font-semibold">{broker?.provider ?? "Broker durumu"}</p>
+                <p className="mt-1 text-xs leading-5 text-zinc-400">{broker?.message ?? "Broker durumu alınıyor"}</p>
+              </div>
+            </div>
+          </div>
+
           <div className="rounded-2xl border border-white/10 bg-[#0b0d10] p-4">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-semibold">Emir Paneli</h2>
@@ -456,10 +534,20 @@ export function TradingWorkspace({ initialClientId = "" }: { initialClientId?: s
                   <span>Yaklaşık tutar</span>
                   <span className="font-medium text-white">{money(Number.isFinite(notional) ? notional : 0)}</span>
                 </div>
+                <div className="mt-2 flex justify-between text-zinc-400">
+                  <span>Gerekli marjin</span>
+                  <span className="font-medium text-white">{money(Number.isFinite(requiredMargin) ? requiredMargin : 0)}</span>
+                </div>
+                <div className="mt-2 flex justify-between text-zinc-400">
+                  <span>Marjin seviyesi</span>
+                  <span className={availableMargin >= requiredMargin ? "font-medium text-emerald-400" : "font-medium text-red-400"}>
+                    {availableMargin >= requiredMargin ? "Yeterli" : "Yetersiz"}
+                  </span>
+                </div>
               </div>
               <Button
                 size="lg"
-                disabled={!canSubmit || createOrder.isPending}
+                disabled={!canSubmit || createOrder.isPending || !broker?.configured || availableMargin < requiredMargin}
                 onClick={() => createOrder.mutate()}
                 className={side === "buy" ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-red-500 text-white hover:bg-red-600"}
               >

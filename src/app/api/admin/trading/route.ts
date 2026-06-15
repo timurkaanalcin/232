@@ -13,10 +13,19 @@ import { getBrokerConfig, submitBrokerOrder } from "@/services/broker";
 import { createTradeOrder, getTradingWorkspace } from "@/services/trading";
 
 export const GET = apiHandler(async (request: Request) => {
-  const { db } = await requirePermission("trading.access");
+  const { db, env } = await requirePermission("trading.access");
   const url = new URL(request.url);
   const clientId = url.searchParams.get("clientId");
-  return jsonOk({ workspace: await getTradingWorkspace(db, clientId) });
+  const brokerConfig = getBrokerConfig(env);
+  return jsonOk({
+    workspace: await getTradingWorkspace(db, clientId, {
+      configured: Boolean(brokerConfig),
+      provider: brokerConfig ? new URL(brokerConfig.apiUrl).host : "Broker bağlanmadı",
+      message: brokerConfig
+        ? "Canlı broker API yapılandırıldı"
+        : "Gerçek borsa emirleri için BROKER_API_URL ve BROKER_API_KEY gerekli",
+    }),
+  });
 });
 
 export const POST = apiHandler(async (request: Request) => {

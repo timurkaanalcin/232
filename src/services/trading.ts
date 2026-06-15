@@ -218,7 +218,11 @@ export async function getTradeOrderById(db: D1Database, id: string): Promise<Tra
   return row ? toOrderDTO(row) : null;
 }
 
-export async function getTradingWorkspace(db: D1Database, clientId?: string | null): Promise<TradingWorkspaceDTO> {
+export async function getTradingWorkspace(
+  db: D1Database,
+  clientId?: string | null,
+  broker?: TradingWorkspaceDTO["broker"],
+): Promise<TradingWorkspaceDTO> {
   const clients = await getTradingClients(db);
   const selectedClientId = clientId || clients[0]?.id || null;
   const clientWhere = selectedClientId ? "WHERE o.client_id = ?" : "";
@@ -264,6 +268,11 @@ export async function getTradingWorkspace(db: D1Database, clientId?: string | nu
     symbols: TRADING_SYMBOLS,
     orders,
     positions,
+    broker: broker ?? {
+      configured: false,
+      provider: "Broker bağlanmadı",
+      message: "BROKER_API_URL ve BROKER_API_KEY yapılandırılmalı",
+    },
     summary: {
       equity,
       availableMargin: Math.max(0, equity - usedMargin),

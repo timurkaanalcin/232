@@ -388,6 +388,11 @@ export interface TradingWorkspaceDTO {
   symbols: TradingSymbolDTO[];
   orders: TradingOrderDTO[];
   positions: TradingPositionDTO[];
+  broker: {
+    configured: boolean;
+    provider: string;
+    message: string;
+  };
   summary: {
     equity: number;
     availableMargin: number;

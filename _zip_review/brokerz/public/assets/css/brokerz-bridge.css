@@ -1,0 +1,102 @@
+/* Bridge: BitRader template + React Brokerz site */
+.brokerz-site button {
+  font: inherit;
+}
+
+.brokerz-site .menu a,
+.brokerz-site .footer__linklist-item a,
+.brokerz-site .header-btn a {
+  cursor: pointer;
+}
+
+.brokerz-site .menu .submenu {
+  display: none;
+}
+
+.brokerz-site .menu > li:hover > .submenu,
+.brokerz-site .menu > li.is-open > .submenu {
+  display: block;
+}
+
+.brokerz-site .menu-area.menu-open .menu {
+  display: block !important;
+}
+
+.brokerz-site .header-bar.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.brokerz-site .header-bar.active span:nth-child(2) {
+  opacity: 0;
+}
+.brokerz-site .header-bar.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+.brokerz-site .page-inner {
+  min-height: 40vh;
+}
+
+.brokerz-site .tw-compat {
+  color: inherit;
+}
+
+.brokerz-site .nav-cta {
+  cursor: pointer;
+}
+
+.brokerz-site button.trk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.brokerz-site button.trk-btn--primary {
+  background: var(--brand-color, #00d094);
+  color: #0c263a;
+}
+
+.brokerz-site button.trk-btn--outline,
+.brokerz-site button.trk-btn--outline22,
+.brokerz-site button.trk-btn--border {
+  background: transparent;
+}
+
+.brokerz-site button.trk-btn--secondary2 {
+  background: var(--brand-color, #00d094);
+  color: #0c263a;
+}
+
+.brokerz-site .logo .nav-cta,
+.brokerz-site .footer__about-logo.nav-cta {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+/* Inner Tailwind pages sit on BitRader chrome */
+.brokerz-site .page-inner {
+  background: transparent;
+}
+
+.brokerz-site .page-inner .bg-black,
+.brokerz-site .page-inner [class*="bg-[#0"] {
+  background-color: transparent !important;
+}
+
+/* Keep terminal/admin usable without BitRader */
+#tw-app {
+  min-height: 100vh;
+  background: #000;
+  color: #fff;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+#tw-app *,
+#tw-app *::before,
+#tw-app *::after {
+  box-sizing: border-box;
+}

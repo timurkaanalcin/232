@@ -1,0 +1,72 @@
+// partner
+.partner {
+    overflow-x: clip;
+
+    @extend %py-30;
+
+    &__wrapper {
+        @extend %p-rel;
+        z-index: 333;
+    }
+
+    //background overlay
+    &--gradient {
+        @extend %p-rel;
+
+        &:before {
+            @extend %p-abs;
+            content: "";
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            background-color: $tertiary-color;
+            border-top: 8px solid $body-color;
+            border-bottom: 8px solid $body-color;
+            z-index: 3;
+        }
+
+        &::after {
+            @extend %p-abs;
+            content: "";
+            left: 0;
+            top: -5px;
+            height: 119px;
+            width: 100%;
+            background: linear-gradient(150.39deg, rgb(237 242 248) 15.02%, #EDF2F8 99.59%);
+
+            transform: rotate(2deg);
+            z-index: 2;
+        }
+    }
+
+
+    &--style2 {
+        @extend %p-rel,
+        %py-50;
+
+        @include breakpoint(lg){
+            padding-block: 60px;
+        }
+        @include breakpoint(xl){
+            padding-block: 70px;
+        }
+        @include breakpoint(xxl){
+            padding-block: 80px;
+        }
+        @include breakpoint(xxl){
+            padding-block: 90px;
+        }
+
+        &:before {
+            @extend %p-abs;
+            content: "";
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            background-color: $bg-color-12;
+            z-index: 3;
+        }
+    }
+}

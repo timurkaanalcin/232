@@ -1,0 +1,255 @@
+.accordion {
+  &-button {
+    // bootstrap overwrite
+    padding: 0px;
+
+    &:not(.collapesd) {
+      box-shadow: none;
+    }
+
+
+    &::after {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid $brand-color;
+      background-position: center;
+      background-size: inherit;
+    }
+
+    &--style2 {
+      &::after {
+        border: 1px solid $thm-black-color;
+      }
+    }
+
+    &--style3 {
+      &::after {
+        border: 1px solid $secondary-color;
+      }
+    }
+
+    &.collapsed {
+      &::after {
+        border: 1.5px solid $faq-item-btn-border-color;
+        background-size: inherit;
+      }
+    }
+  }
+
+  &__item {
+    @extend %of-hidden;
+  }
+
+  &__button {
+    @extend %w-100,
+    %text-medium,
+    %text-capitalize;
+    @extend %text-start;
+    @extend %d-flex;
+    @extend %justify-between;
+    @include font-size(20px);
+    color: $brand-color;
+    font-family: $title-font;
+    border: none;
+
+    &-content {
+      flex: 1;
+    }
+
+    &.collapsed {
+      color: $title-color;
+
+      .accordion__button {
+        &-plusicon {
+          border: 1.5px solid $faq-item-btn-border-color;
+
+          &::before {
+            background-color: $title-color;
+          }
+
+          &::after {
+            @include add-prefix(transform, translateY(-50%));
+            content: "";
+            height: 14px;
+            width: 2px;
+            top: 50%;
+            left: 11px;
+            background-color: $title-color;
+          }
+        }
+      }
+    }
+  }
+
+
+  &--style1 {
+    [class^="col"] {
+      &:not(:last-child) {
+        .accordion__item {
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
+
+
+    .accordion {
+      &__item {
+        border-radius: 0 !important;
+      }
+
+      &__button {
+        @extend %py-20;
+        background-color: $bg-color-3;
+
+        // modify bootstrap
+        color: $title-color;
+
+        &:not(.collapsed) {
+          color: $brand-color;
+          padding-block-end: 8px;
+        }
+
+        &--style2 {
+          background-color: $tertiary-color3;
+        }
+      }
+
+      &__header {
+        border-bottom: none;
+
+        &:focus {
+          outline: none;
+        }
+      }
+    }
+  }
+
+  &--style2 {
+    .accordion {
+      &__item {
+        border-radius: 16px;
+        background-color: $faq-bg-color;
+        box-shadow: 0px 16px 48px 0px rgba(6, 35, 63, 0.03), 0px -16px 48px 0px rgba(6, 35, 63, 0.03);
+
+
+
+        @include breakpoint(sm) {
+          margin-block-end: 5px;
+        }
+
+        @include breakpoint(xl) {
+          margin-block-end: 10px;
+        }
+      }
+
+      &__button {
+        @extend %p-25;
+        background-color: $bg-color-5;
+        color: $secondary-color;
+
+        &.collapsed {
+          color: $title-color;
+        }
+
+        &:not(.collapsed) {
+          padding-block-end: 8px;
+        }
+
+        &-plusicon {
+          border: 1.5px solid $secondary-color;
+
+          &::before {
+            @include add-prefix(transform, translateY(-50%));
+            content: "";
+            width: 14px;
+            height: 2px;
+            top: 50%;
+            left: 5px;
+            background-color: $secondary-color;
+          }
+        }
+      }
+
+      &__body {
+        @extend %px-25,
+        %pb-25;
+        background-color: $bg-color-5;
+      }
+    }
+  }
+
+  &--style3 {
+    [class^="col"] {
+      &:not(:last-child) {
+        .accordion__item {
+          border-bottom: 1px solid $border-color-10;
+        }
+      }
+    }
+
+    .accordion {
+
+      &__item {
+        border-radius: 0 !important;
+
+      }
+
+      &__button {
+        @extend %py-20,
+        %px-20;
+        background-color: $bg-color-3;
+        border-top-right-radius: 4px;
+        border-top-left-radius: 4px;
+
+
+        @include breakpoint(xl) {
+          padding-inline: 24px;
+        }
+
+        // modify bootstrap
+        color: $title-color;
+
+
+        &:not(.collapsed) {
+          color: $thm-title-color;
+          background-color: $bg-color-10;
+          padding-block-end: 8px;
+        }
+
+
+
+        &--style2 {
+          background-color: $tertiary-color3;
+        }
+      }
+
+      &__header {
+        border-bottom: none;
+
+        &:focus {
+          outline: none;
+        }
+      }
+
+      &__body {
+        @extend %px-20;
+        border-bottom: 1px solid transparent;
+        background-color: $bg-color-10;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+
+        @include breakpoint(xl) {
+          padding-inline: 24px;
+        }
+
+        p {
+          color: $thm-title-color;
+        }
+      }
+
+    }
+  }
+
+
+}

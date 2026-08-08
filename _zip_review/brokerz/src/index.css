@@ -2,52 +2,287 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Tickmill (new brand) tokens ── */
+.tw-scope.tm-landing {
+  --tm-bg: #140106;
+  --tm-bg-2: #280410;
+  --tm-panel: #390513;
+  --tm-line: rgba(255, 178, 199, 0.16);
+  --tm-accent: #f83b00;
+  --tm-pink: #ff4c7c;
+  --tm-green: #147d40;
+  --tm-mint: #56cf87;
+  --tm-cream: #faf0e5;
+  --tm-cream-2: #fff7ee;
+  --tm-muted: #c9a4ae;
+  --tm-text: #fff6ed;
+  font-family: Poppins, "DM Sans", system-ui, sans-serif;
+  color: var(--tm-text);
+  background: var(--tm-bg);
+}
+
+.tw-scope.tm-landing .tm-display {
+  font-family: Fraunces, Georgia, serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "SOFT" 50, "WONK" 0;
+}
+
+/* Hide BitRader chrome leftovers on elite landings */
+html.theme-tickmill body {
+  background: #140106 !important;
+}
+html.theme-tickmill .preloader,
+html.theme-olymp .preloader {
+  display: none !important;
+}
+
+/* Olymptrade TR clone */
+.tw-scope.ot-tr {
+  font-family: "Noto Sans", "DM Sans", system-ui, sans-serif;
+  --ot-accent: #6aff41;
+  --ot-grad: linear-gradient(90deg, #00ffc2 0%, #42ff00 100%);
+  --ot-surface: #141414;
+  --ot-canvas: #000;
+}
+.tw-scope.ot-landing {
+  --ot-bg: #08080d;
+  --ot-bg-2: #0f0f12;
+  --ot-panel: #141414;
+  --ot-line: rgba(255, 255, 255, 0.1);
+  --ot-orange: #ff773d;
+  --ot-orange-2: #eb7047;
+  --ot-blue: #7dbaff;
+  --ot-muted: #8f8f8f;
+  --ot-text: #f2f2f2;
+  font-family: "Noto Sans", "DM Sans", system-ui, sans-serif;
+  color: var(--ot-text);
+  background: var(--ot-bg);
+}
+
+.tw-scope.ot-landing .ot-display {
+  font-family: Syne, "DM Sans", sans-serif;
+}
+
+/* UBS theme */
+.tw-scope.ubs-landing {
+  --ubs-red: #E60000;
+}
+html.theme-ubs .preloader {
+  display: none !important;
+}
+/* UBS Olymp-layout home stays black */
+html.theme-ubs:has(.ot-tr) body,
+html.theme-ubs:has(.ot-tr) main,
+html.theme-ubs body {
+  background: #000000 !important;
+}
+
+/*
+ * Kill BitRader/Bootstrap frames & gray fills on UBS elite surfaces.
+ * Template CSS otherwise paints borders/backgrounds onto every <button>.
+ */
+.tw-scope.ot-tr button,
+.tw-scope.ot-tr [type="button"],
+.tw-scope.ot-tr [type="submit"],
+html.theme-ubs .ot-tr button,
+html.theme-ubs .ot-tr [type="button"],
+html.theme-ubs .ot-tr [type="submit"] {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-image: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+.tw-scope.ot-tr button:not([class*="bg-"]),
+.tw-scope.ot-tr [type="button"]:not([class*="bg-"]),
+html.theme-ubs .ot-tr button:not([class*="bg-"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+.tw-scope.ot-tr img,
+.tw-scope.ot-tr picture,
+.tw-scope.ot-tr video,
+.tw-scope.ot-tr a,
+html.theme-ubs .ot-tr img,
+html.theme-ubs .ot-tr a {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.tw-scope.ot-tr header button img,
+.tw-scope.ot-tr header img {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Customer auth — no frames / no gray panels */
+.tw-scope.ubs-auth button,
+.tw-scope.ubs-auth [type="button"],
+.tw-scope.ubs-auth [type="submit"],
+.tw-scope.ubs-auth input {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+.tw-scope.ubs-auth input {
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: transparent !important;
+}
+.tw-scope.ubs-auth input:focus {
+  border-bottom-color: #E60000 !important;
+}
+
+@keyframes tm-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tm-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+@keyframes ot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 119, 61, 0.45); }
+  70% { box-shadow: 0 0 0 14px rgba(255, 119, 61, 0); }
+}
+
+.tw-scope.tm-landing .tm-rise { animation: tm-rise 0.7s ease-out both; }
+.tw-scope.tm-landing .tm-rise-2 { animation-delay: 0.12s; }
+.tw-scope.tm-landing .tm-rise-3 { animation-delay: 0.24s; }
+.tw-scope.tm-landing .tm-glow { animation: tm-glow 6s ease-in-out infinite; }
+.tw-scope.ot-landing .ot-rise { animation: tm-rise 0.7s ease-out both; }
+.tw-scope.ot-landing .ot-rise-2 { animation-delay: 0.12s; }
+.tw-scope.ot-landing .ot-rise-3 { animation-delay: 0.22s; }
+.tw-scope.ot-landing .ot-pulse-cta { animation: ot-pulse 2.4s infinite; }
+
+/* Site chrome — Tickmill default */
+html.theme-tickmill .header-section--style2 {
+  background: #140106 !important;
+  border-bottom: 1px solid rgba(255, 178, 199, 0.14);
+}
+html.theme-tickmill .header-section--style2 .menu > li > a {
+  color: #fff6ed !important;
+}
+html.theme-tickmill .header-section--style2 .menu > li > a:hover,
+html.theme-tickmill .header-section--style2 .menu > li > a.active {
+  color: #ff4c7c !important;
+}
+html.theme-tickmill .header-section--style2 .trk-btn--primary {
+  background: #f83b00 !important;
+  border-color: #f83b00 !important;
+  color: #fff !important;
+  border-radius: 999px !important;
+}
+html.theme-tickmill .header-section--style2 .trk-btn--border {
+  border-color: rgba(255, 76, 124, 0.45) !important;
+  color: #ffb2c7 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+}
+html.theme-tickmill .footer {
+  background: #0a0104 !important;
+  border-top: 1px solid rgba(255, 178, 199, 0.12);
+  color: #c9a4ae;
+}
+html.theme-tickmill .footer h6,
+html.theme-tickmill .footer__about-moto,
+html.theme-tickmill .footer a {
+  color: #fff6ed !important;
+}
+html.theme-tickmill .footer a:hover { color: #ff4c7c !important; }
+html.theme-tickmill .preloader { background: #140106 !important; }
+html.theme-tickmill main { background: #140106; }
+
+/* Site chrome — Olymp (cps-dark lime) */
+html.theme-olymp .header-section--style2 {
+  background: #000 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+html.theme-olymp .header-section--style2 .menu > li > a {
+  color: #ffffff8f !important;
+}
+html.theme-olymp .header-section--style2 .menu > li > a:hover,
+html.theme-olymp .header-section--style2 .menu > li > a.active {
+  color: #6aff41 !important;
+}
+html.theme-olymp .header-section--style2 .trk-btn--primary {
+  background: linear-gradient(90deg, #00ffc2 0%, #42ff00 100%) !important;
+  border-color: transparent !important;
+  color: #000 !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+}
+html.theme-olymp .footer a:hover { color: #6aff41 !important; }
+html.theme-olymp .preloader { background: #000 !important; }
+html.theme-olymp main { background: #000; }
+html.theme-olymp .header-section--style2 .trk-btn--border {
+  border-color: rgba(242, 242, 242, 0.2) !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  background: rgba(242, 242, 242, 0.08) !important;
+}
+html.theme-olymp .footer {
+  background: #000 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: #ffffff8f;
+}
+html.theme-olymp .footer h6,
+html.theme-olymp .footer__about-moto,
+html.theme-olymp .footer a {
+  color: #f2f2f2 !important;
+}
+
+html .header-section--style2 .header-bottom {
+  background: transparent !important;
+}
+html .lightdark-switch {
+  display: none !important;
+}
+
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
+html[data-ubs-theme="dark"] .tw-scope.ubs-auth,
+html[data-ubs-theme="dark"] .bg-\[\#f4f4f6\] {
+  /* customer app dark polish */
+}
+html[data-ubs-theme="dark"] body {
+  color-scheme: dark;
+}
+
 @layer utilities {
   .animate-scroll {
     animation: scroll 30s linear infinite;
   }
 
   @keyframes scroll {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
   }
 
-  /* Custom scrollbar for dark theme */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
-  ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-
-  /* Fade-in animation */
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out;
   }
 
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }

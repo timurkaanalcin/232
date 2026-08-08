@@ -7,6 +7,11 @@ export type {
   Transaction,
   SiteSetting,
   AdminUser,
+  Team,
+  CrmLead,
+  AdminRole,
+  Department,
+  LeadStatus,
 } from "./types";
 
 const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() ?? "";

@@ -1,7 +1,19 @@
-import type { DbRow, QueryError, QueryResult, TableName } from "./types";
-import type { AdminUser, SiteSetting, Trade, Trader, Transaction } from "./types";
+import type {
+  AdminUser,
+  CrmLead,
+  DbRow,
+  QueryError,
+  QueryResult,
+  SiteSetting,
+  TableName,
+  Team,
+  Trade,
+  Trader,
+  Transaction,
+} from "./types";
 
-const STORAGE_KEY = "brokerz_local_db_v1";
+const STORAGE_KEY = "brokerz_local_db_v2";
+const LEGACY_KEY = "brokerz_local_db_v1";
 
 interface LocalDb {
   traders: Trader[];
@@ -9,6 +21,8 @@ interface LocalDb {
   transactions: Transaction[];
   site_settings: SiteSetting[];
   admin_users: AdminUser[];
+  teams: Team[];
+  crm_leads: CrmLead[];
 }
 
 function uid(): string {
@@ -23,24 +37,116 @@ function now(): string {
 }
 
 function seed(): LocalDb {
+  const salesTeamId = uid();
+  const retTeamId = uid();
+  const superId = uid();
+  const headSalesId = uid();
+  const headRetId = uid();
+  const tlSalesId = uid();
+  const tlRetId = uid();
+  const salesAgentId = uid();
+  const retAgentId = uid();
   const traderId = uid();
+  const leadSalesId = uid();
+  const leadRetId = uid();
+  const t = now();
+
   return {
+    teams: [
+      { id: salesTeamId, name: "Sales Team Alpha", department: "sales", leader_id: tlSalesId, created_at: t },
+      { id: retTeamId, name: "Retention Team Alpha", department: "retention", leader_id: tlRetId, created_at: t },
+    ],
     admin_users: [
       {
-        id: uid(),
+        id: superId,
         email: "admin@brokerz.com",
         password_hash: "admin123",
         name: "Super Admin",
         role: "super_admin",
+        department: "all",
+        team_id: null,
+        manager_id: null,
         is_active: true,
-        created_at: now(),
+        created_at: t,
+      },
+      {
+        id: headSalesId,
+        email: "head.sales@brokerz.com",
+        password_hash: "head123",
+        name: "Head of Sales",
+        role: "head_sales",
+        department: "sales",
+        team_id: null,
+        manager_id: superId,
+        is_active: true,
+        created_at: t,
+      },
+      {
+        id: headRetId,
+        email: "head.ret@brokerz.com",
+        password_hash: "head123",
+        name: "Head of Retention",
+        role: "head_retention",
+        department: "retention",
+        team_id: null,
+        manager_id: superId,
+        is_active: true,
+        created_at: t,
+      },
+      {
+        id: tlSalesId,
+        email: "tl.sales@brokerz.com",
+        password_hash: "tl123",
+        name: "Sales Team Leader",
+        role: "team_leader_sales",
+        department: "sales",
+        team_id: salesTeamId,
+        manager_id: headSalesId,
+        is_active: true,
+        created_at: t,
+      },
+      {
+        id: tlRetId,
+        email: "tl.ret@brokerz.com",
+        password_hash: "tl123",
+        name: "Retention Team Leader",
+        role: "team_leader_retention",
+        department: "retention",
+        team_id: retTeamId,
+        manager_id: headRetId,
+        is_active: true,
+        created_at: t,
+      },
+      {
+        id: salesAgentId,
+        email: "sales@brokerz.com",
+        password_hash: "sales123",
+        name: "Sales Agent",
+        role: "sales_agent",
+        department: "sales",
+        team_id: salesTeamId,
+        manager_id: tlSalesId,
+        is_active: true,
+        created_at: t,
+      },
+      {
+        id: retAgentId,
+        email: "ret@brokerz.com",
+        password_hash: "ret123",
+        name: "Retention Agent",
+        role: "retention_agent",
+        department: "retention",
+        team_id: retTeamId,
+        manager_id: tlRetId,
+        is_active: true,
+        created_at: t,
       },
     ],
     traders: [
       {
         id: traderId,
         email: "trader@brokerz.com",
-        name: "Demo Trader",
+        name: "Live Trader",
         account_number: "5001284563",
         account_type: "raw",
         balance: 10000,
@@ -48,9 +154,13 @@ function seed(): LocalDb {
         leverage: 500,
         currency: "USD",
         is_active: true,
-        is_demo: true,
-        created_at: now(),
-        updated_at: now(),
+        is_demo: false,
+        assigned_to: retAgentId,
+        department: "retention",
+        lead_id: leadRetId,
+        team_id: retTeamId,
+        created_at: t,
+        updated_at: t,
       },
     ],
     trades: [
@@ -62,13 +172,13 @@ function seed(): LocalDb {
         volume: 0.1,
         open_price: 1.08542,
         close_price: null,
-        open_time: now(),
+        open_time: t,
         close_time: null,
         sl: null,
         tp: null,
         profit: 0,
         status: "open",
-        created_at: now(),
+        created_at: t,
       },
     ],
     transactions: [
@@ -78,33 +188,124 @@ function seed(): LocalDb {
         type: "deposit",
         amount: 10000,
         status: "completed",
-        description: "Initial demo deposit",
-        created_at: now(),
+        description: "Initial deposit (FTD)",
+        created_at: t,
+      },
+    ],
+    crm_leads: [
+      {
+        id: leadSalesId,
+        name: "New Prospect",
+        email: "prospect@example.com",
+        phone: "+44 7700 900123",
+        status: "new",
+        department: "sales",
+        assigned_to: salesAgentId,
+        team_id: salesTeamId,
+        trader_id: null,
+        ftd_amount: 0,
+        notes: "Inbound web lead — follow up today.",
+        created_at: t,
+        updated_at: t,
+      },
+      {
+        id: leadRetId,
+        name: "Live Trader",
+        email: "trader@brokerz.com",
+        phone: "+44 7700 900456",
+        status: "retention",
+        department: "retention",
+        assigned_to: retAgentId,
+        team_id: retTeamId,
+        trader_id: traderId,
+        ftd_amount: 10000,
+        notes: "FTD completed. Retention care sequence active.",
+        created_at: t,
+        updated_at: t,
+      },
+      {
+        id: uid(),
+        name: "Contacted Lead",
+        email: "contact@example.com",
+        phone: "+41 79 123 45 67",
+        status: "contacted",
+        department: "sales",
+        assigned_to: salesAgentId,
+        team_id: salesTeamId,
+        trader_id: null,
+        ftd_amount: 0,
+        notes: "Interested in RAW account.",
+        created_at: t,
+        updated_at: t,
       },
     ],
     site_settings: [
-      { id: uid(), key: "site_name", value: "BROKERZ", description: "Site display name", updated_at: now() },
-      { id: uid(), key: "site_tagline", value: "Trade Smart. Trade BROKERZ.", description: "Hero tagline", updated_at: now() },
-      { id: uid(), key: "leverage_max", value: "1000", description: "Maximum leverage offered", updated_at: now() },
-      { id: uid(), key: "min_deposit", value: "100", description: "Minimum deposit in USD", updated_at: now() },
-      { id: uid(), key: "default_balance", value: "10000", description: "Default demo balance for new traders", updated_at: now() },
-      { id: uid(), key: "default_leverage", value: "500", description: "Default leverage for new traders", updated_at: now() },
-      { id: uid(), key: "default_account_type", value: "raw", description: "Default account type (classic/raw/tvraw)", updated_at: now() },
-      { id: uid(), key: "spread_eurusd", value: "12", description: "EURUSD spread in points", updated_at: now() },
-      { id: uid(), key: "spread_xauusd", value: "25", description: "XAUUSD spread in points", updated_at: now() },
-      { id: uid(), key: "spread_btcusd", value: "50", description: "BTCUSD spread in points", updated_at: now() },
-      { id: uid(), key: "execution_speed", value: "0.15", description: "Average execution speed in seconds", updated_at: now() },
-      { id: uid(), key: "support_email", value: "support@brokerz.com", description: "Support email address", updated_at: now() },
-      { id: uid(), key: "support_phone", value: "+44 20 7190 9935", description: "Support phone number", updated_at: now() },
-      { id: uid(), key: "maintenance_mode", value: "false", description: "Site maintenance mode on/off", updated_at: now() },
-      { id: uid(), key: "trading_enabled", value: "true", description: "Trading enabled globally", updated_at: now() },
-      { id: uid(), key: "max_volume", value: "100", description: "Maximum trade volume in lots", updated_at: now() },
-      { id: uid(), key: "min_volume", value: "0.01", description: "Minimum trade volume in lots", updated_at: now() },
-      { id: uid(), key: "margin_call_level", value: "100", description: "Margin call level percentage", updated_at: now() },
-      { id: uid(), key: "stop_out_level", value: "50", description: "Stop out level percentage", updated_at: now() },
-      { id: uid(), key: "commission_raw", value: "3", description: "RAW account commission per lot per side", updated_at: now() },
-      { id: uid(), key: "commission_tvraw", value: "3.5", description: "TradingView RAW commission per lot per side", updated_at: now() },
+      { id: uid(), key: "site_name", value: "BROKERZ", description: "Site display name", updated_at: t },
+      { id: uid(), key: "site_tagline", value: "Trade Smart. Trade BROKERZ.", description: "Hero tagline", updated_at: t },
+      { id: uid(), key: "leverage_max", value: "1000", description: "Maximum leverage offered", updated_at: t },
+      { id: uid(), key: "min_deposit", value: "100", description: "Minimum deposit in USD", updated_at: t },
+      { id: uid(), key: "default_balance", value: "10000", description: "Default balance for new live traders", updated_at: t },
+      { id: uid(), key: "default_leverage", value: "500", description: "Default leverage for new traders", updated_at: t },
+      { id: uid(), key: "default_account_type", value: "raw", description: "Default account type (classic/raw/tvraw)", updated_at: t },
+      { id: uid(), key: "spread_eurusd", value: "12", description: "EURUSD spread in points", updated_at: t },
+      { id: uid(), key: "spread_xauusd", value: "25", description: "XAUUSD spread in points", updated_at: t },
+      { id: uid(), key: "spread_btcusd", value: "50", description: "BTCUSD spread in points", updated_at: t },
+      { id: uid(), key: "execution_speed", value: "0.15", description: "Average execution speed in seconds", updated_at: t },
+      { id: uid(), key: "support_email", value: "support@brokerz.com", description: "Support email address", updated_at: t },
+      { id: uid(), key: "support_phone", value: "+44 20 7190 9935", description: "Support phone number", updated_at: t },
+      { id: uid(), key: "maintenance_mode", value: "false", description: "Site maintenance mode on/off", updated_at: t },
+      { id: uid(), key: "trading_enabled", value: "true", description: "Trading enabled globally", updated_at: t },
+      { id: uid(), key: "max_volume", value: "100", description: "Maximum trade volume in lots", updated_at: t },
+      { id: uid(), key: "min_volume", value: "0.01", description: "Minimum trade volume in lots", updated_at: t },
+      { id: uid(), key: "margin_call_level", value: "100", description: "Margin call level percentage", updated_at: t },
+      { id: uid(), key: "stop_out_level", value: "50", description: "Stop out level percentage", updated_at: t },
+      { id: uid(), key: "commission_raw", value: "3", description: "RAW account commission per lot per side", updated_at: t },
+      { id: uid(), key: "commission_tvraw", value: "3.5", description: "TradingView RAW commission per lot per side", updated_at: t },
     ],
+  };
+}
+
+function migrateTrader(t: Record<string, unknown>): Trader {
+  return {
+    id: String(t.id),
+    email: String(t.email ?? ""),
+    name: String(t.name ?? ""),
+    account_number: String(t.account_number ?? ""),
+    account_type: String(t.account_type ?? "raw"),
+    balance: Number(t.balance ?? 0),
+    equity: Number(t.equity ?? t.balance ?? 0),
+    leverage: Number(t.leverage ?? 500),
+    currency: String(t.currency ?? "USD"),
+    is_active: Boolean(t.is_active ?? true),
+    is_demo: false,
+    assigned_to: (t.assigned_to as string) ?? null,
+    department: (t.department as Trader["department"]) ?? "sales",
+    lead_id: (t.lead_id as string) ?? null,
+    team_id: (t.team_id as string) ?? null,
+    created_at: String(t.created_at ?? now()),
+    updated_at: String(t.updated_at ?? now()),
+  };
+}
+
+function migrateAdmin(a: Record<string, unknown>): AdminUser {
+  const role = String(a.role ?? "sales_agent");
+  let department: AdminUser["department"] = "sales";
+  if (role === "super_admin") department = "all";
+  else if (role.includes("retention") || role === "head_retention") department = "retention";
+  else if (a.department === "retention" || a.department === "sales" || a.department === "all") {
+    department = a.department;
+  }
+  return {
+    id: String(a.id),
+    email: String(a.email ?? ""),
+    password_hash: String(a.password_hash ?? ""),
+    name: String(a.name ?? ""),
+    role,
+    department,
+    team_id: (a.team_id as string) ?? null,
+    manager_id: (a.manager_id as string) ?? null,
+    is_active: Boolean(a.is_active ?? true),
+    created_at: String(a.created_at ?? now()),
   };
 }
 
@@ -112,12 +313,49 @@ function load(): LocalDb {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as LocalDb;
-      if (parsed?.admin_users?.length) return parsed;
+      const parsed = JSON.parse(raw) as Partial<LocalDb>;
+      if (parsed?.admin_users?.length) {
+        return {
+          traders: (parsed.traders ?? []).map((t) => migrateTrader(t as unknown as Record<string, unknown>)),
+          trades: parsed.trades ?? [],
+          transactions: parsed.transactions ?? [],
+          site_settings: parsed.site_settings ?? [],
+          admin_users: (parsed.admin_users ?? []).map((a) => migrateAdmin(a as unknown as Record<string, unknown>)),
+          teams: parsed.teams ?? [],
+          crm_leads: parsed.crm_leads ?? [],
+        };
+      }
     }
   } catch {
     /* fall through */
   }
+
+  // One-shot migrate from v1 if present
+  try {
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) {
+      const old = JSON.parse(legacy) as Partial<LocalDb>;
+      if (old?.admin_users?.length) {
+        const fresh = seed();
+        const merged: LocalDb = {
+          ...fresh,
+          traders: (old.traders ?? []).map((t) => migrateTrader(t as unknown as Record<string, unknown>)),
+          trades: old.trades ?? fresh.trades,
+          transactions: old.transactions ?? fresh.transactions,
+          site_settings: old.site_settings ?? fresh.site_settings,
+          admin_users: fresh.admin_users,
+          teams: fresh.teams,
+          crm_leads: fresh.crm_leads,
+        };
+        save(merged);
+        localStorage.removeItem(LEGACY_KEY);
+        return merged;
+      }
+    }
+  } catch {
+    /* fall through */
+  }
+
   const fresh = seed();
   save(fresh);
   return fresh;
@@ -255,9 +493,9 @@ class InsertBuilder<T extends DbRow = DbRow> {
     const inserted: Record<string, unknown>[] = [];
 
     for (const item of items) {
-      if (this.table === "traders") {
+      if (this.table === "traders" || this.table === "admin_users") {
         const email = String(item.email ?? "");
-        if (rows.some((r) => r.email === email)) {
+        if (email && rows.some((r) => r.email === email)) {
           return { data: null, error: { message: "Email already exists" } };
         }
       }
@@ -273,6 +511,33 @@ class InsertBuilder<T extends DbRow = DbRow> {
         full.equity = full.equity ?? full.balance ?? 0;
         full.currency = full.currency ?? "USD";
         full.is_active = full.is_active ?? true;
+        full.is_demo = false;
+        full.assigned_to = full.assigned_to ?? null;
+        full.department = full.department ?? "sales";
+        full.lead_id = full.lead_id ?? null;
+        full.team_id = full.team_id ?? null;
+      }
+
+      if (this.table === "crm_leads") {
+        full.status = full.status ?? "new";
+        full.department = full.department ?? "sales";
+        full.assigned_to = full.assigned_to ?? null;
+        full.team_id = full.team_id ?? null;
+        full.trader_id = full.trader_id ?? null;
+        full.ftd_amount = full.ftd_amount ?? 0;
+        full.notes = full.notes ?? "";
+        full.phone = full.phone ?? "";
+      }
+
+      if (this.table === "admin_users") {
+        full.department = full.department ?? "sales";
+        full.team_id = full.team_id ?? null;
+        full.manager_id = full.manager_id ?? null;
+        full.is_active = full.is_active ?? true;
+      }
+
+      if (this.table === "teams") {
+        full.leader_id = full.leader_id ?? null;
       }
 
       rows.push(full);
@@ -317,6 +582,7 @@ export function createLocalClient() {
 
 export function resetLocalDb() {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(LEGACY_KEY);
   const fresh = seed();
   save(fresh);
   return fresh;

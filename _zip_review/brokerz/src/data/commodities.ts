@@ -50,7 +50,7 @@ export const COMMODITY_INSTRUMENTS: Instrument[] = [
 
   // Agriculture — Grains (8)
   { id: "xwusd", symbol: "XWUSD", name: "Wheat", category: "commodities", basePrice: 612.5, volatility: 2.5, digits: 2, contractSize: 100, spread: 40, tvSymbol: "CBOT:ZW1!" },
-  { id: "xcusd", symbol: "XCUSD", name: "Corn", category: "commodities", basePrice: 455.0, volatility: 2.0, digits: 2, contractSize: 100, spread: 40, tvSymbol: "CBOT:ZC1!" },
+  { id: "corn", symbol: "CORN", name: "Corn", category: "commodities", basePrice: 455.0, volatility: 2.0, digits: 2, contractSize: 100, spread: 40, tvSymbol: "CBOT:ZC1!" },
   { id: "xsusd", symbol: "XSUSD", name: "Soybean", category: "commodities", basePrice: 1185.0, volatility: 3.0, digits: 2, contractSize: 100, spread: 40, tvSymbol: "CBOT:ZS1!" },
   { id: "soybean_oil", symbol: "SOYOIL", name: "Soybean Oil", category: "commodities", basePrice: 0.42, volatility: 0.005, digits: 3, contractSize: 1000, spread: 40, tvSymbol: "CBOT:ZL1!" },
   { id: "soybean_meal", symbol: "SOYMEAL", name: "Soybean Meal", category: "commodities", basePrice: 320.0, volatility: 2.0, digits: 2, contractSize: 100, spread: 40, tvSymbol: "CBOT:ZM1!" },

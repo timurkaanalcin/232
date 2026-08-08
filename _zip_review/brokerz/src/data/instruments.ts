@@ -10,7 +10,7 @@ import { TR_STOCKS } from "@/data/stocks-tr";
 import { ASIA_STOCKS } from "@/data/stocks-asia";
 import { ETF_INSTRUMENTS } from "@/data/etfs";
 
-export const INSTRUMENTS: Instrument[] = [
+const RAW_INSTRUMENTS: Instrument[] = [
   ...FOREX_INSTRUMENTS,
   ...COMMODITY_INSTRUMENTS,
   ...CRYPTO_INSTRUMENTS,
@@ -22,6 +22,16 @@ export const INSTRUMENTS: Instrument[] = [
   ...ASIA_STOCKS,
   ...ETF_INSTRUMENTS,
 ];
+
+/** First occurrence wins — avoids duplicate React keys / tick map collisions. */
+export const INSTRUMENTS: Instrument[] = (() => {
+  const seen = new Set<string>();
+  return RAW_INSTRUMENTS.filter((i) => {
+    if (seen.has(i.id)) return false;
+    seen.add(i.id);
+    return true;
+  });
+})();
 
 export const CATEGORY_LABELS: Record<string, string> = {
   forex: "Forex",
@@ -41,6 +51,18 @@ export const CATEGORY_META: Record<string, { label: string; desc: string; icon: 
   bonds: { label: "Bonds", desc: "Government bonds", icon: "Landmark" },
 };
 
+/** Tek hesap kategorisi — Classic / RAW farkı yok, tüm hesaplar aynı koşullar. */
+export const UNIFIED_ACCOUNT = {
+  name: "USBANK ACCOUNT",
+  deposit: 100,
+  currencies: ["USD", "EUR", "GBP", "ZAR"],
+  leverage: "1:1000",
+  commission: "Zero Commissions",
+  spreads: "0.0 pips",
+  platforms: ["MT4", "MT5", "TradingView", "WebTrader"],
+  blurb: "Exceptional conditions on every CFD trading account — one category, same pricing for all traders.",
+};
+
 export const ACCOUNT_TYPES: {
   id: AccountType;
   name: string;
@@ -50,9 +72,9 @@ export const ACCOUNT_TYPES: {
   commission: string;
   highlight?: boolean;
 }[] = [
-  { id: "classic", name: "CLASSIC", deposit: 100, currencies: ["USD", "EUR", "GBP", "ZAR"], leverage: "1:1000", commission: "Zero Commissions" },
-  { id: "raw", name: "RAW", deposit: 100, currencies: ["USD", "EUR", "GBP", "ZAR"], leverage: "1:1000", commission: "$3 per lot per side", highlight: true },
-  { id: "tvraw", name: "TRADINGVIEW RAW", deposit: 100, currencies: ["USD"], leverage: "1:1000", commission: "$3.5 per lot per side" },
+  { id: "classic", name: "USBANK", deposit: 100, currencies: ["USD", "EUR", "GBP", "ZAR"], leverage: "1:1000", commission: "Zero Commissions", highlight: true },
+  { id: "raw", name: "USBANK", deposit: 100, currencies: ["USD", "EUR", "GBP", "ZAR"], leverage: "1:1000", commission: "Zero Commissions" },
+  { id: "tvraw", name: "USBANK", deposit: 100, currencies: ["USD", "EUR", "GBP", "ZAR"], leverage: "1:1000", commission: "Zero Commissions" },
 ];
 
 export function formatPrice(price: number, digits: number): string {

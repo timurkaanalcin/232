@@ -123,7 +123,7 @@ export default function EducationPage({ onLaunchTerminal }: Props) {
       <section className="border-t border-white/5 bg-white/[0.01] py-16 text-center">
         <div className="mx-auto max-w-3xl px-4">
           <h2 className="text-3xl font-bold">Put your knowledge into practice</h2>
-          <p className="mt-3 text-white/40">Open a free demo account and start trading with $10,000 virtual funds.</p>
+          <p className="mt-3 text-white/40">Open a live account and start trading with real market conditions.</p>
           <button
             onClick={onLaunchTerminal}
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-8 py-4 text-base font-bold text-black transition hover:bg-yellow-300"

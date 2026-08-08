@@ -39,6 +39,8 @@ export interface Position {
   sl: number | null;
   tp: number | null;
   swap: number;
+  margin?: number;
+  commission?: number;
 }
 
 export interface Order {
@@ -51,6 +53,7 @@ export interface Order {
   status: "pending";
   sl: number | null;
   tp: number | null;
+  mode?: "limit" | "stop";
 }
 
 export interface ClosedTrade {
@@ -64,6 +67,7 @@ export interface ClosedTrade {
   closeTime: number;
   profit: number;
   swap: number;
+  commission?: number;
 }
 
 export type Timeframe = "M1" | "M5" | "M15" | "M30" | "H1" | "H4" | "D1";

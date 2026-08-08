@@ -1,3 +1,22 @@
+export type Department = "sales" | "retention" | "all";
+
+export type AdminRole =
+  | "super_admin"
+  | "head_sales"
+  | "head_retention"
+  | "team_leader_sales"
+  | "team_leader_retention"
+  | "sales_agent"
+  | "retention_agent";
+
+export type LeadStatus =
+  | "new"
+  | "contacted"
+  | "registered"
+  | "ftd"
+  | "retention"
+  | "inactive";
+
 export interface Trader {
   id: string;
   email: string;
@@ -10,6 +29,10 @@ export interface Trader {
   currency: string;
   is_active: boolean;
   is_demo: boolean;
+  assigned_to: string | null;
+  department: Department;
+  lead_id: string | null;
+  team_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -54,9 +77,36 @@ export interface AdminUser {
   email: string;
   password_hash: string;
   name: string;
-  role: string;
+  role: AdminRole | string;
+  department: Department;
+  team_id: string | null;
+  manager_id: string | null;
   is_active: boolean;
   created_at: string;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  department: "sales" | "retention";
+  leader_id: string | null;
+  created_at: string;
+}
+
+export interface CrmLead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: LeadStatus;
+  department: "sales" | "retention";
+  assigned_to: string | null;
+  team_id: string | null;
+  trader_id: string | null;
+  ftd_amount: number;
+  notes: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export type TableName =
@@ -64,9 +114,11 @@ export type TableName =
   | "trades"
   | "transactions"
   | "site_settings"
-  | "admin_users";
+  | "admin_users"
+  | "teams"
+  | "crm_leads";
 
-export type DbRow = Trader | Trade | Transaction | SiteSetting | AdminUser;
+export type DbRow = Trader | Trade | Transaction | SiteSetting | AdminUser | Team | CrmLead;
 
 export interface QueryError {
   message: string;

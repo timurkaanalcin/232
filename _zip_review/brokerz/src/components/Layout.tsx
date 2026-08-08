@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useMessages } from "@/lib/i18n";
 
 export const NAV_SECTIONS = [
   {
@@ -17,9 +19,7 @@ export const NAV_SECTIONS = [
     title: "Accounts",
     path: "accounts",
     children: [
-      { label: "Classic Account", path: "accounts" },
-      { label: "RAW Account", path: "accounts" },
-      { label: "TradingView RAW", path: "accounts" },
+      { label: "USBANK Account", path: "accounts" },
       { label: "Islamic Account", path: "accounts" },
     ],
   },
@@ -73,16 +73,17 @@ export default function Layout({
   onLaunchTerminal,
   onLaunchAdmin,
 }: Props) {
+  const m = useMessages();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    return (localStorage.getItem("theme") as "light" | "dark") || "dark";
-  });
+  const siteTheme = currentPage === "olymp" ? "olymp" : "tickmill";
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-bs-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    document.documentElement.setAttribute("data-bs-theme", "dark");
+    document.documentElement.classList.remove("theme-tickmill", "theme-olymp");
+    document.documentElement.classList.add(`theme-${siteTheme}`);
+    localStorage.setItem("theme", "dark");
+  }, [siteTheme]);
 
   useEffect(() => {
     const preloader = document.querySelector<HTMLElement>(".preloader");
@@ -107,24 +108,58 @@ export default function Layout({
     setMobileOpen(false);
   };
 
-  const toggleTheme = () => {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
-  };
-
   return (
     <>
       <div className="preloader">
         <img src="/assets/images/logo/preloader.png" alt="preloader" />
       </div>
 
-      <div className="lightdark-switch">
-        <span className={`switch-btn${theme === "dark" ? " dark-switcher" : ""}`} id="btnSwitch" onClick={toggleTheme} role="button" tabIndex={0}>
-          <img
-            src={theme === "dark" ? "/assets/images/icon/sun.svg" : "/assets/images/icon/moon.svg"}
-            alt="theme"
-            className="swtich-icon"
-          />
-        </span>
+      {/* Landing style switcher */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          display: "flex",
+          justifyContent: "center",
+          gap: 8,
+          padding: "8px 12px",
+          background: siteTheme === "olymp" ? "#05121e" : "#1a040a",
+          borderBottom: siteTheme === "olymp" ? "1px solid rgba(125,186,255,0.12)" : "1px solid rgba(255,178,199,0.12)",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => go("home")}
+          style={{
+            borderRadius: 999,
+            padding: "6px 14px",
+            fontSize: 12,
+            fontWeight: 700,
+            border: currentPage === "home" ? "none" : "1px solid rgba(255,255,255,0.15)",
+            background: currentPage === "home" ? "#f83b00" : "transparent",
+            color: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          Tickmill style
+        </button>
+        <button
+          type="button"
+          onClick={() => go("olymp")}
+          style={{
+            borderRadius: 999,
+            padding: "6px 14px",
+            fontSize: 12,
+            fontWeight: 700,
+            border: currentPage === "olymp" ? "none" : "1px solid rgba(255,255,255,0.15)",
+            background: currentPage === "olymp" ? "#ff773d" : "transparent",
+            color: currentPage === "olymp" ? "#080e1b" : "#fff",
+            cursor: "pointer",
+          }}
+        >
+          Olymp Trade style
+        </button>
       </div>
 
       <header className="header-section header-section--style2">
@@ -132,7 +167,7 @@ export default function Layout({
           <div className="container">
             <div className="header-wrapper">
               <div className="logo">
-                <button type="button" className="nav-cta" onClick={() => go("home")} aria-label="BROKERZ home">
+                <button type="button" className="nav-cta" onClick={() => go(currentPage === "olymp" ? "olymp" : "home")} aria-label="BROKERZ home">
                   <img className="dark" src="/brokerz-logo.webp" alt="BROKERZ" style={{ height: 40, width: "auto" }} />
                 </button>
               </div>
@@ -183,7 +218,8 @@ export default function Layout({
               </div>
 
               <div className="header-action">
-                <div className="menu-area">
+                <div className="menu-area d-flex align-items-center gap-2">
+                  <LanguageSwitcher tone="dark" compact />
                   <div className="header-btn d-none d-sm-block">
                     <button type="button" className="trk-btn trk-btn--border trk-btn--primary nav-cta" onClick={onLaunchAdmin}>
                       <span>Admin</span>
@@ -191,7 +227,7 @@ export default function Layout({
                   </div>
                   <div className="header-btn ms-2">
                     <button type="button" className="trk-btn trk-btn--primary nav-cta" onClick={onLaunchTerminal}>
-                      <span>WebTrader</span>
+                      <span>{m.hero.startTrading}</span>
                     </button>
                   </div>
                   <div
@@ -257,8 +293,8 @@ function Footer({ onNavigate }: { onNavigate: (page: string) => void }) {
                     <img src="/brokerz-logo.webp" alt="BROKERZ" style={{ height: 36, width: "auto" }} />
                   </button>
                   <p className="footer__about-moto">
-                    Trade Smart. Trade BROKERZ. Access 880+ instruments with institutional-grade execution,
-                    spreads from 0.0 pips, and multi-regulated protection.
+                    Access 880+ CFDs including Forex, Commodities, Indices and Cryptocurrencies —
+                    platforms designed for performance. Ultra-fast execution, tight spreads, multi-regulated safety.
                   </p>
                   <div className="footer__app">
                     <div className="footer__app-item footer__app-item--apple">
@@ -364,7 +400,7 @@ function Footer({ onNavigate }: { onNavigate: (page: string) => void }) {
             </div>
             <p className="mt-4 mb-0" style={{ fontSize: 12, opacity: 0.65 }}>
               Risk Warning: Trading financial products on margin carries a high degree of risk and is not suitable for
-              all investors. Losses can exceed the initial investment.
+              all investors. Losses can exceed the initial investment. Please ensure you fully understand the risks.
             </p>
           </div>
         </div>

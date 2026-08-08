@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -18,62 +18,114 @@ import {
   Activity,
   AlertCircle,
   Save,
-  BarChart3,
   LogOut,
   Lock,
   Mail,
   FileText,
-  UserCheck,
   Download,
-  PieChart,
-  Globe,
   Clock,
   Filter,
   ArrowUpRight,
   ArrowDownRight,
+  Briefcase,
+  HeartHandshake,
+  UserCog,
 } from "lucide-react";
 import { supabase, dataBackend } from "@/lib/supabase";
-import type { Trader, Trade, Transaction, SiteSetting, AdminUser } from "@/lib/supabase";
+import type {
+  Trader,
+  Trade,
+  Transaction,
+  SiteSetting,
+  AdminUser,
+  Team,
+  CrmLead,
+} from "@/lib/supabase";
+import {
+  can,
+  filterByTraderIds,
+  filterTraders,
+  roleLabel,
+} from "@/lib/crmRoles";
+import CrmLeadsTab from "@/components/admin/CrmLeadsTab";
+import StaffTab from "@/components/admin/StaffTab";
+import CustomerOpsTab from "@/components/admin/CustomerOpsTab";
+import { listPendingWithdrawals, listSupportTickets, listAllKyc } from "@/lib/adminOps";
 
 interface Props {
   onBack: () => void;
 }
 
-type Tab = "dashboard" | "traders" | "trades" | "transactions" | "settings" | "reports";
+type Tab =
+  | "dashboard"
+  | "sales"
+  | "retention"
+  | "traders"
+  | "trades"
+  | "transactions"
+  | "settings"
+  | "reports"
+  | "staff"
+  | "ops";
 
 export default function AdminPanel({ onBack }: Props) {
   const [tab, setTab] = useState<Tab>("dashboard");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [session, setSession] = useState<AdminUser | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [adminName, setAdminName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const [traders, setTraders] = useState<Trader[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [settings, setSettings] = useState<SiteSetting[]>([]);
+  const [staff, setStaff] = useState<AdminUser[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [leads, setLeads] = useState<CrmLead[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [tRes, trRes, txRes, sRes] = await Promise.all([
+    const [tRes, trRes, txRes, sRes, aRes, teamRes, leadRes] = await Promise.all([
       supabase.from("traders").select("*").order("created_at", { ascending: false }),
       supabase.from("trades").select("*").order("created_at", { ascending: false }),
       supabase.from("transactions").select("*").order("created_at", { ascending: false }),
       supabase.from("site_settings").select("*").order("key", { ascending: true }),
+      supabase.from("admin_users").select("*").order("created_at", { ascending: false }),
+      supabase.from("teams").select("*").order("created_at", { ascending: false }),
+      supabase.from("crm_leads").select("*").order("created_at", { ascending: false }),
     ]);
     if (tRes.data) setTraders(tRes.data as Trader[]);
     if (trRes.data) setTrades(trRes.data as Trade[]);
     if (txRes.data) setTransactions(txRes.data as Transaction[]);
     if (sRes.data) setSettings(sRes.data as SiteSetting[]);
+    if (aRes.data) setStaff(aRes.data as AdminUser[]);
+    if (teamRes.data) setTeams(teamRes.data as Team[]);
+    if (leadRes.data) setLeads(leadRes.data as CrmLead[]);
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (loggedIn) loadData();
-  }, [loggedIn, loadData]);
+    if (session) loadData();
+  }, [session, loadData]);
+
+  const scopedTraders = useMemo(
+    () => (session ? filterTraders(traders, session) : []),
+    [traders, session],
+  );
+  const traderIds = useMemo(
+    () => new Set(scopedTraders.map((t) => t.id)),
+    [scopedTraders],
+  );
+  const scopedTrades = useMemo(
+    () => (session ? filterByTraderIds(trades, traderIds, session) : []),
+    [trades, traderIds, session],
+  );
+  const scopedTx = useMemo(
+    () => (session ? filterByTraderIds(transactions, traderIds, session) : []),
+    [transactions, traderIds, session],
+  );
 
   const handleLogin = async () => {
     setLoginError("");
@@ -81,7 +133,7 @@ export default function AdminPanel({ onBack }: Props) {
     const { data, error } = await supabase
       .from("admin_users")
       .select("*")
-      .eq("email", email)
+      .eq("email", email.trim().toLowerCase())
       .eq("password_hash", password)
       .eq("is_active", true)
       .maybeSingle();
@@ -91,57 +143,157 @@ export default function AdminPanel({ onBack }: Props) {
       return;
     }
     const admin = data as AdminUser;
-    setAdminName(admin.name);
-    setLoggedIn(true);
+    setSession(admin);
+    setTab("dashboard");
   };
 
-  if (!loggedIn) {
+  if (!session) {
     return (
       <AdminLogin
-        email={email} password={password} showPassword={showPassword}
-        loginError={loginError} loading={loading}
-        setEmail={setEmail} setPassword={setPassword} setShowPassword={setShowPassword}
-        onLogin={handleLogin} onBack={onBack}
+        email={email}
+        password={password}
+        showPassword={showPassword}
+        loginError={loginError}
+        loading={loading}
+        setEmail={setEmail}
+        setPassword={setPassword}
+        setShowPassword={setShowPassword}
+        onLogin={handleLogin}
+        onBack={onBack}
       />
     );
   }
 
+  const goTab = (next: Tab) => {
+    if (next === "sales" && !can(session, "sales_crm")) return;
+    if (next === "retention" && !can(session, "retention_crm")) return;
+    if (next === "settings" && !can(session, "settings")) return;
+    if (next === "staff" && !can(session, "staff")) return;
+    if (next === "traders" && !can(session, "traders")) return;
+    if (next === "trades" && !can(session, "trades")) return;
+    if (next === "transactions" && !can(session, "transactions")) return;
+    if (next === "reports" && !can(session, "reports")) return;
+    setTab(next);
+  };
+
   return (
     <div className="flex h-screen bg-[#0a0e17] text-white">
-      <aside className="flex w-60 shrink-0 flex-col border-r border-white/5 bg-[#0d1119]">
+      <aside className="flex w-64 shrink-0 flex-col border-r border-white/5 bg-[#0d1119]">
         <div className="flex items-center gap-2.5 border-b border-white/5 px-5 py-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600">
-            <Lock className="h-4 w-4 text-white" />
+            <Lock className="h-4 w-4 text-black" />
           </div>
           <div>
-            <div className="text-sm font-bold">Admin Panel</div>
+            <div className="text-sm font-bold">CRM Admin</div>
             <div className="text-[10px] text-white/40">
-              BROKERZ CRM · {dataBackend === "local" ? "Local" : "Supabase"}
+              {dataBackend === "local" ? "Local" : "Supabase"} · {roleLabel(String(session.role))}
             </div>
           </div>
         </div>
-        <nav className="flex-1 space-y-1 p-3">
-          <NavBtn icon={LayoutDashboard} label="Dashboard" active={tab === "dashboard"} onClick={() => setTab("dashboard")} />
-          <NavBtn icon={Users} label="Traders" active={tab === "traders"} onClick={() => setTab("traders")} badge={traders.length} />
-          <NavBtn icon={TrendingUp} label="Trades" active={tab === "trades"} onClick={() => setTab("trades")} badge={trades.filter((t) => t.status === "open").length} />
-          <NavBtn icon={Wallet} label="Transactions" active={tab === "transactions"} onClick={() => setTab("transactions")} badge={transactions.length} />
-          <NavBtn icon={FileText} label="Reports" active={tab === "reports"} onClick={() => setTab("reports")} />
-          <NavBtn icon={Settings} label="Settings" active={tab === "settings"} onClick={() => setTab("settings")} />
+        <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+          <div className="space-y-1">
+            {can(session, "dashboard") && (
+              <NavBtn icon={LayoutDashboard} label="Dashboard" active={tab === "dashboard"} onClick={() => goTab("dashboard")} />
+            )}
+          </div>
+
+          {(can(session, "sales_crm") || can(session, "retention_crm")) && (
+            <div>
+              <div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/30">CRM</div>
+              <div className="space-y-1">
+                {can(session, "sales_crm") && (
+                  <NavBtn
+                    icon={Briefcase}
+                    label="Sales"
+                    active={tab === "sales"}
+                    onClick={() => goTab("sales")}
+                    badge={leads.filter((l) => l.department === "sales").length}
+                  />
+                )}
+                {can(session, "retention_crm") && (
+                  <NavBtn
+                    icon={HeartHandshake}
+                    label="Retention"
+                    active={tab === "retention"}
+                    onClick={() => goTab("retention")}
+                    badge={leads.filter((l) => l.department === "retention").length}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/30">Trading</div>
+            <div className="space-y-1">
+              {can(session, "traders") && (
+                <NavBtn icon={Users} label="Traders" active={tab === "traders"} onClick={() => goTab("traders")} badge={scopedTraders.length} />
+              )}
+              {can(session, "trades") && (
+                <NavBtn
+                  icon={TrendingUp}
+                  label="Trades"
+                  active={tab === "trades"}
+                  onClick={() => goTab("trades")}
+                  badge={scopedTrades.filter((t) => t.status === "open").length}
+                />
+              )}
+              {can(session, "transactions") && (
+                <NavBtn icon={Wallet} label="Transactions" active={tab === "transactions"} onClick={() => goTab("transactions")} badge={scopedTx.length} />
+              )}
+              <NavBtn
+                icon={Lock}
+                label="Customer Ops"
+                active={tab === "ops"}
+                onClick={() => goTab("ops")}
+                badge={
+                  listPendingWithdrawals().length +
+                  listSupportTickets().filter((t) => t.status !== "closed").length +
+                  listAllKyc().filter((k) => k.status === "pending").length
+                }
+              />
+              {can(session, "reports") && (
+                <NavBtn icon={FileText} label="Reports" active={tab === "reports"} onClick={() => goTab("reports")} />
+              )}
+            </div>
+          </div>
+
+          {(can(session, "staff") || can(session, "settings")) && (
+            <div>
+              <div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/30">Management</div>
+              <div className="space-y-1">
+                {can(session, "staff") && (
+                  <NavBtn icon={UserCog} label="Teams & Staff" active={tab === "staff"} onClick={() => goTab("staff")} badge={staff.length} />
+                )}
+                {can(session, "settings") && (
+                  <NavBtn icon={Settings} label="Settings" active={tab === "settings"} onClick={() => goTab("settings")} />
+                )}
+              </div>
+            </div>
+          )}
         </nav>
         <div className="border-t border-white/5 p-3">
           <div className="mb-2 flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-yellow-500/20 text-xs font-bold text-yellow-400">
-              {adminName.charAt(0).toUpperCase()}
+              {session.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-medium">{adminName}</div>
-              <div className="truncate text-[10px] text-white/40">Super Admin</div>
+              <div className="truncate text-xs font-medium">{session.name}</div>
+              <div className="truncate text-[10px] text-white/40">{roleLabel(String(session.role))}</div>
             </div>
           </div>
-          <button onClick={() => setLoggedIn(false)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/50 transition hover:bg-white/5 hover:text-white">
+          <button
+            type="button"
+            onClick={() => setSession(null)}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/50 transition hover:bg-white/5 hover:text-white"
+          >
             <LogOut className="h-3.5 w-3.5" /> Sign Out
           </button>
-          <button onClick={onBack} className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/50 transition hover:bg-white/5 hover:text-white">
+          <button
+            type="button"
+            onClick={onBack}
+            className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-white/50 transition hover:bg-white/5 hover:text-white"
+          >
             <ArrowLeft className="h-3.5 w-3.5" /> Back to Site
           </button>
         </div>
@@ -153,12 +305,59 @@ export default function AdminPanel({ onBack }: Props) {
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-yellow-400" />
           </div>
         )}
-        {!loading && tab === "dashboard" && <Dashboard traders={traders} trades={trades} transactions={transactions} />}
-        {!loading && tab === "traders" && <TradersTab traders={traders} trades={trades} onUpdate={loadData} />}
-        {!loading && tab === "trades" && <TradesTab trades={trades} traders={traders} onUpdate={loadData} />}
-        {!loading && tab === "transactions" && <TransactionsTab transactions={transactions} traders={traders} onUpdate={loadData} />}
-        {!loading && tab === "reports" && <ReportsTab traders={traders} trades={trades} transactions={transactions} />}
-        {!loading && tab === "settings" && <SettingsTab settings={settings} onUpdate={loadData} />}
+        {!loading && tab === "dashboard" && (
+          <Dashboard traders={scopedTraders} trades={scopedTrades} transactions={scopedTx} leads={leads} user={session} />
+        )}
+        {!loading && tab === "sales" && can(session, "sales_crm") && (
+          <CrmLeadsTab
+            department="sales"
+            leads={leads}
+            staff={staff}
+            teams={teams}
+            traders={traders}
+            user={session}
+            onUpdate={loadData}
+          />
+        )}
+        {!loading && tab === "retention" && can(session, "retention_crm") && (
+          <CrmLeadsTab
+            department="retention"
+            leads={leads}
+            staff={staff}
+            teams={teams}
+            traders={traders}
+            user={session}
+            onUpdate={loadData}
+          />
+        )}
+        {!loading && tab === "traders" && (
+          <TradersTab
+            traders={scopedTraders}
+            trades={scopedTrades}
+            canBalance={can(session, "balance")}
+            user={session}
+            onUpdate={loadData}
+          />
+        )}
+        {!loading && tab === "trades" && <TradesTab trades={scopedTrades} traders={scopedTraders} onUpdate={loadData} />}
+        {!loading && tab === "transactions" && (
+          <TransactionsTab
+            transactions={scopedTx}
+            traders={scopedTraders}
+            canApprove={can(session, "balance")}
+            onUpdate={loadData}
+          />
+        )}
+        {!loading && tab === "ops" && <CustomerOpsTab />}
+        {!loading && tab === "reports" && (
+          <ReportsTab traders={scopedTraders} trades={scopedTrades} transactions={scopedTx} />
+        )}
+        {!loading && tab === "staff" && can(session, "staff") && (
+          <StaffTab user={session} staff={staff} teams={teams} onUpdate={loadData} />
+        )}
+        {!loading && tab === "settings" && can(session, "settings") && (
+          <SettingsTab settings={settings} onUpdate={loadData} />
+        )}
       </main>
     </div>
   );
@@ -210,9 +409,7 @@ function AdminLogin({ email, password, showPassword, loginError, loading, setEma
             </button>
           </div>
           <div className="mt-5 rounded-lg border border-white/5 bg-white/5 p-3 text-xs text-white/40">
-            <div className="font-medium text-white/60">Demo credentials:</div>
-            <div className="mt-1">Email: admin@brokerz.com</div>
-            <div>Password: admin123</div>
+            Staff CRM access — contact your Head or Super Admin for credentials.
           </div>
           <button onClick={onBack} className="mt-4 flex w-full items-center justify-center gap-1.5 text-xs text-white/40 transition hover:text-white">
             <ArrowLeft className="h-3.5 w-3.5" /> Back to site
@@ -234,7 +431,19 @@ function NavBtn({ icon: Icon, label, active, onClick, badge }: { icon: React.Com
 }
 
 // === DASHBOARD ===
-function Dashboard({ traders, trades, transactions }: { traders: Trader[]; trades: Trade[]; transactions: Transaction[] }) {
+function Dashboard({
+  traders,
+  trades,
+  transactions,
+  leads,
+  user,
+}: {
+  traders: Trader[];
+  trades: Trade[];
+  transactions: Transaction[];
+  leads: CrmLead[];
+  user: AdminUser;
+}) {
   const totalBalance = traders.reduce((s, t) => s + Number(t.balance), 0);
   const openTrades = trades.filter((t) => t.status === "open");
   const closedTrades = trades.filter((t) => t.status === "closed");
@@ -244,23 +453,31 @@ function Dashboard({ traders, trades, transactions }: { traders: Trader[]; trade
   const activeTraders = traders.filter((t) => t.is_active).length;
   const newToday = traders.filter((t) => new Date(t.created_at).toDateString() === new Date().toDateString()).length;
   const winRate = closedTrades.length > 0 ? (closedTrades.filter((t) => Number(t.profit) > 0).length / closedTrades.length) * 100 : 0;
+  const salesLeads = leads.filter((l) => l.department === "sales").length;
+  const retClients = leads.filter((l) => l.department === "retention").length;
 
-  // Top symbols by volume
   const symbolVolumes: Record<string, number> = {};
-  trades.forEach((t) => { symbolVolumes[t.symbol] = (symbolVolumes[t.symbol] ?? 0) + Number(t.volume); });
-  const topSymbols = Object.entries(symbolVolumes).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  trades.forEach((t) => {
+    symbolVolumes[t.symbol] = (symbolVolumes[t.symbol] ?? 0) + Number(t.volume);
+  });
+  const topSymbols = Object.entries(symbolVolumes)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
   const maxVol = topSymbols.length > 0 ? topSymbols[0][1] : 1;
 
-  // Account type distribution
   const typeCounts: Record<string, number> = {};
-  traders.forEach((t) => { typeCounts[t.account_type] = (typeCounts[t.account_type] ?? 0) + 1; });
+  traders.forEach((t) => {
+    typeCounts[t.account_type] = (typeCounts[t.account_type] ?? 0) + 1;
+  });
 
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="mt-1 text-sm text-white/40">Real-time overview of your trading platform</p>
+          <p className="mt-1 text-sm text-white/40">
+            Scoped overview · {roleLabel(String(user.role))} · {user.department}
+          </p>
         </div>
         <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
           <Clock className="h-4 w-4 text-yellow-400" />
@@ -268,127 +485,48 @@ function Dashboard({ traders, trades, transactions }: { traders: Trader[]; trade
         </div>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={Users} label="Total Traders" value={traders.length.toString()} subtext={`${activeTraders} active, ${newToday} new today`} color="blue" trend={newToday > 0 ? "up" : "flat"} />
-        <StatCard icon={DollarSign} label="Total Balance" value={`$${totalBalance.toFixed(2)}`} subtext="Across all traders" color="green" trend="up" />
+        <StatCard icon={Users} label="Traders in scope" value={traders.length.toString()} subtext={`${activeTraders} active, ${newToday} new today`} color="blue" trend={newToday > 0 ? "up" : "flat"} />
+        <StatCard icon={DollarSign} label="Total Balance" value={`$${totalBalance.toFixed(2)}`} subtext="Across scoped traders" color="green" trend="up" />
         <StatCard icon={Activity} label="Open Positions" value={openTrades.length.toString()} subtext={`${closedTrades.length} closed total`} color="orange" trend={openTrades.length > 0 ? "up" : "flat"} />
         <StatCard icon={TrendingUp} label="Total P&L" value={`${totalProfit >= 0 ? "+" : ""}$${totalProfit.toFixed(2)}`} subtext={`Win rate: ${winRate.toFixed(1)}%`} color={totalProfit >= 0 ? "green" : "red"} trend={totalProfit >= 0 ? "up" : "down"} />
       </div>
 
-      {/* Charts Row */}
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        {/* Top Symbols */}
+      <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard icon={Briefcase} label="Sales leads" value={String(salesLeads)} subtext="CRM sales department" color="orange" />
+        <StatCard icon={HeartHandshake} label="Retention" value={String(retClients)} subtext="CRM retention clients" color="blue" />
+        <StatCard icon={Wallet} label="Deposits" value={`$${totalDeposits.toFixed(0)}`} subtext="Completed in scope" color="green" />
+        <StatCard icon={Wallet} label="Withdrawals" value={`$${totalWithdrawals.toFixed(0)}`} subtext="Completed in scope" color="red" />
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-white/10 bg-[#131622] p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-white/80">Top Symbols by Volume</h3>
-            <BarChart3 className="h-4 w-4 text-white/30" />
-          </div>
+          <h3 className="mb-4 text-sm font-semibold text-white/80">Top symbols by volume</h3>
           <div className="space-y-3">
-            {topSymbols.length > 0 ? topSymbols.map(([sym, vol]) => (
+            {topSymbols.length === 0 && <div className="text-sm text-white/30">No trades yet</div>}
+            {topSymbols.map(([sym, vol]) => (
               <div key={sym}>
-                <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="font-mono font-medium text-white/70">{sym}</span>
+                <div className="mb-1 flex justify-between text-xs">
+                  <span className="font-mono text-white/70">{sym}</span>
                   <span className="text-white/40">{vol.toFixed(2)} lots</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                  <div className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-500" style={{ width: `${(vol / maxVol) * 100}%` }} />
-                </div>
-              </div>
-            )) : <div className="py-4 text-center text-sm text-white/30">No trade data</div>}
-          </div>
-        </div>
-
-        {/* Account Types */}
-        <div className="rounded-xl border border-white/10 bg-[#131622] p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-white/80">Account Type Distribution</h3>
-            <PieChart className="h-4 w-4 text-white/30" />
-          </div>
-          <div className="space-y-3">
-            {Object.entries(typeCounts).length > 0 ? Object.entries(typeCounts).map(([type, count]) => {
-              const pct = traders.length > 0 ? (count / traders.length) * 100 : 0;
-              return (
-                <div key={type}>
-                  <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="font-medium uppercase text-white/70">{type}</span>
-                    <span className="text-white/40">{count} ({pct.toFixed(0)}%)</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                    <div className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-500" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            }) : <div className="py-4 text-center text-sm text-white/30">No traders yet</div>}
-          </div>
-        </div>
-
-        {/* Financial Summary */}
-        <div className="rounded-xl border border-white/10 bg-[#131622] p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-white/80">Financial Summary</h3>
-            <Wallet className="h-4 w-4 text-white/30" />
-          </div>
-          <div className="space-y-3">
-            <SummaryRow label="Total Deposits" value={`$${totalDeposits.toFixed(2)}`} color="green" />
-            <SummaryRow label="Total Withdrawals" value={`$${totalWithdrawals.toFixed(2)}`} color="red" />
-            <SummaryRow label="Net Flow" value={`$${(totalDeposits - totalWithdrawals).toFixed(2)}`} color="blue" />
-            <SummaryRow label="Total Profit (closed)" value={`${totalProfit >= 0 ? "+" : ""}$${totalProfit.toFixed(2)}`} color={totalProfit >= 0 ? "green" : "red"} />
-            <SummaryRow label="Open Positions" value={openTrades.length.toString()} color="orange" />
-            <SummaryRow label="Win Rate" value={`${winRate.toFixed(1)}%`} color="blue" />
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-white/10 bg-[#131622] p-5">
-          <h3 className="mb-4 text-sm font-semibold text-white/80">Recent Traders</h3>
-          <div className="space-y-2">
-            {traders.slice(0, 6).map((t) => (
-              <div key={t.id} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2.5 transition hover:bg-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-yellow-500/20 text-sm font-bold text-yellow-400">
-                    {(t.name || t.email).charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">{t.name || t.email}</div>
-                    <div className="text-[10px] text-white/40">{t.account_number} · {t.account_type}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold tabular-nums">${Number(t.balance).toFixed(2)}</div>
-                  <div className={`text-[10px] ${t.is_active ? "text-green-400" : "text-yellow-400"}`}>{t.is_active ? "Active" : "Disabled"}</div>
+                  <div className="h-full rounded-full bg-yellow-400" style={{ width: `${(vol / maxVol) * 100}%` }} />
                 </div>
               </div>
             ))}
-            {traders.length === 0 && <div className="py-4 text-center text-sm text-white/30">No traders yet</div>}
           </div>
         </div>
-
         <div className="rounded-xl border border-white/10 bg-[#131622] p-5">
-          <h3 className="mb-4 text-sm font-semibold text-white/80">Recent Trades</h3>
-          <div className="space-y-2">
-            {trades.slice(0, 6).map((t) => (
-              <div key={t.id} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2.5 transition hover:bg-white/10">
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-full ${t.type === "buy" ? "bg-green-500/20" : "bg-red-500/20"}`}>
-                    {t.type === "buy" ? <ArrowUpRight className="h-4 w-4 text-green-400" /> : <ArrowDownRight className="h-4 w-4 text-red-400" />}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium font-mono">{t.symbol}</div>
-                    <div className="text-[10px] text-white/40">{Number(t.volume).toFixed(2)} lots · {t.type.toUpperCase()}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`text-sm font-bold tabular-nums ${Number(t.profit) >= 0 ? "text-green-400" : "text-red-400"}`}>
-                    {Number(t.profit) >= 0 ? "+" : ""}${Number(t.profit).toFixed(2)}
-                  </div>
-                  <div className={`text-[10px] ${t.status === "open" ? "text-blue-400" : "text-white/40"}`}>{t.status}</div>
-                </div>
+          <h3 className="mb-4 text-sm font-semibold text-white/80">Account type mix</h3>
+          <div className="space-y-3">
+            {Object.keys(typeCounts).length === 0 && <div className="text-sm text-white/30">No traders</div>}
+            {Object.entries(typeCounts).map(([type, count]) => (
+              <div key={type} className="flex items-center justify-between border-b border-white/5 pb-2">
+                <span className="text-sm uppercase text-white/60">{type}</span>
+                <span className="font-mono font-semibold text-yellow-400">{count}</span>
               </div>
             ))}
-            {trades.length === 0 && <div className="py-4 text-center text-sm text-white/30">No trades yet</div>}
           </div>
         </div>
       </div>
@@ -397,7 +535,19 @@ function Dashboard({ traders, trades, transactions }: { traders: Trader[]; trade
 }
 
 // === TRADERS TAB ===
-function TradersTab({ traders, trades, onUpdate }: { traders: Trader[]; trades: Trade[]; onUpdate: () => void }) {
+function TradersTab({
+  traders,
+  trades,
+  canBalance,
+  user,
+  onUpdate,
+}: {
+  traders: Trader[];
+  trades: Trade[];
+  canBalance: boolean;
+  user: AdminUser;
+  onUpdate: () => void;
+}) {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Trader | null>(null);
   const [adjusting, setAdjusting] = useState<Trader | null>(null);
@@ -415,9 +565,11 @@ function TradersTab({ traders, trades, onUpdate }: { traders: Trader[]; trades: 
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Traders</h1>
-          <p className="mt-1 text-sm text-white/40">{traders.length} total · {traders.filter((t) => t.is_active).length} active</p>
+          <p className="mt-1 text-sm text-white/40">
+            {traders.length} in scope · {traders.filter((t) => t.is_active).length} active · {roleLabel(String(user.role))}
+          </p>
         </div>
-        <button onClick={() => setShowNew(true)} className="flex items-center gap-2 rounded-lg bg-yellow-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-yellow-300">
+        <button onClick={() => setShowNew(true)} className="flex items-center gap-2 rounded-lg bg-yellow-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-yellow-300">
           <Plus className="h-4 w-4" /> Add Trader
         </button>
       </div>
@@ -479,7 +631,9 @@ function TradersTab({ traders, trades, onUpdate }: { traders: Trader[]; trades: 
                   <td className="px-4 py-3 text-center text-white/70">{openCount}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => setAdjusting(t)} title="Adjust balance" className="flex h-7 w-7 items-center justify-center rounded bg-green-500/10 text-green-400 transition hover:bg-green-500/20"><DollarSign className="h-3.5 w-3.5" /></button>
+                      {canBalance && (
+                        <button onClick={() => setAdjusting(t)} title="Adjust balance" className="flex h-7 w-7 items-center justify-center rounded bg-green-500/10 text-green-400 transition hover:bg-green-500/20"><DollarSign className="h-3.5 w-3.5" /></button>
+                      )}
                       <button onClick={() => setEditing(t)} title="Edit" className="flex h-7 w-7 items-center justify-center rounded bg-blue-500/10 text-blue-400 transition hover:bg-blue-500/20"><Edit3 className="h-3.5 w-3.5" /></button>
                       <button onClick={async () => { await supabase.from("traders").update({ is_active: !t.is_active }).eq("id", t.id); onUpdate(); }} title={t.is_active ? "Disable" : "Enable"} className={`flex h-7 w-7 items-center justify-center rounded transition ${t.is_active ? "bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20" : "bg-green-500/10 text-green-400 hover:bg-green-500/20"}`}>{t.is_active ? <X className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}</button>
                       <button onClick={async () => { if (confirm(`Delete trader ${t.name || t.email}? This cannot be undone.`)) { await supabase.from("traders").delete().eq("id", t.id); onUpdate(); } }} title="Delete" className="flex h-7 w-7 items-center justify-center rounded bg-red-500/10 text-red-400 transition hover:bg-red-500/20"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -564,7 +718,17 @@ function TradesTab({ trades, traders, onUpdate }: { trades: Trade[]; traders: Tr
 }
 
 // === TRANSACTIONS TAB ===
-function TransactionsTab({ transactions, traders, onUpdate }: { transactions: Transaction[]; traders: Trader[]; onUpdate: () => void }) {
+function TransactionsTab({
+  transactions,
+  traders,
+  canApprove,
+  onUpdate,
+}: {
+  transactions: Transaction[];
+  traders: Trader[];
+  canApprove: boolean;
+  onUpdate: () => void;
+}) {
   const [filter, setFilter] = useState<string>("all");
   const traderName = (id: string) => traders.find((t) => t.id === id)?.name ?? "Unknown";
   const filtered = transactions.filter((t) => filter === "all" || t.type === filter);
@@ -621,7 +785,7 @@ function TransactionsTab({ transactions, traders, onUpdate }: { transactions: Tr
                 <td className="px-4 py-3 text-xs text-white/50">{tx.description || "—"}</td>
                 <td className="px-4 py-3 text-xs text-white/50">{new Date(tx.created_at).toLocaleString()}</td>
                 <td className="px-4 py-3 text-center">
-                  {tx.status === "pending" && (
+                  {canApprove && tx.status === "pending" && (
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={async () => { await supabase.from("transactions").update({ status: "completed" }).eq("id", tx.id); onUpdate(); }} className="rounded bg-green-500/10 px-2 py-1 text-[10px] font-semibold text-green-400 hover:bg-green-500/20">Approve</button>
                       <button onClick={async () => { await supabase.from("transactions").update({ status: "rejected" }).eq("id", tx.id); onUpdate(); }} className="rounded bg-red-500/10 px-2 py-1 text-[10px] font-semibold text-red-400 hover:bg-red-500/20">Reject</button>
@@ -815,11 +979,11 @@ function SettingsTab({ settings, onUpdate }: { settings: SiteSetting[]; onUpdate
 
 // === MODALS ===
 function EditTraderModal({ trader, onClose, onUpdate }: { trader: Trader; onClose: () => void; onUpdate: () => void }) {
-  const [form, setForm] = useState({ name: trader.name, email: trader.email, account_number: trader.account_number, account_type: trader.account_type, balance: trader.balance.toString(), leverage: trader.leverage.toString(), is_demo: trader.is_demo });
+  const [form, setForm] = useState({ name: trader.name, email: trader.email, account_number: trader.account_number, account_type: trader.account_type, balance: trader.balance.toString(), leverage: trader.leverage.toString() });
   const [saving, setSaving] = useState(false);
   const handleSave = async () => {
     setSaving(true);
-    await supabase.from("traders").update({ name: form.name, email: form.email, account_number: form.account_number, account_type: form.account_type, balance: Number(form.balance), leverage: Number(form.leverage), is_demo: form.is_demo, updated_at: new Date().toISOString() }).eq("id", trader.id);
+    await supabase.from("traders").update({ name: form.name, email: form.email, account_number: form.account_number, account_type: form.account_type, balance: Number(form.balance), leverage: Number(form.leverage), is_demo: false, updated_at: new Date().toISOString() }).eq("id", trader.id);
     setSaving(false); onUpdate(); onClose();
   };
   return (
@@ -836,7 +1000,6 @@ function EditTraderModal({ trader, onClose, onUpdate }: { trader: Trader; onClos
         </div>
         <FormField label="Balance ($)" value={form.balance} onChange={(v) => setForm({ ...form, balance: v })} type="number" />
         <FormField label="Leverage" value={form.leverage} onChange={(v) => setForm({ ...form, leverage: v })} type="number" />
-        <label className="flex items-center gap-2 text-sm text-white/70"><input type="checkbox" checked={form.is_demo} onChange={(e) => setForm({ ...form, is_demo: e.target.checked })} className="accent-yellow-400" /> Demo Account</label>
         <button onClick={handleSave} disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-lg bg-yellow-400 py-3 text-sm font-semibold text-white transition hover:bg-yellow-300 disabled:opacity-50">
           <Save className="h-4 w-4" /> {saving ? "Saving..." : "Save Changes"}
         </button>
@@ -882,13 +1045,25 @@ function AdjustBalanceModal({ trader, onClose, onUpdate }: { trader: Trader; onC
 }
 
 function NewTraderModal({ onClose, onUpdate }: { onClose: () => void; onUpdate: () => void }) {
-  const [form, setForm] = useState({ name: "", email: "", account_type: "raw", balance: "10000", leverage: "500", is_demo: true });
+  const [form, setForm] = useState({ name: "", email: "", account_type: "raw", balance: "10000", leverage: "500" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const handleSave = async () => {
     setSaving(true); setError("");
     const accountNumber = "500" + Math.floor(1000000 + Math.random() * 9000000).toString();
-    const { error: err } = await supabase.from("traders").insert({ name: form.name, email: form.email, account_number: accountNumber, account_type: form.account_type, balance: Number(form.balance), leverage: Number(form.leverage), is_demo: form.is_demo });
+    const { error: err } = await supabase.from("traders").insert({
+      name: form.name,
+      email: form.email,
+      account_number: accountNumber,
+      account_type: form.account_type,
+      balance: Number(form.balance),
+      leverage: Number(form.leverage),
+      is_demo: false,
+      assigned_to: null,
+      department: "sales",
+      lead_id: null,
+      team_id: null,
+    });
     if (err) { setError(err.message); setSaving(false); return; }
     setSaving(false); onUpdate(); onClose();
   };
@@ -906,7 +1081,6 @@ function NewTraderModal({ onClose, onUpdate }: { onClose: () => void; onUpdate: 
         </div>
         <FormField label="Initial Balance ($)" value={form.balance} onChange={(v) => setForm({ ...form, balance: v })} type="number" />
         <FormField label="Leverage" value={form.leverage} onChange={(v) => setForm({ ...form, leverage: v })} type="number" />
-        <label className="flex items-center gap-2 text-sm text-white/70"><input type="checkbox" checked={form.is_demo} onChange={(e) => setForm({ ...form, is_demo: e.target.checked })} className="accent-yellow-400" /> Demo Account</label>
         <button onClick={handleSave} disabled={saving || !form.email} className="flex w-full items-center justify-center gap-2 rounded-lg bg-yellow-400 py-3 text-sm font-semibold text-white transition hover:bg-yellow-300 disabled:opacity-50">
           <Plus className="h-4 w-4" /> {saving ? "Creating..." : "Create Trader"}
         </button>

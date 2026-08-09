@@ -92,3 +92,63 @@ export const userSearchSchema = paginationSchema.extend({
   role: z.enum(["super_admin", "admin", "operator", "viewer", "user"]).optional(),
   status: z.enum(["active", "disabled"]).optional(),
 });
+
+export const riskEventQuerySchema = paginationSchema.extend({
+  status: z.enum(["open", "acknowledged", "resolved"]).optional(),
+  severity: z.enum(["info", "warning", "critical"]).optional(),
+  source: z.string().trim().max(80).optional(),
+  type: z.string().trim().max(120).optional(),
+  subject: z.string().trim().max(160).optional(),
+});
+
+export const createRiskEventSchema = z.object({
+  source: z.string().trim().min(1).max(80),
+  eventType: z.string().trim().min(1).max(120),
+  severity: z.enum(["info", "warning", "critical"]),
+  riskScore: z.number().int().min(0).max(100).optional().default(0),
+  subjectType: z.string().trim().max(80).optional().default(""),
+  subjectId: z.string().trim().max(120).optional().default(""),
+  title: z.string().trim().min(1).max(160),
+  description: z.string().trim().max(2_000).optional().default(""),
+  metadata: z.record(z.string(), z.unknown()).optional().default({}),
+});
+
+export const riskEventActionSchema = z.object({
+  note: z.string().trim().max(1_000).optional().default(""),
+});
+
+export const walletCurrencySchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z0-9]{3,10}$/, "Currency must be 3-10 uppercase letters or digits");
+
+export const walletQuerySchema = paginationSchema.extend({
+  q: z.string().trim().max(254).optional(),
+  userId: z.string().uuid().optional(),
+  type: z.enum(["main", "trading", "bonus", "credit", "crypto", "multi_currency"]).optional(),
+  status: z.enum(["active", "frozen", "archived"]).optional(),
+  currency: walletCurrencySchema.optional(),
+});
+
+export const createWalletSchema = z.object({
+  userId: z.string().uuid(),
+  walletType: z.enum(["main", "trading", "bonus", "credit", "crypto", "multi_currency"]),
+  currency: walletCurrencySchema,
+});
+
+export const updateWalletStatusSchema = z.object({
+  status: z.enum(["active", "frozen", "archived"]),
+  memo: z.string().trim().max(500).optional().default(""),
+});
+
+export const walletTransferSchema = z.object({
+  fromWalletId: z.string().uuid(),
+  toWalletId: z.string().uuid(),
+  amountMinor: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  memo: z.string().trim().max(500).optional().default(""),
+});
+
+export const reverseWalletTransferSchema = z.object({
+  memo: z.string().trim().max(500).optional().default(""),
+});

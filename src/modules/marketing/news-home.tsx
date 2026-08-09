@@ -20,6 +20,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { ensureGuestSession } from "@/lib/ensure-guest-session";
 import { geolocationErrorMessage, geolocationUnavailableMessage } from "@/lib/geolocation-errors";
 import { getGeolocationPermission, requestCurrentPosition } from "@/lib/geolocation-permission";
+import { formatCalendarDate } from "@/lib/utils";
 import { useLocationSharing } from "@/hooks/use-location-sharing";
 import {
   FINANCE_VIDEOS,
@@ -171,7 +172,7 @@ export function NewsHome() {
 
       <div className="border-b bg-gradient-to-r from-slate-900 to-blue-950 text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-1.5 text-xs sm:px-6">
-          <span>{new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}</span>
+          <span>{formatCalendarDate(Date.now())}</span>
           <Link href="/admin/map" className="text-amber-400 hover:underline">
             Konum (Admin)
           </Link>

@@ -15,6 +15,8 @@ if (process.env.NODE_ENV === "development") {
  * - `unsafe-inline` style is required by Leaflet's inline positioning styles.
  */
 // Next.js App Router requires inline bootstrap scripts — strict script-src breaks hydration (white screen).
+const isDevelopment = process.env.NODE_ENV === "development";
+
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
@@ -23,7 +25,7 @@ const csp = [
   "font-src 'self'",
   "connect-src 'self' wss: https://*.tile.openstreetmap.org",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
-  "frame-ancestors 'none'",
+  !isDevelopment && "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
@@ -33,7 +35,7 @@ const csp = [
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
-  { key: "X-Frame-Options", value: "DENY" },
+  !isDevelopment && { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
@@ -45,11 +47,14 @@ const securityHeaders = [
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
   },
-];
+].filter((header): header is { key: string; value: string } => Boolean(header));
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Cursor/Cloud preview opens dev servers through a forwarded origin.
+  // Production keeps frame blocking headers above.
+  allowedDevOrigins: ["*.agent.cvm.dev"],
   eslint: {
     // Lint runs as a dedicated CI step (`npm run lint`).
     ignoreDuringBuilds: true,

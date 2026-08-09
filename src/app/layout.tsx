@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/providers";
-import { SITE_NAME } from "@/modules/marketing/news-articles";
 import "./globals.css";
 
 const inter = Inter({
@@ -12,12 +11,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: `${SITE_NAME} — Borsa, döviz, altın ve ekonomi haberleri`,
-    template: `%s · ${SITE_NAME}`,
+    default: "CanlıSite — Anında güncellenen web sitesi",
+    template: "%s · CanlıSite",
   },
-  description:
-    "Canlı piyasa verileri, BIST, döviz kurları, altın, video haberler ve Türkiye finans gündemi.",
-  applicationName: SITE_NAME,
+  description: "Hot reload destekli modern Next.js web sitesi.",
+  applicationName: "CanlıSite",
   robots: { index: true, follow: true },
 };
 
@@ -32,7 +30,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>

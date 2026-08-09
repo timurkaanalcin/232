@@ -101,6 +101,18 @@ Requires RBAC permissions (see `SECURITY.md`).
 | `GET` | `/api/admin/audit` | `audit.view` | Audit log (`?action=&actor=`) |
 | `GET` | `/api/admin/security/stats` | `audit.view` | Security metrics |
 | `GET` | `/api/admin/security/events` | `audit.view` | Security events |
+| `GET` | `/api/admin/risk/stats` | `risk.view` | Open, critical and resolved risk metrics |
+| `GET` | `/api/admin/risk/events` | `risk.view` | Risk events (`?status=&severity=&source=&type=&subject=`) |
+| `POST` | `/api/admin/risk/events` | `risk.manage` | Create a manual risk event |
+| `POST` | `/api/admin/risk/events/:id/acknowledge` | `risk.manage` | Acknowledge an open risk event |
+| `POST` | `/api/admin/risk/events/:id/resolve` | `risk.manage` | Resolve an open or acknowledged risk event |
+| `GET` | `/api/admin/wallets/stats` | `wallets.view` | Wallet counts and balances by currency |
+| `GET` | `/api/admin/wallets` | `wallets.view` | Wallets (`?q=&userId=&type=&status=&currency=`) |
+| `POST` | `/api/admin/wallets` | `wallets.manage` | Create a user wallet |
+| `POST` | `/api/admin/wallets/:id/status` | `wallets.manage` | Freeze, unfreeze or archive a wallet |
+| `GET` | `/api/admin/wallets/transactions` | `wallets.view` | Wallet ledger (`?walletId=&userId=`) |
+| `POST` | `/api/admin/wallets/transfer` | `wallets.manage` | Transfer balance between wallets |
+| `POST` | `/api/admin/wallets/transfers/:id/reverse` | `wallets.manage` | Reverse a posted wallet transfer |
 
 ---
 

@@ -52,10 +52,10 @@ Exceeded limits log a `security_events` row and return HTTP 429.
 
 | Role | Capabilities |
 |------|-------------|
-| `super_admin` | Full access incl. role assignment |
-| `admin` | User management, audit, live map |
-| `operator` | Live map, session management |
-| `viewer` | Read-only live map + stats |
+| `super_admin` | Full access incl. role assignment, risk workflow control and wallet control |
+| `admin` | User management, audit, live map, risk workflow control and wallet control |
+| `operator` | Live map, session management, read-only risk and wallet monitoring |
+| `viewer` | Read-only live map, stats, risk monitoring and wallet monitoring |
 | `user` | Own profile, sharing, history |
 
 Permissions enforced server-side on every admin endpoint.
@@ -65,6 +65,14 @@ Permissions enforced server-side on every admin endpoint.
 **Audit log** (`audit_logs`) — append-only trail of user-visible actions: login, consent, sessions, admin views.
 
 **Security events** (`security_events`) — failed logins, rate limits, suspicious patterns. Visible in `/admin/security`.
+
+**Risk events** (`risk_events`) — operational AI/trading/wallet/liquidation alerts. Viewing requires
+`risk.view`; acknowledgement, resolution and manual creation require `risk.manage` and write audit entries.
+
+**Wallet events** (`wallets`, `wallet_transfers`, `wallet_transactions`) — internal wallet balances and
+ledger entries. Viewing requires `wallets.view`; creation, freeze/unfreeze/archive, transfers and reversals
+require `wallets.manage`. Wallet deletion is represented as `archived` status so balances and ledger history
+remain recoverable.
 
 ## GDPR / KVKK
 

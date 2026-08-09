@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { signOut } from "next-auth/react";
 import {
+  ClockIcon,
   DownloadIcon,
+  Globe2Icon,
   KeyRoundIcon,
   LaptopIcon,
   SmartphoneIcon,
@@ -28,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiDelete, apiGet, apiPatch, apiPost, ClientApiError } from "@/lib/client-api";
-import { formatRelative } from "@/lib/utils";
+import { formatDateTime, formatRelative, getUserDateTimePreferences, type UserDateTimePreferences } from "@/lib/utils";
 import type { DeviceSessionDTO, UserDTO } from "@/types";
 
 export function SettingsModule() {
@@ -43,6 +45,7 @@ export function SettingsModule() {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="devices">Devices</TabsTrigger>
+          <TabsTrigger value="datetime">Date &amp; time</TabsTrigger>
           <TabsTrigger value="privacy">Privacy &amp; data</TabsTrigger>
         </TabsList>
         <TabsContent value="profile">
@@ -54,11 +57,66 @@ export function SettingsModule() {
         <TabsContent value="devices">
           <DevicesTab />
         </TabsContent>
+        <TabsContent value="datetime">
+          <DateTimeTab />
+        </TabsContent>
         <TabsContent value="privacy">
           <PrivacyTab />
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function DateTimeTab() {
+  const [now, setNow] = useState(() => Date.now());
+  const [preferences, setPreferences] = useState<UserDateTimePreferences | null>(null);
+
+  useEffect(() => {
+    setPreferences(getUserDateTimePreferences());
+    const interval = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <ClockIcon className="size-4" /> Date &amp; time
+        </CardTitle>
+        <CardDescription>
+          Dates and times are automatically shown in your browser region and time zone.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Globe2Icon className="size-4 text-muted-foreground" />
+              Region format
+            </div>
+            <p className="mt-2 text-2xl font-semibold">{preferences?.locale ?? "Detecting..."}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Example: Turkish users see Turkish date text; German users see German date text.
+            </p>
+          </div>
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <ClockIcon className="size-4 text-muted-foreground" />
+              Time zone
+            </div>
+            <p className="mt-2 text-2xl font-semibold">{preferences?.timeZone ?? "Detecting..."}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Example: Turkey uses Europe/Istanbul, Germany uses Europe/Berlin.
+            </p>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-accent/30 p-4">
+          <p className="text-sm text-muted-foreground">Current localized time</p>
+          <p className="mt-1 text-xl font-semibold">{preferences ? formatDateTime(now, preferences) : "Detecting..."}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

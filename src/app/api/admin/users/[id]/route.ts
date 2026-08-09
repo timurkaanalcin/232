@@ -9,11 +9,28 @@ import {
   requirePermission,
 } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
-import { AUDIT_ACTIONS, REALTIME } from "@/lib/constants";
+import { AUDIT_ACTIONS, REALTIME, canAssignRole, canManageRole, requiresStatusSchedule } from "@/lib/constants";
 import { adminUpdateUserSchema } from "@/lib/validators";
-import { adminUpdateUser, findUserById, toUserDTO } from "@/services/users";
+import { adminUpdateUser, findUserById, generateClientNumericId, toUserDTO } from "@/services/users";
 import { revokeAllDeviceSessions } from "@/services/device-sessions";
 import { endLocationSession, getActiveSessionForUser } from "@/services/location-sessions";
+
+async function canAssignManager(db: D1Database, actorId: string, actorRole: string, managerId: string): Promise<boolean> {
+  if (actorRole === "super_admin") return true;
+  if (managerId === actorId) return true;
+  const row = await db
+    .prepare(
+      `SELECT u.id
+       FROM users u
+       LEFT JOIN users m1 ON m1.id = u.manager_id
+       LEFT JOIN users m2 ON m2.id = m1.manager_id
+       LEFT JOIN users m3 ON m3.id = m2.manager_id
+       WHERE u.id = ? AND (u.manager_id = ? OR m1.manager_id = ? OR m2.manager_id = ? OR m3.manager_id = ?)`,
+    )
+    .bind(managerId, actorId, actorId, actorId, actorId)
+    .first<{ id: string }>();
+  return Boolean(row);
+}
 
 export const PATCH = apiHandler(
   async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
@@ -23,6 +40,9 @@ export const PATCH = apiHandler(
 
     const target = await findUserById(db, id);
     if (!target) throw notFound("User");
+    if (actor.role === "super_admin" && target.role_id !== "shift") {
+      throw forbidden();
+    }
 
     const parsed = adminUpdateUserSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) {
@@ -33,16 +53,50 @@ export const PATCH = apiHandler(
       const permissions = await getPermissions(db, actor.role);
       if (!permissions.has("roles.assign")) throw forbidden();
       if (id === actor.id) throw badRequest("You cannot change your own role");
+      if (!canAssignRole(actor.role, parsed.data.role)) throw forbidden();
+      if (actor.role === "super_admin" && parsed.data.role !== "shift") throw forbidden();
     }
     if (parsed.data.status === "disabled" && id === actor.id) {
       throw badRequest("You cannot disable your own account");
     }
-    // Admin-tier accounts can only be modified by super admins.
-    if (target.role_id !== "user" && actor.role !== "super_admin") {
+    if (!canManageRole(actor.role, target.role_id)) {
       throw forbidden();
     }
+    if (parsed.data.managerId === id) throw badRequest("A user cannot manage themselves");
+    if (parsed.data.managerId) {
+      const manager = await findUserById(db, parsed.data.managerId);
+      if (!manager) throw badRequest("Selected manager does not exist");
+      if (!(await canAssignManager(db, actor.id, actor.role, parsed.data.managerId))) throw forbidden();
+    }
+    const nextRole = parsed.data.role ?? target.role_id;
+    const nextSaleStatus = parsed.data.saleStatus ?? target.sale_status;
+    const nextSaleStatusScheduledAt =
+      parsed.data.saleStatusScheduledAt !== undefined
+        ? parsed.data.saleStatusScheduledAt
+        : target.sale_status_scheduled_at;
+    const nextRetentionStatus = parsed.data.retentionStatus ?? target.retention_status;
+    const nextRetentionStatusScheduledAt =
+      parsed.data.retentionStatusScheduledAt !== undefined
+        ? parsed.data.retentionStatusScheduledAt
+        : target.retention_status_scheduled_at;
+    if (nextRole === "user") {
+      if (requiresStatusSchedule(nextSaleStatus) && !nextSaleStatusScheduledAt) {
+        throw badRequest("Sale status date and time are required for Call Back and Active clients");
+      }
+      if (requiresStatusSchedule(nextRetentionStatus) && !nextRetentionStatusScheduledAt) {
+        throw badRequest("Retention status date and time are required for Call Back and Active clients");
+      }
+    }
 
-    await adminUpdateUser(db, id, parsed.data);
+    await adminUpdateUser(db, id, {
+      ...parsed.data,
+      clientNumericId:
+        parsed.data.role === "user" && !target.client_numeric_id
+          ? await generateClientNumericId(db)
+          : parsed.data.role && parsed.data.role !== "user"
+            ? ""
+          : undefined,
+    });
 
     if (parsed.data.status === "disabled") {
       // Disabling immediately kills all sessions and any active sharing.

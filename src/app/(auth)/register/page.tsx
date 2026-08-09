@@ -4,18 +4,18 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "@/modules/auth/register-form";
 import { isGoogleEnabled } from "@/lib/auth-config";
 
-export const metadata: Metadata = { title: "Create account" };
+export const metadata: Metadata = { title: "CRM hesap oluştur" };
 
 export default function RegisterPage() {
   return (
     <AuthShell
-      title="Create your account"
-      description="Start sharing your location securely — only ever with your consent."
+      title="CRM hesabı oluştur"
+      description="Sale ve Retention ekipleri için yeni bir CRM kullanıcı hesabı açın."
       footer={
         <>
-          Already have an account?{" "}
+          Zaten hesabınız var mı?{" "}
           <Link href="/login" className="text-primary hover:underline">
-            Sign in
+            Giriş yap
           </Link>
         </>
       }

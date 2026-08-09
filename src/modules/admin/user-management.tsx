@@ -1,12 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, SearchIcon } from "lucide-react";
+import {
+  AlarmClockIcon,
+  BarChart3Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CrownIcon,
+  DownloadIcon,
+  EyeIcon,
+  FileTextIcon,
+  HeadphonesIcon,
+  MegaphoneIcon,
+  PhoneIcon,
+  PlusIcon,
+  SearchIcon,
+  ShieldIcon,
+  TrendingUpIcon,
+  UserRoundIcon,
+  UsersIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -21,24 +41,443 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiGet, apiPatch, apiPost, ClientApiError } from "@/lib/client-api";
-import { ROLE_LABELS } from "@/lib/constants";
-import { formatRelative, initials } from "@/lib/utils";
+import {
+  CRM_DEPARTMENT_LABELS,
+  CRM_STATUS_LABELS,
+  ROLE_LABELS,
+  ROLE_PERMISSIONS,
+  requiresStatusSchedule,
+} from "@/lib/constants";
+import { initials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { Paginated, RoleId, UserDTO, UserStatus } from "@/types";
+import type {
+  AnalyticsBreakdownItem,
+  CrmDepartment,
+  CrmOverviewDTO,
+  CrmStatus,
+  Paginated,
+  Permission,
+  RetentionStatus,
+  RoleId,
+  UserDTO,
+} from "@/types";
 
-const ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer", "user"];
+const ROLES: RoleId[] = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale", "user"];
+const DEPARTMENTS: CrmDepartment[] = ["management", "retention", "sale", "client"];
+const CRM_STATUSES: CrmStatus[] = [
+  "new",
+  "no_answer",
+  "call_back",
+  "not_interested",
+  "low_potential",
+  "potential",
+  "recovery",
+  "active",
+  "wrong_number",
+  "wrong_person",
+  "referral",
+  "test",
+  "renew",
+  "depositor",
+  "trash",
+  "never_answer",
+];
+const NO_MANAGER_VALUE = "__none__";
+
+const PERMISSION_AREAS: { permission: Permission; label: string }[] = [
+  { permission: "customers.manage", label: "Müşteri Yönetimi" },
+  { permission: "tickets.manage", label: "Bilet Yönetimi" },
+  { permission: "documents.manage", label: "Belge Yönetimi" },
+  { permission: "reports.view", label: "Raporlar" },
+  { permission: "settings.manage", label: "Ayarlar" },
+  { permission: "admin.panel", label: "Admin Paneli" },
+];
+
+const ROLE_CARDS: {
+  role: RoleId;
+  title: string;
+  description: string;
+  tone: string;
+  icon: LucideIcon;
+}[] = [
+  {
+    role: "super_admin",
+    title: "Admin",
+    description: "Tam yetki - tüm modüllere erişim ve site ayarları",
+    tone: "border-red-300 bg-red-50 text-red-950",
+    icon: CrownIcon,
+  },
+  {
+    role: "shift",
+    title: "Shift",
+    description: "Admin yetkisi; Head ve altını yönetir, site ayarlarını değiştiremez",
+    tone: "border-amber-300 bg-amber-50 text-amber-950",
+    icon: ShieldIcon,
+  },
+  {
+    role: "admin",
+    title: "Head",
+    description: "Sale ve Retention ekiplerini, Team Leader'ları yönetir",
+    tone: "border-purple-300 bg-purple-50 text-purple-950",
+    icon: ShieldIcon,
+  },
+  {
+    role: "operator",
+    title: "Retention TL",
+    description: "Retention çalışanlarını yönetir ve takip eder",
+    tone: "border-blue-300 bg-blue-50 text-blue-950",
+    icon: HeadphonesIcon,
+  },
+  {
+    role: "viewer",
+    title: "Sale TL",
+    description: "Sale çalışanlarını ve müşteri iletişimini yönetir",
+    tone: "border-emerald-300 bg-emerald-50 text-emerald-950",
+    icon: UsersIcon,
+  },
+  {
+    role: "retention",
+    title: "Retention",
+    description: "Müşteri tutma ve bilet süreçlerinde çalışır",
+    tone: "border-sky-300 bg-sky-50 text-sky-950",
+    icon: HeadphonesIcon,
+  },
+  {
+    role: "sale",
+    title: "Sale",
+    description: "Satış ve müşteri iletişimi süreçlerinde çalışır",
+    tone: "border-green-300 bg-green-50 text-green-950",
+    icon: UserRoundIcon,
+  },
+  {
+    role: "user",
+    title: "Client",
+    description: "Sadece okuma yetkisi",
+    tone: "border-slate-300 bg-slate-50 text-slate-950",
+    icon: FileTextIcon,
+  },
+];
 
 function errorMessage(error: unknown): string {
   return error instanceof ClientApiError ? error.message : "Something went wrong";
+}
+
+function toDateTimeInputValue(value: number | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function fromDateTimeInputValue(value: string): number | null {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? null : time;
+}
+
+function isScheduleMissingForClient(role: RoleId, status: CrmStatus, scheduledAt: string): boolean {
+  return role === "user" && requiresStatusSchedule(status) && !scheduledAt;
+}
+
+function formatDateTime(value: number | null | undefined): string {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("tr-TR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function money(value: number, currency = "$"): string {
+  return `${currency}${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function shortDate(value: number): string {
+  return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium" }).format(new Date(value));
+}
+
+function clientAssignedStatus(user: UserDTO): { label: string; value: string } {
+  if (user.managerRole === "sale" || user.managerRole === "viewer") {
+    return { label: "Sale", value: CRM_STATUS_LABELS[user.saleStatus] };
+  }
+  if (user.managerRole === "retention" || user.managerRole === "operator") {
+    return { label: "Retention", value: CRM_STATUS_LABELS[user.retentionStatus] };
+  }
+  return { label: "Sale", value: CRM_STATUS_LABELS[user.saleStatus] };
+}
+
+function csvCell(value: unknown): string {
+  const text = String(value ?? "");
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function downloadVisibleUsersCsv(users: UserDTO[]): void {
+  if (users.length === 0) {
+    toast.info("Dışa aktarılacak kullanıcı yok");
+    return;
+  }
+
+  const headers = [
+    "Client ID",
+    "Ad Soyad",
+    "E-posta",
+    "Telefon",
+    "Rol",
+    "Departman",
+    "Reklam Kaynağı",
+    "Sale Statüsü",
+    "Sale Tarih/Saat",
+    "Retention Statüsü",
+    "Retention Tarih/Saat",
+    "Yönetici",
+    "Sorumlu Rol",
+    "Gösterilen Statü",
+    "Yatırdığı Para",
+    "Toplam Bakiye",
+    "Trading Emir",
+    "Trading Hacim",
+    "Açık Pozisyon",
+    "Son Trading",
+    "Durum",
+  ];
+  const rows = users.map((user) => [
+    user.clientNumericId,
+    user.name,
+    user.email,
+    user.phone,
+    ROLE_LABELS[user.role],
+    CRM_DEPARTMENT_LABELS[user.department],
+    user.adSource,
+    CRM_STATUS_LABELS[user.saleStatus],
+    formatDateTime(user.saleStatusScheduledAt),
+    CRM_STATUS_LABELS[user.retentionStatus],
+    formatDateTime(user.retentionStatusScheduledAt),
+    user.managerName ?? "",
+    user.managerRole ? ROLE_LABELS[user.managerRole] : "",
+    `${clientAssignedStatus(user).label}: ${clientAssignedStatus(user).value}`,
+    user.financeSummary.totalDeposit,
+    user.financeSummary.totalBalance,
+    user.tradingSummary.orderCount,
+    user.tradingSummary.totalNotional,
+    user.tradingSummary.openPositions,
+    formatDateTime(user.tradingSummary.lastTradeAt),
+    user.status === "active" ? "Aktif" : "Pasif",
+  ]);
+  const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `crm-kullanicilar-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function RolePermissionCards() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Yetki Seviyeleri</CardTitle>
+        <CardDescription>CRM platformu için Admin, Head, Team Leader, Sale, Retention ve Client alanları.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {ROLE_CARDS.map((card) => {
+          const permissions = new Set(ROLE_PERMISSIONS[card.role] ?? []);
+          const Icon = card.icon;
+          return (
+            <div key={card.role} className={`rounded-xl border p-4 ${card.tone}`}>
+              <div className="mb-3 flex items-center gap-2">
+                <Icon className="size-4" />
+                <h3 className="font-semibold">{card.title}</h3>
+              </div>
+              <p className="min-h-10 text-xs font-medium leading-5 text-current/85">{card.description}</p>
+              <div className="mt-4 grid gap-1 text-sm">
+                {PERMISSION_AREAS.map((area) => {
+                  const enabled = permissions.has(area.permission);
+                  return (
+                    <div
+                      key={area.permission}
+                      className={
+                        enabled
+                          ? "font-semibold text-slate-950"
+                          : "font-medium text-slate-500 line-through decoration-slate-500/80"
+                      }
+                    >
+                      {area.label}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CrmOverviewPanel({ overview, loading }: { overview?: CrmOverviewDTO; loading: boolean }) {
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <OverviewStatCard
+          title="Toplam Client"
+          value={overview?.totalClients}
+          description={`${overview?.activeClients ?? 0} aktif client`}
+          icon={UsersIcon}
+          loading={loading}
+        />
+        <OverviewStatCard
+          title="Bugünkü Yeni Client"
+          value={overview?.newClientsToday}
+          description="Bugün oluşturulan kayıtlar"
+          icon={TrendingUpIcon}
+          loading={loading}
+        />
+        <OverviewStatCard
+          title="Bugünkü Takip"
+          value={overview?.followUps.today}
+          description={`${overview?.followUps.overdue ?? 0} gecikmiş takip`}
+          icon={AlarmClockIcon}
+          loading={loading}
+          tone={overview && overview.followUps.overdue > 0 ? "warning" : "default"}
+        />
+        <OverviewStatCard
+          title="Kaynak Eksik"
+          value={overview?.missingAdSource}
+          description="Reklam kaynağı girilmemiş"
+          icon={MegaphoneIcon}
+          loading={loading}
+          tone={overview && overview.missingAdSource > 0 ? "warning" : "default"}
+        />
+        <OverviewStatCard
+          title="Trading Client"
+          value={overview?.tradingActiveClients}
+          description={`${overview?.tradingOrderCount ?? 0} broker emri`}
+          icon={TrendingUpIcon}
+          loading={loading}
+        />
+        <OverviewStatCard
+          title="Canlı Hacim"
+          value={overview?.tradingVolume}
+          valueFormatter={(value) => money(value)}
+          description="Toplam işlem tutarı"
+          icon={BarChart3Icon}
+          loading={loading}
+        />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-4">
+        <BreakdownCard title="Sale Pipeline" items={overview?.saleStatusBreakdown} loading={loading} />
+        <BreakdownCard title="Retention Pipeline" items={overview?.retentionStatusBreakdown} loading={loading} />
+        <BreakdownCard title="Reklam Kaynakları" items={overview?.adSourceBreakdown} loading={loading} />
+        <BreakdownCard title="Ekip Dağılımı" items={overview?.teamRoleBreakdown} loading={loading} />
+      </div>
+    </div>
+  );
+}
+
+function OverviewStatCard({
+  title,
+  value,
+  valueFormatter,
+  description,
+  icon: Icon,
+  loading,
+  tone = "default",
+}: {
+  title: string;
+  value: number | undefined;
+  valueFormatter?: (value: number) => string;
+  description: string;
+  icon: LucideIcon;
+  loading: boolean;
+  tone?: "default" | "warning";
+}) {
+  return (
+    <Card className={tone === "warning" ? "border-amber-200 bg-amber-50/70" : undefined}>
+      <CardContent className="flex items-center justify-between p-5">
+        <div>
+          <p className="text-sm text-muted-foreground">{title}</p>
+          {loading ? (
+            <Skeleton className="mt-2 h-8 w-16" />
+          ) : (
+            <p className="mt-1 text-3xl font-semibold">{valueFormatter ? valueFormatter(value ?? 0) : (value ?? 0)}</p>
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+        </div>
+        <div className={tone === "warning" ? "rounded-lg bg-amber-100 p-2 text-amber-700" : "rounded-lg bg-primary/10 p-2 text-primary"}>
+          <Icon className="size-5" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BreakdownCard({
+  title,
+  items,
+  loading,
+}: {
+  title: string;
+  items?: AnalyticsBreakdownItem[];
+  loading: boolean;
+}) {
+  const max = Math.max(1, ...(items ?? []).map((item) => item.count));
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <BarChart3Icon className="size-4" /> {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        {loading ? (
+          <Skeleton className="h-28" />
+        ) : items && items.length > 0 ? (
+          items.map((item) => (
+            <div key={item.label} className="grid gap-1">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="truncate text-muted-foreground">{item.label}</span>
+                <span className="font-medium tabular-nums">{item.count}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(8, (item.count / max) * 100)}%` }} />
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="py-4 text-sm text-muted-foreground">Henüz veri yok.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export function UserManagement() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("user");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserDTO | null>(null);
+
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => apiGet<{ user: UserDTO }>("/api/profile"),
+  });
+  const currentRole = profileQuery.data?.user.role;
+  const isPlatformAdmin = currentRole === "super_admin";
+
+  useEffect(() => {
+    if (isPlatformAdmin && roleFilter !== "shift") {
+      setRoleFilter("shift");
+      setPage(1);
+    }
+  }, [isPlatformAdmin, roleFilter]);
 
   const params = new URLSearchParams({ page: String(page), pageSize: "15" });
   if (query.trim()) params.set("q", query.trim());
@@ -50,17 +489,16 @@ export function UserManagement() {
     queryFn: () => apiGet<Paginated<UserDTO>>(`/api/admin/users?${params.toString()}`),
   });
 
-  const invalidate = () => void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-
-  const updateUser = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) =>
-      apiPatch(`/api/admin/users/${id}`, body),
-    onSuccess: () => {
-      toast.success("User updated");
-      invalidate();
-    },
-    onError: (error) => toast.error(errorMessage(error)),
+  const overviewQuery = useQuery({
+    queryKey: ["admin", "crm", "overview"],
+    queryFn: () => apiGet<{ overview: CrmOverviewDTO }>("/api/admin/crm/overview"),
+    refetchInterval: 30_000,
   });
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    void queryClient.invalidateQueries({ queryKey: ["admin", "crm", "overview"] });
+  };
 
   const totalPages = usersQuery.data ? Math.max(1, Math.ceil(usersQuery.data.total / 15)) : 1;
 
@@ -68,13 +506,37 @@ export function UserManagement() {
     <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">User management</h1>
-          <p className="text-sm text-muted-foreground">Create users, assign roles and manage access.</p>
+          <h1 className="text-xl font-semibold tracking-tight">
+            {isPlatformAdmin ? "Shift Şirket Yönetimi" : "CRM Admin Paneli"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {isPlatformAdmin
+              ? "Her Shift farklı bir şirketi temsil eder. Admin yalnızca Shift kullanıcılarını oluşturur ve yönetir."
+              : "Çalışanları oluşturun, yönetici atayın ve Sale/Retention yetkilerini yönetin."}
+          </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <PlusIcon /> New user
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/admin/trading">
+              <TrendingUpIcon /> Trading terminal
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => downloadVisibleUsersCsv(usersQuery.data?.items ?? [])}
+            disabled={usersQuery.isLoading || (usersQuery.data?.items.length ?? 0) === 0}
+          >
+            <DownloadIcon /> CSV indir
+          </Button>
+          <Button onClick={() => setCreateOpen(true)}>
+            <PlusIcon /> Yeni kullanıcı
+          </Button>
+        </div>
       </div>
+
+      {!isPlatformAdmin ? <CrmOverviewPanel overview={overviewQuery.data?.overview} loading={overviewQuery.isLoading} /> : null}
+
+      {isPlatformAdmin ? <RolePermissionCards /> : null}
 
       <Card>
         <CardContent className="p-4">
@@ -82,7 +544,7 @@ export function UserManagement() {
             <div className="relative flex-1">
               <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by name or email"
+                placeholder="Ad, e-posta, telefon veya Client ID ara"
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
@@ -91,7 +553,7 @@ export function UserManagement() {
                 className="pl-8"
               />
             </div>
-            <Select
+            {!isPlatformAdmin ? <Select
               value={roleFilter}
               onValueChange={(value) => {
                 setRoleFilter(value);
@@ -99,17 +561,17 @@ export function UserManagement() {
               }}
             >
               <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Role" />
+                <SelectValue placeholder="Rol" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
+                <SelectItem value="all">Tüm roller</SelectItem>
                 {ROLES.map((role) => (
                   <SelectItem key={role} value={role}>
                     {ROLE_LABELS[role]}
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> : null}
             <Select
               value={statusFilter}
               onValueChange={(value) => {
@@ -118,12 +580,12 @@ export function UserManagement() {
               }}
             >
               <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder="Durum" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="disabled">Disabled</SelectItem>
+                <SelectItem value="all">Tüm durumlar</SelectItem>
+                <SelectItem value="active">Aktif</SelectItem>
+                <SelectItem value="disabled">Pasif</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -141,77 +603,124 @@ export function UserManagement() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead className="hidden sm:table-cell">Role</TableHead>
-                  <TableHead className="hidden md:table-cell">Status</TableHead>
-                  <TableHead className="hidden lg:table-cell">Last login</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
+                {isPlatformAdmin ? (
+                  <TableRow>
+                    <TableHead>Şirket</TableHead>
+                    <TableHead>Shift Kullanıcısı</TableHead>
+                    <TableHead className="hidden md:table-cell">Telefon</TableHead>
+                    <TableHead className="hidden lg:table-cell">E-posta</TableHead>
+                    <TableHead className="hidden xl:table-cell">Kayıt Tarihi</TableHead>
+                    <TableHead className="hidden md:table-cell">Durum</TableHead>
+                    <TableHead className="text-right">İşlemler</TableHead>
+                  </TableRow>
+                ) : (
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Ad Soyad</TableHead>
+                    <TableHead className="hidden md:table-cell">Telefon</TableHead>
+                    <TableHead className="hidden lg:table-cell">E-posta</TableHead>
+                    <TableHead className="hidden xl:table-cell">Kayıt Tarihi</TableHead>
+                    <TableHead className="hidden xl:table-cell">Yatırdığı Para</TableHead>
+                    <TableHead className="hidden lg:table-cell">Toplam Bakiye</TableHead>
+                    <TableHead className="hidden md:table-cell">Statü</TableHead>
+                    <TableHead className="text-right">İşlemler</TableHead>
+                  </TableRow>
+                )}
               </TableHeader>
               <TableBody>
-                {usersQuery.data?.items.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                          {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
-                          <AvatarFallback>{initials(user.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{user.name}</p>
-                          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                {usersQuery.data?.items.map((user) => {
+                  const assignedStatus = clientAssignedStatus(user);
+                  if (isPlatformAdmin) {
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.companyName || "Şirket adı yok"}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="size-8">
+                              {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+                              <AvatarFallback>{initials(user.name)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">{user.name}</p>
+                              <p className="truncate text-xs text-muted-foreground">{ROLE_LABELS[user.role]}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm">{user.phone || "—"}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{user.email}</TableCell>
+                        <TableCell className="hidden xl:table-cell text-sm">{shortDate(user.createdAt)}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {user.status === "active" ? <Badge variant="success">Aktif</Badge> : <Badge variant="destructive">Pasif</Badge>}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
+                            Düzenle
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium text-primary">
+                        {user.clientNumericId || user.id.slice(0, 8)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-8">
+                            {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+                            <AvatarFallback>{initials(user.name)}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{user.name}</p>
+                            <p className="truncate text-xs text-muted-foreground md:hidden">{user.phone || "Telefon yok"}</p>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Select
-                        value={user.role}
-                        onValueChange={(role) => updateUser.mutate({ id: user.id, body: { role } })}
-                      >
-                        <SelectTrigger className="h-8 w-36">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ROLES.map((role) => (
-                            <SelectItem key={role} value={role}>
-                              {ROLE_LABELS[role]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {user.status === "active" ? (
-                        <Badge variant="success">Active</Badge>
-                      ) : (
-                        <Badge variant="destructive">Disabled</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                      {user.lastLoginAt ? formatRelative(user.lastLoginAt) : "Never"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant={user.status === "active" ? "outline" : "default"}
-                        size="sm"
-                        disabled={updateUser.isPending}
-                        onClick={() =>
-                          updateUser.mutate({
-                            id: user.id,
-                            body: { status: (user.status === "active" ? "disabled" : "active") as UserStatus },
-                          })
-                        }
-                      >
-                        {user.status === "active" ? "Disable" : "Enable"}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-sm">{user.phone || "—"}</TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{user.email}</TableCell>
+                      <TableCell className="hidden xl:table-cell text-sm">{shortDate(user.createdAt)}</TableCell>
+                      <TableCell className="hidden xl:table-cell font-medium text-emerald-600">
+                        {money(user.financeSummary.totalDeposit)}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell font-medium">{money(user.financeSummary.totalBalance)}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge variant="secondary">
+                          {assignedStatus.label}: {assignedStatus.value}
+                        </Badge>
+                        {user.managerName ? (
+                          <p className="mt-1 text-xs text-muted-foreground">Sorumlu: {user.managerName}</p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {user.phone ? (
+                            <Button variant="outline" size="sm" asChild aria-label={`${user.name} ara`}>
+                              <a href={`tel:${user.phone}`}>
+                                <PhoneIcon /> Ara
+                              </a>
+                            </Button>
+                          ) : null}
+                          {user.role === "user" ? (
+                            <Button variant="outline" size="sm" asChild aria-label={`${user.name} detay`}>
+                              <Link href={`/admin/clients/${user.id}`}>
+                                <EyeIcon /> Detay
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
+                              Düzenle
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {usersQuery.data && usersQuery.data.items.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
-                      No users match your filters.
+                    <TableCell colSpan={isPlatformAdmin ? 7 : 9} className="py-10 text-center text-sm text-muted-foreground">
+                      Filtrelerle eşleşen kullanıcı bulunamadı.
                     </TableCell>
                   </TableRow>
                 )}
@@ -222,10 +731,10 @@ export function UserManagement() {
       </Card>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{usersQuery.data?.total ?? 0} users</p>
+        <p className="text-sm text-muted-foreground">{usersQuery.data?.total ?? 0} kullanıcı</p>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((v) => v - 1)}>
-            <ChevronLeftIcon /> Prev
+            <ChevronLeftIcon /> Önceki
           </Button>
           <span className="text-xs text-muted-foreground">
             {page} / {totalPages}
@@ -236,16 +745,29 @@ export function UserManagement() {
             disabled={page >= totalPages}
             onClick={() => setPage((v) => v + 1)}
           >
-            Next <ChevronRightIcon />
+            Sonraki <ChevronRightIcon />
           </Button>
         </div>
       </div>
 
       <CreateUserDialog
         open={createOpen}
+        users={usersQuery.data?.items ?? []}
+        forcedRole={isPlatformAdmin ? "shift" : undefined}
         onOpenChange={setCreateOpen}
         onCreated={() => {
           setCreateOpen(false);
+          invalidate();
+        }}
+      />
+      <EditUserDialog
+        user={editingUser}
+        users={usersQuery.data?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setEditingUser(null);
+        }}
+        onSaved={() => {
+          setEditingUser(null);
           invalidate();
         }}
       />
@@ -255,26 +777,77 @@ export function UserManagement() {
 
 function CreateUserDialog({
   open,
+  users,
+  forcedRole,
   onOpenChange,
   onCreated,
 }: {
   open: boolean;
+  users: UserDTO[];
+  forcedRole?: RoleId;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
 }) {
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<RoleId>("user");
+  const [address, setAddress] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [image, setImage] = useState("");
+  const [role, setRole] = useState<RoleId>(forcedRole ?? "user");
+  const [companyName, setCompanyName] = useState("");
+  const [department, setDepartment] = useState<CrmDepartment>("client");
+  const [saleStatus, setSaleStatus] = useState<CrmStatus>("new");
+  const [saleStatusScheduledAt, setSaleStatusScheduledAt] = useState("");
+  const [retentionStatus, setRetentionStatus] = useState<RetentionStatus>("new");
+  const [retentionStatusScheduledAt, setRetentionStatusScheduledAt] = useState("");
+  const [adSource, setAdSource] = useState("");
+  const [managerId, setManagerId] = useState<string>(NO_MANAGER_VALUE);
+  useEffect(() => {
+    if (forcedRole) setRole(forcedRole);
+  }, [forcedRole]);
+  const saleScheduleMissing = isScheduleMissingForClient(role, saleStatus, saleStatusScheduledAt);
+  const retentionScheduleMissing = isScheduleMissingForClient(role, retentionStatus, retentionStatusScheduledAt);
 
   const create = useMutation({
-    mutationFn: () => apiPost("/api/admin/users", { name, email, password, role }),
+    mutationFn: () =>
+      apiPost("/api/admin/users", {
+        name,
+        phone,
+        email,
+        password,
+        address,
+        dateOfBirth,
+        image,
+        role: forcedRole ?? role,
+        department,
+        saleStatus,
+        saleStatusScheduledAt: fromDateTimeInputValue(saleStatusScheduledAt),
+        retentionStatus,
+        retentionStatusScheduledAt: fromDateTimeInputValue(retentionStatusScheduledAt),
+        adSource,
+        companyName,
+        managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
+      }),
     onSuccess: () => {
-      toast.success("User created");
+      toast.success("Kullanıcı oluşturuldu");
       setName("");
+      setPhone("");
       setEmail("");
       setPassword("");
-      setRole("user");
+      setAddress("");
+      setDateOfBirth("");
+      setImage("");
+      setRole(forcedRole ?? "user");
+      setCompanyName("");
+      setDepartment("client");
+      setSaleStatus("new");
+      setSaleStatusScheduledAt("");
+      setRetentionStatus("new");
+      setRetentionStatusScheduledAt("");
+      setAdSource("");
+      setManagerId(NO_MANAGER_VALUE);
       onCreated();
     },
     onError: (error) => toast.error(errorMessage(error)),
@@ -282,58 +855,456 @@ function CreateUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create user</DialogTitle>
+          <DialogTitle>Yeni CRM kullanıcısı</DialogTitle>
           <DialogDescription>
-            The user can sign in immediately with these credentials. Assigning an admin-tier role requires
-            super-admin rights.
+            Admin panelindeki örneğe göre çalışan veya client hesabı oluşturun.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="grid gap-2">
-            <Label htmlFor="new-user-name">Name</Label>
+            <Label htmlFor="new-user-name">Adı Soyadı</Label>
             <Input id="new-user-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="new-user-email">Email</Label>
+            <Label htmlFor="new-user-phone">Telefon numarası</Label>
+            <Input id="new-user-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="new-user-email">E posta adresi</Label>
             <Input id="new-user-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="new-user-password">Temporary password</Label>
+            <Label htmlFor="new-user-password">Şifre</Label>
             <Input
               id="new-user-password"
               type="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 10 chars, upper/lower/number"
+              placeholder="Min 10 karakter, büyük/küçük harf ve rakam"
+            />
+          </div>
+          <div className="grid gap-2 sm:col-span-2">
+            <Label htmlFor="new-user-address">Adres</Label>
+            <Input id="new-user-address" value={address} onChange={(e) => setAddress(e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="new-user-birthdate">Doğum Tarihi</Label>
+            <Input
+              id="new-user-birthdate"
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
             />
           </div>
           <div className="grid gap-2">
-            <Label>Role</Label>
-            <Select value={role} onValueChange={(value) => setRole(value as RoleId)}>
+            <Label htmlFor="new-user-image">Fotoğraf URL</Label>
+            <Input id="new-user-image" value={image} onChange={(e) => setImage(e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Rol</Label>
+            {forcedRole ? (
+              <Input value={ROLE_LABELS[forcedRole]} disabled />
+            ) : (
+              <Select value={role} onValueChange={(value) => setRole(value as RoleId)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {ROLE_LABELS[r]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {role === "user" ? (
+              <p className="text-xs text-muted-foreground">
+                Client ID otomatik atanır ve yalnızca rakamlardan oluşur.
+              </p>
+            ) : null}
+          </div>
+          {(forcedRole ?? role) === "shift" ? (
+            <div className="grid gap-2">
+              <Label htmlFor="new-user-company">Şirket adı</Label>
+              <Input
+                id="new-user-company"
+                value={companyName}
+                onChange={(event) => setCompanyName(event.target.value)}
+                placeholder="Örn. Atlas Capital"
+              />
+            </div>
+          ) : null}
+          <div className="grid gap-2">
+            <Label>Departman</Label>
+            <Select value={department} onValueChange={(value) => setDepartment(value as CrmDepartment)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ROLES.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {ROLE_LABELS[r]}
+                {DEPARTMENTS.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {CRM_DEPARTMENT_LABELS[item]}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          <div className="grid gap-2">
+            <Label htmlFor="new-user-ad-source">Reklam Kaynağı</Label>
+            <Input
+              id="new-user-ad-source"
+              value={adSource}
+              onChange={(event) => setAdSource(event.target.value)}
+              placeholder="Örn. Facebook, Google, Shift"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Yönetici</Label>
+            <Select value={managerId} onValueChange={setManagerId}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_MANAGER_VALUE}>Yönetici yok</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name} - {ROLE_LABELS[user.role]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Sale Statüsü</Label>
+            <Select value={saleStatus} onValueChange={(value) => setSaleStatus(value as CrmStatus)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CRM_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {CRM_STATUS_LABELS[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {requiresStatusSchedule(saleStatus) ? (
+            <div className="grid gap-2">
+              <Label htmlFor="new-user-sale-scheduled-at">Sale Tarih ve Saat</Label>
+              <Input
+                id="new-user-sale-scheduled-at"
+                type="datetime-local"
+                value={saleStatusScheduledAt}
+                onChange={(event) => setSaleStatusScheduledAt(event.target.value)}
+                required={role === "user"}
+              />
+            </div>
+          ) : null}
+          <div className="grid gap-2">
+            <Label>Retention Statüsü</Label>
+            <Select value={retentionStatus} onValueChange={(value) => setRetentionStatus(value as RetentionStatus)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CRM_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {CRM_STATUS_LABELS[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {requiresStatusSchedule(retentionStatus) ? (
+            <div className="grid gap-2">
+              <Label htmlFor="new-user-retention-scheduled-at">Retention Tarih ve Saat</Label>
+              <Input
+                id="new-user-retention-scheduled-at"
+                type="datetime-local"
+                value={retentionStatusScheduledAt}
+                onChange={(event) => setRetentionStatusScheduledAt(event.target.value)}
+                required={role === "user"}
+              />
+            </div>
+          ) : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            İptal
           </Button>
           <Button
             onClick={() => create.mutate()}
-            disabled={create.isPending || !name || !email || password.length < 10}
+            disabled={
+              create.isPending ||
+              !name ||
+              !email ||
+              password.length < 10 ||
+              ((forcedRole ?? role) === "shift" && !companyName.trim()) ||
+              saleScheduleMissing ||
+              retentionScheduleMissing
+            }
           >
-            {create.isPending ? "Creating…" : "Create user"}
+            {create.isPending ? "Oluşturuluyor..." : "Kaydet"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditUserDialog({
+  user,
+  users,
+  onOpenChange,
+  onSaved,
+}: {
+  user: UserDTO | null;
+  users: UserDTO[];
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState(user?.name ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [address, setAddress] = useState(user?.address ?? "");
+  const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth ?? "");
+  const [image, setImage] = useState(user?.image ?? "");
+  const [role, setRole] = useState<RoleId>(user?.role ?? "user");
+  const [department, setDepartment] = useState<CrmDepartment>(user?.department ?? "client");
+  const [saleStatus, setSaleStatus] = useState<CrmStatus>(user?.saleStatus ?? "new");
+  const [saleStatusScheduledAt, setSaleStatusScheduledAt] = useState(toDateTimeInputValue(user?.saleStatusScheduledAt));
+  const [retentionStatus, setRetentionStatus] = useState<RetentionStatus>(user?.retentionStatus ?? "new");
+  const [retentionStatusScheduledAt, setRetentionStatusScheduledAt] = useState(
+    toDateTimeInputValue(user?.retentionStatusScheduledAt),
+  );
+  const [adSource, setAdSource] = useState(user?.adSource ?? "");
+  const [companyName, setCompanyName] = useState(user?.companyName ?? "");
+  const [managerId, setManagerId] = useState<string>(user?.managerId ?? NO_MANAGER_VALUE);
+  const saleScheduleMissing = isScheduleMissingForClient(role, saleStatus, saleStatusScheduledAt);
+  const retentionScheduleMissing = isScheduleMissingForClient(role, retentionStatus, retentionStatusScheduledAt);
+
+  useEffect(() => {
+    if (!user) return;
+    // The dialog stays mounted between row selections; sync local form state when the selected row changes.
+    setName(user.name);
+    setPhone(user.phone);
+    setAddress(user.address);
+    setDateOfBirth(user.dateOfBirth);
+    setImage(user.image ?? "");
+    setRole(user.role);
+    setDepartment(user.department);
+    setSaleStatus(user.saleStatus);
+    setSaleStatusScheduledAt(toDateTimeInputValue(user.saleStatusScheduledAt));
+    setRetentionStatus(user.retentionStatus);
+    setRetentionStatusScheduledAt(toDateTimeInputValue(user.retentionStatusScheduledAt));
+    setAdSource(user.adSource);
+    setCompanyName(user.companyName);
+    setManagerId(user.managerId ?? NO_MANAGER_VALUE);
+  }, [user]);
+
+  const save = useMutation({
+    mutationFn: () =>
+      apiPatch(`/api/admin/users/${user?.id}`, {
+        name,
+        phone,
+        address,
+        dateOfBirth,
+        image,
+        role,
+        department,
+        saleStatus,
+        saleStatusScheduledAt: fromDateTimeInputValue(saleStatusScheduledAt),
+        retentionStatus,
+        retentionStatusScheduledAt: fromDateTimeInputValue(retentionStatusScheduledAt),
+        adSource,
+        companyName,
+        managerId: managerId === NO_MANAGER_VALUE ? null : managerId,
+      }),
+    onSuccess: () => {
+      toast.success("Kullanıcı güncellendi");
+      onSaved();
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
+
+  return (
+    <Dialog open={Boolean(user)} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>CRM kullanıcısını düzenle</DialogTitle>
+          <DialogDescription>İletişim, yönetim ve Retention Durum bilgilerini güncelleyin.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-name">Adı Soyadı</Label>
+            <Input id="edit-user-name" value={name} onChange={(event) => setName(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-phone">Telefon numarası</Label>
+            <Input id="edit-user-phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-email">E posta adresi</Label>
+            <Input id="edit-user-email" type="email" value={user?.email ?? ""} disabled />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-client-id">Client ID</Label>
+            <Input
+              id="edit-user-client-id"
+              value={user?.clientNumericId || "Client rolünde otomatik atanır"}
+              disabled
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-birthdate">Doğum Tarihi</Label>
+            <Input
+              id="edit-user-birthdate"
+              type="date"
+              value={dateOfBirth}
+              onChange={(event) => setDateOfBirth(event.target.value)}
+            />
+          </div>
+          <div className="grid gap-2 sm:col-span-2">
+            <Label htmlFor="edit-user-address">Adres</Label>
+            <Input id="edit-user-address" value={address} onChange={(event) => setAddress(event.target.value)} />
+          </div>
+          <div className="grid gap-2 sm:col-span-2">
+            <Label htmlFor="edit-user-image">Fotoğraf URL</Label>
+            <Input id="edit-user-image" value={image} onChange={(event) => setImage(event.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Rol</Label>
+            <Select value={role} onValueChange={(value) => setRole(value as RoleId)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLES.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {ROLE_LABELS[item]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Departman</Label>
+            <Select value={department} onValueChange={(value) => setDepartment(value as CrmDepartment)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DEPARTMENTS.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {CRM_DEPARTMENT_LABELS[item]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {role === "shift" ? (
+            <div className="grid gap-2">
+              <Label htmlFor="edit-user-company">Şirket adı</Label>
+              <Input
+                id="edit-user-company"
+                value={companyName}
+                onChange={(event) => setCompanyName(event.target.value)}
+              />
+            </div>
+          ) : null}
+          <div className="grid gap-2">
+            <Label htmlFor="edit-user-ad-source">Reklam Kaynağı</Label>
+            <Input
+              id="edit-user-ad-source"
+              value={adSource}
+              onChange={(event) => setAdSource(event.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Yönetici</Label>
+            <Select value={managerId} onValueChange={setManagerId}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_MANAGER_VALUE}>Yönetici yok</SelectItem>
+                {users
+                  .filter((item) => item.id !== user?.id)
+                  .map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name} - {ROLE_LABELS[item.role]}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Sale Statüsü</Label>
+            <Select value={saleStatus} onValueChange={(value) => setSaleStatus(value as CrmStatus)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CRM_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {CRM_STATUS_LABELS[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {requiresStatusSchedule(saleStatus) ? (
+            <div className="grid gap-2">
+              <Label htmlFor="edit-user-sale-scheduled-at">Sale Tarih ve Saat</Label>
+              <Input
+                id="edit-user-sale-scheduled-at"
+                type="datetime-local"
+                value={saleStatusScheduledAt}
+                onChange={(event) => setSaleStatusScheduledAt(event.target.value)}
+                required={role === "user"}
+              />
+            </div>
+          ) : null}
+          <div className="grid gap-2">
+            <Label>Retention Statüsü</Label>
+            <Select value={retentionStatus} onValueChange={(value) => setRetentionStatus(value as RetentionStatus)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CRM_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {CRM_STATUS_LABELS[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {requiresStatusSchedule(retentionStatus) ? (
+            <div className="grid gap-2">
+              <Label htmlFor="edit-user-retention-scheduled-at">Retention Tarih ve Saat</Label>
+              <Input
+                id="edit-user-retention-scheduled-at"
+                type="datetime-local"
+                value={retentionStatusScheduledAt}
+                onChange={(event) => setRetentionStatusScheduledAt(event.target.value)}
+                required={role === "user"}
+              />
+            </div>
+          ) : null}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            İptal
+          </Button>
+          <Button
+            onClick={() => save.mutate()}
+            disabled={save.isPending || !name || saleScheduleMissing || retentionScheduleMissing}
+          >
+            {save.isPending ? "Kaydediliyor..." : "Kaydet"}
           </Button>
         </DialogFooter>
       </DialogContent>

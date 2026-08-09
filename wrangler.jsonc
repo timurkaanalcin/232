@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "borsahatti",
+  "name": "als-yatirim",
   "main": "worker.ts",
   "compatibility_date": "2026-05-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -12,6 +12,12 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
+  "routes": [
+    {
+      "pattern": "alsyatirim.login.org.tr",
+      "custom_domain": true
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
@@ -37,6 +43,7 @@
     // Non-secret variables. Secrets (AUTH_SECRET, GOOGLE_CLIENT_SECRET, ...)
     // must be set with `wrangler secret put <NAME>` - never here.
     "AUTH_TRUST_HOST": "true",
-    "NEXT_PUBLIC_SITE_URL": "https://borsahatti.timurkaanalcin.workers.dev"
+    "AUTH_URL": "https://alsyatirim.login.org.tr",
+    "NEXT_PUBLIC_SITE_URL": "https://alsyatirim.login.org.tr"
   }
 }

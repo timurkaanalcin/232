@@ -25,8 +25,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { COUNTRY_TIMEZONES, countryForTimezone } from "@/lib/constants";
 import { apiDelete, apiGet, apiPatch, apiPost, ClientApiError } from "@/lib/client-api";
 import { formatRelative } from "@/lib/utils";
 import type { DeviceSessionDTO, UserDTO } from "@/types";
@@ -77,9 +79,15 @@ function ProfileTab() {
   const profile = useProfile();
   const queryClient = useQueryClient();
   const [name, setName] = useState<string | null>(null);
+  const [timezone, setTimezone] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: (newName: string) => apiPatch("/api/profile", { name: newName }),
+    mutationFn: (payload: { name: string; timezone: string }) =>
+      apiPatch("/api/profile", {
+        name: payload.name,
+        timezone: payload.timezone,
+        countryCode: countryForTimezone(payload.timezone),
+      }),
     onSuccess: () => {
       toast.success("Profile updated");
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
@@ -91,6 +99,7 @@ function ProfileTab() {
   const user = profile.data?.user;
   if (!user) return null;
   const value = name ?? user.name;
+  const timezoneValue = timezone ?? user.timezone;
 
   return (
     <Card>
@@ -109,10 +118,29 @@ function ProfileTab() {
           <Label htmlFor="profile-name">Display name</Label>
           <Input id="profile-name" value={value} maxLength={100} onChange={(e) => setName(e.target.value)} />
         </div>
+        <div className="grid gap-2">
+          <Label>Ülke / saat dilimi</Label>
+          <Select value={timezoneValue} onValueChange={setTimezone}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {COUNTRY_TIMEZONES.map((item) => (
+                <SelectItem key={item.timezone} value={item.timezone}>
+                  {item.label} - {item.timezone}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div>
           <Button
-            onClick={() => mutation.mutate(value)}
-            disabled={mutation.isPending || value.trim().length === 0 || value === user.name}
+            onClick={() => mutation.mutate({ name: value, timezone: timezoneValue })}
+            disabled={
+              mutation.isPending ||
+              value.trim().length === 0 ||
+              (value === user.name && timezoneValue === user.timezone)
+            }
           >
             {mutation.isPending ? "Saving…" : "Save changes"}
           </Button>

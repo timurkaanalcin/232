@@ -2,7 +2,7 @@
   "name": "livetrack",
   "version": "1.0.0",
   "private": true,
-  "description": "LiveTrack Enterprise - consent-first real-time location sharing platform",
+  "description": "ALS Yatirim - institutional investment CRM and broker operations platform",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

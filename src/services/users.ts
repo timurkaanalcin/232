@@ -1,17 +1,55 @@
 import { hashPassword } from "@/lib/crypto";
-import type { Paginated, RoleId, UserDTO, UserRow, UserStatus } from "@/types";
+import { DEFAULT_COUNTRY_CODE, DEFAULT_TIMEZONE, countryForTimezone } from "@/lib/constants";
+import type { CrmDepartment, CrmStatus, Paginated, RetentionStatus, RoleId, UserDTO, UserRow, UserStatus } from "@/types";
 
-export function toUserDTO(row: UserRow): UserDTO {
+type UserRowWithManager = UserRow & {
+  manager_name?: string | null;
+  manager_role?: RoleId | null;
+  total_deposit?: number | null;
+  total_balance?: number | null;
+  trade_order_count?: number | null;
+  trade_total_notional?: number | null;
+  trade_open_positions?: number | null;
+  trade_last_at?: number | null;
+};
+
+export function toUserDTO(row: UserRowWithManager): UserDTO {
   return {
     id: row.id,
     email: row.email,
     name: row.name,
     image: row.image,
     role: row.role_id,
+    clientNumericId: row.client_numeric_id ?? "",
+    saleStatus: row.sale_status ?? "new",
+    saleStatusScheduledAt: row.sale_status_scheduled_at ?? null,
+    phone: row.phone ?? "",
+    address: row.address ?? "",
+    dateOfBirth: row.date_of_birth ?? "",
+    department: row.department ?? "client",
+    retentionStatus: row.retention_status ?? "new",
+    retentionStatusScheduledAt: row.retention_status_scheduled_at ?? null,
+    adSource: row.ad_source ?? "",
+    countryCode: row.country_code ?? DEFAULT_COUNTRY_CODE,
+    timezone: row.timezone ?? DEFAULT_TIMEZONE,
+    companyName: row.company_name ?? "",
+    managerId: row.manager_id ?? null,
+    managerName: row.manager_name ?? null,
+    managerRole: row.manager_role ?? null,
     status: row.status,
     emailVerified: row.email_verified === 1,
     createdAt: row.created_at,
     lastLoginAt: row.last_login_at,
+    financeSummary: {
+      totalDeposit: row.total_deposit ?? 0,
+      totalBalance: row.total_balance ?? 0,
+    },
+    tradingSummary: {
+      orderCount: row.trade_order_count ?? 0,
+      totalNotional: row.trade_total_notional ?? 0,
+      openPositions: row.trade_open_positions ?? 0,
+      lastTradeAt: row.trade_last_at ?? null,
+    },
   };
 }
 
@@ -23,12 +61,43 @@ export async function findUserById(db: D1Database, id: string): Promise<UserRow 
   return db.prepare(`SELECT * FROM users WHERE id = ?`).bind(id).first<UserRow>();
 }
 
+function generateEightDigitId(): string {
+  const values = new Uint32Array(1);
+  crypto.getRandomValues(values);
+  return String(10_000_000 + ((values[0] ?? 0) % 90_000_000));
+}
+
+export async function generateClientNumericId(db: D1Database): Promise<string> {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const candidate = generateEightDigitId();
+    const existing = await db
+      .prepare(`SELECT id FROM users WHERE client_numeric_id = ? LIMIT 1`)
+      .bind(candidate)
+      .first<{ id: string }>();
+    if (!existing) return candidate;
+  }
+  throw new Error("Failed to generate a unique client ID");
+}
+
 export interface CreateUserInput {
   email: string;
   name: string;
   password?: string;
   image?: string | null;
   role?: RoleId;
+  phone?: string;
+  address?: string;
+  dateOfBirth?: string;
+  department?: CrmDepartment;
+  saleStatus?: CrmStatus;
+  saleStatusScheduledAt?: number | null;
+  retentionStatus?: RetentionStatus;
+  retentionStatusScheduledAt?: number | null;
+  adSource?: string;
+  managerId?: string | null;
+  countryCode?: string;
+  timezone?: string;
+  companyName?: string;
   emailVerified?: boolean;
 }
 
@@ -36,11 +105,17 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
   const now = Date.now();
   const id = crypto.randomUUID();
   const passwordHash = input.password ? await hashPassword(input.password) : null;
+  const role = input.role ?? "user";
+  const clientNumericId = role === "user" ? await generateClientNumericId(db) : "";
 
   await db
     .prepare(
-      `INSERT INTO users (id, email, email_verified, name, image, password_hash, role_id, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+      `INSERT INTO users (
+         id, email, email_verified, name, image, password_hash, role_id, client_numeric_id, sale_status,
+         sale_status_scheduled_at, phone, address, date_of_birth, department, retention_status,
+         retention_status_scheduled_at, ad_source, country_code, timezone, company_name, manager_id, status, created_at, updated_at
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
     )
     .bind(
       id,
@@ -49,7 +124,21 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
       input.name,
       input.image ?? null,
       passwordHash,
-      input.role ?? "user",
+      role,
+      clientNumericId,
+      input.saleStatus ?? "new",
+      input.saleStatusScheduledAt ?? null,
+      input.phone ?? "",
+      input.address ?? "",
+      input.dateOfBirth ?? "",
+      input.department ?? "client",
+      input.retentionStatus ?? "new",
+      input.retentionStatusScheduledAt ?? null,
+      input.adSource ?? "",
+      input.countryCode ?? countryForTimezone(input.timezone ?? DEFAULT_TIMEZONE),
+      input.timezone ?? DEFAULT_TIMEZONE,
+      input.companyName ?? "",
+      input.managerId ?? null,
       now,
       now,
     )
@@ -62,6 +151,19 @@ export async function createUser(db: D1Database, input: CreateUserInput): Promis
 
 export async function updateUserProfile(db: D1Database, id: string, name: string): Promise<void> {
   await db.prepare(`UPDATE users SET name = ?, updated_at = ? WHERE id = ?`).bind(name, Date.now(), id).run();
+}
+
+export async function updateUserLocale(
+  db: D1Database,
+  id: string,
+  input: { name: string; timezone?: string; countryCode?: string },
+): Promise<void> {
+  const timezone = input.timezone ?? DEFAULT_TIMEZONE;
+  const countryCode = input.countryCode ?? countryForTimezone(timezone);
+  await db
+    .prepare(`UPDATE users SET name = ?, timezone = ?, country_code = ?, updated_at = ? WHERE id = ?`)
+    .bind(input.name, timezone, countryCode, Date.now(), id)
+    .run();
 }
 
 export async function setUserPassword(db: D1Database, id: string, password: string): Promise<void> {
@@ -79,6 +181,19 @@ export async function touchLastLogin(db: D1Database, id: string): Promise<void> 
 export interface AdminUpdateUserInput {
   name?: string;
   role?: RoleId;
+  clientNumericId?: string;
+  phone?: string;
+  address?: string;
+  dateOfBirth?: string;
+  image?: string;
+  department?: CrmDepartment;
+  saleStatus?: CrmStatus;
+  saleStatusScheduledAt?: number | null;
+  retentionStatus?: RetentionStatus;
+  retentionStatusScheduledAt?: number | null;
+  adSource?: string;
+  managerId?: string | null;
+  companyName?: string;
   status?: UserStatus;
 }
 
@@ -92,6 +207,58 @@ export async function adminUpdateUser(db: D1Database, id: string, input: AdminUp
   if (input.role !== undefined) {
     sets.push("role_id = ?");
     binds.push(input.role);
+  }
+  if (input.clientNumericId !== undefined) {
+    sets.push("client_numeric_id = ?");
+    binds.push(input.clientNumericId);
+  }
+  if (input.phone !== undefined) {
+    sets.push("phone = ?");
+    binds.push(input.phone);
+  }
+  if (input.address !== undefined) {
+    sets.push("address = ?");
+    binds.push(input.address);
+  }
+  if (input.dateOfBirth !== undefined) {
+    sets.push("date_of_birth = ?");
+    binds.push(input.dateOfBirth);
+  }
+  if (input.image !== undefined) {
+    sets.push("image = ?");
+    binds.push(input.image || null);
+  }
+  if (input.department !== undefined) {
+    sets.push("department = ?");
+    binds.push(input.department);
+  }
+  if (input.saleStatus !== undefined) {
+    sets.push("sale_status = ?");
+    binds.push(input.saleStatus);
+  }
+  if (input.saleStatusScheduledAt !== undefined) {
+    sets.push("sale_status_scheduled_at = ?");
+    binds.push(input.saleStatusScheduledAt);
+  }
+  if (input.retentionStatus !== undefined) {
+    sets.push("retention_status = ?");
+    binds.push(input.retentionStatus);
+  }
+  if (input.retentionStatusScheduledAt !== undefined) {
+    sets.push("retention_status_scheduled_at = ?");
+    binds.push(input.retentionStatusScheduledAt);
+  }
+  if (input.adSource !== undefined) {
+    sets.push("ad_source = ?");
+    binds.push(input.adSource);
+  }
+  if (input.managerId !== undefined) {
+    sets.push("manager_id = ?");
+    binds.push(input.managerId);
+  }
+  if (input.companyName !== undefined) {
+    sets.push("company_name = ?");
+    binds.push(input.companyName);
   }
   if (input.status !== undefined) {
     sets.push("status = ?");
@@ -111,34 +278,110 @@ export interface ListUsersFilter {
   pageSize: number;
 }
 
-export async function listUsers(db: D1Database, filter: ListUsersFilter): Promise<Paginated<UserDTO>> {
+export interface UserScope {
+  id: string;
+  role: RoleId;
+}
+
+function applyUserScope(scope: UserScope | undefined, where: string[], binds: unknown[]): void {
+  if (!scope || scope.role === "super_admin") return;
+  where.push(
+    `(u.id = ? OR u.manager_id = ? OR m.manager_id = ? OR m2.manager_id = ? OR m3.manager_id = ?)`,
+  );
+  binds.push(scope.id, scope.id, scope.id, scope.id, scope.id);
+}
+
+export async function listUsers(
+  db: D1Database,
+  filter: ListUsersFilter,
+  scope?: UserScope,
+): Promise<Paginated<UserDTO>> {
   const where: string[] = [];
   const binds: unknown[] = [];
   if (filter.q) {
-    where.push("(email LIKE ? OR name LIKE ?)");
+    where.push("(u.email LIKE ? OR u.name LIKE ? OR u.phone LIKE ? OR u.client_numeric_id LIKE ? OR u.ad_source LIKE ?)");
     const like = `%${filter.q.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`;
-    binds.push(like, like);
+    binds.push(like, like, like, like, like);
   }
   if (filter.role) {
-    where.push("role_id = ?");
+    where.push("u.role_id = ?");
     binds.push(filter.role);
   }
   if (filter.status) {
-    where.push("status = ?");
+    where.push("u.status = ?");
     binds.push(filter.status);
   }
+  applyUserScope(scope, where, binds);
   const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
 
   const countRow = await db
-    .prepare(`SELECT COUNT(*) AS total FROM users ${whereSql}`)
+    .prepare(
+      `SELECT COUNT(*) AS total
+       FROM users u
+       LEFT JOIN users m ON m.id = u.manager_id
+       LEFT JOIN users m2 ON m2.id = m.manager_id
+       LEFT JOIN users m3 ON m3.id = m2.manager_id
+       ${whereSql}`,
+    )
     .bind(...binds)
     .first<{ total: number }>();
 
   const offset = (filter.page - 1) * filter.pageSize;
   const rows = await db
-    .prepare(`SELECT * FROM users ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .prepare(
+      `WITH trade_stats AS (
+         SELECT client_id, COUNT(*) AS order_count, COALESCE(SUM(notional), 0) AS total_notional, MAX(created_at) AS last_trade_at
+         FROM crm_trade_orders
+         GROUP BY client_id
+       ),
+       open_position_stats AS (
+         SELECT client_id, COUNT(*) AS open_positions
+         FROM (
+           SELECT client_id, symbol, SUM(CASE WHEN side = 'buy' THEN quantity ELSE -quantity END) AS quantity
+           FROM crm_trade_orders
+           GROUP BY client_id, symbol
+           HAVING ABS(quantity) > 0.000001
+         )
+         GROUP BY client_id
+       ),
+       money_stats AS (
+         SELECT client_id,
+                COALESCE(SUM(CASE WHEN tx_type = 'deposit' THEN amount ELSE 0 END), 0) AS total_deposit,
+                COALESCE(SUM(CASE
+                  WHEN tx_type IN ('deposit', 'bonus', 'transfer') THEN amount
+                  WHEN tx_type IN ('withdrawal', 'commission', 'swap') THEN -amount
+                  ELSE 0
+                END), 0) AS net_money
+         FROM crm_money_transactions
+         WHERE tx_status IN ('pending', 'approved')
+         GROUP BY client_id
+       ),
+       account_stats AS (
+         SELECT client_id, COALESCE(SUM(balance + credit), 0) AS account_balance
+         FROM crm_trade_accounts
+         GROUP BY client_id
+       )
+       SELECT u.*, m.name AS manager_name, m.role_id AS manager_role,
+              COALESCE(ms.total_deposit, 0) AS total_deposit,
+              COALESCE(ast.account_balance, 0) + COALESCE(ms.net_money, 0) AS total_balance,
+              COALESCE(ts.order_count, 0) AS trade_order_count,
+              COALESCE(ts.total_notional, 0) AS trade_total_notional,
+              COALESCE(ops.open_positions, 0) AS trade_open_positions,
+              ts.last_trade_at AS trade_last_at
+       FROM users u
+       LEFT JOIN users m ON m.id = u.manager_id
+       LEFT JOIN users m2 ON m2.id = m.manager_id
+       LEFT JOIN users m3 ON m3.id = m2.manager_id
+       LEFT JOIN trade_stats ts ON ts.client_id = u.id
+       LEFT JOIN open_position_stats ops ON ops.client_id = u.id
+       LEFT JOIN money_stats ms ON ms.client_id = u.id
+       LEFT JOIN account_stats ast ON ast.client_id = u.id
+       ${whereSql}
+       ORDER BY u.created_at DESC
+       LIMIT ? OFFSET ?`,
+    )
     .bind(...binds, filter.pageSize, offset)
-    .all<UserRow>();
+    .all<UserRowWithManager>();
 
   return {
     items: rows.results.map(toUserDTO),
@@ -155,10 +398,12 @@ export async function deleteUserAccount(db: D1Database, id: string): Promise<voi
 
 /** GDPR/KVKK access: exports all personal data held for a user. */
 export async function exportUserData(db: D1Database, id: string) {
-  const [user, sessions, locationSessions, locations, audit] = await Promise.all([
+  const [user, sessions, locationSessions, locations, audit, tradeOrders, clientComments] = await Promise.all([
     db
       .prepare(
-        `SELECT id, email, name, image, role_id, status, email_verified, created_at, updated_at, last_login_at
+        `SELECT id, email, name, image, role_id, client_numeric_id, sale_status, sale_status_scheduled_at,
+                phone, address, date_of_birth, department, retention_status, retention_status_scheduled_at,
+                ad_source, extra_info, country_code, timezone, manager_id, status, email_verified, created_at, updated_at, last_login_at
          FROM users WHERE id = ?`,
       )
       .bind(id)
@@ -188,6 +433,20 @@ export async function exportUserData(db: D1Database, id: string) {
       )
       .bind(id)
       .all(),
+    db
+      .prepare(
+        `SELECT symbol, market, side, order_type, quantity, price, status, notional, pnl, created_at
+         FROM crm_trade_orders WHERE client_id = ? ORDER BY created_at DESC LIMIT 10000`,
+      )
+      .bind(id)
+      .all(),
+    db
+      .prepare(
+        `SELECT author_name, author_email, body, created_at
+         FROM crm_client_comments WHERE client_id = ? ORDER BY created_at DESC LIMIT 10000`,
+      )
+      .bind(id)
+      .all(),
   ]);
 
   return {
@@ -197,5 +456,7 @@ export async function exportUserData(db: D1Database, id: string) {
     locationSessions: locationSessions.results,
     locationPoints: locations.results,
     auditTrail: audit.results,
+    tradeOrders: tradeOrders.results,
+    clientComments: clientComments.results,
   };
 }

@@ -106,6 +106,10 @@ When a user **explicitly starts** location sharing, admins can receive a Telegra
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — system design
 - [API_REFERENCE.md](./API_REFERENCE.md) — REST API
 - [SECURITY.md](./SECURITY.md) — security & compliance model
+- [docs/enterprise/01_ENTERPRISE_SRS.md](./docs/enterprise/01_ENTERPRISE_SRS.md) — enterprise SRS
+- [docs/enterprise/02_DATABASE_BIBLE.md](./docs/enterprise/02_DATABASE_BIBLE.md) — 200+ table database bible
+- [docs/enterprise/03_MICROSERVICE_ARCHITECTURE.md](./docs/enterprise/03_MICROSERVICE_ARCHITECTURE.md) — target microservice architecture
+- [docs/enterprise/04_IMPLEMENTATION_ROADMAP.md](./docs/enterprise/04_IMPLEMENTATION_ROADMAP.md) — implementation roadmap
 
 ## License
 

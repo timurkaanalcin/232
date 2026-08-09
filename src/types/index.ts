@@ -2,9 +2,31 @@
 // Domain types shared between server, client and the realtime layer.
 // ----------------------------------------------------------------------------
 
-export type RoleId = "super_admin" | "admin" | "operator" | "viewer" | "user";
+export type RoleId = "super_admin" | "shift" | "admin" | "operator" | "viewer" | "retention" | "sale" | "user";
 
 export type UserStatus = "active" | "disabled";
+
+export type CrmDepartment = "management" | "retention" | "sale" | "client";
+
+export type CrmStatus =
+  | "new"
+  | "no_answer"
+  | "call_back"
+  | "not_interested"
+  | "low_potential"
+  | "potential"
+  | "recovery"
+  | "active"
+  | "wrong_number"
+  | "wrong_person"
+  | "referral"
+  | "test"
+  | "renew"
+  | "depositor"
+  | "trash"
+  | "never_answer";
+
+export type RetentionStatus = CrmStatus;
 
 export type LocationSessionStatus = "active" | "ended";
 
@@ -20,7 +42,21 @@ export type Permission =
   | "users.create"
   | "users.manage"
   | "roles.assign"
-  | "audit.view";
+  | "audit.view"
+  | "customers.manage"
+  | "tickets.manage"
+  | "documents.manage"
+  | "reports.view"
+  | "settings.manage"
+  | "admin.panel"
+  | "trading.access"
+  | "trading.order";
+
+export type TradeSide = "buy" | "sell";
+
+export type TradeOrderType = "market" | "limit";
+
+export type TradeOrderStatus = "filled" | "rejected";
 
 // ----------------------------------------------------------------------------
 // Database rows
@@ -34,6 +70,21 @@ export interface UserRow {
   image: string | null;
   password_hash: string | null;
   role_id: RoleId;
+  client_numeric_id: string;
+  sale_status: CrmStatus;
+  sale_status_scheduled_at: number | null;
+  phone: string;
+  address: string;
+  date_of_birth: string;
+  department: CrmDepartment;
+  retention_status: RetentionStatus;
+  retention_status_scheduled_at: number | null;
+  ad_source: string;
+  extra_info: string;
+  country_code: string;
+  timezone: string;
+  company_name: string;
+  manager_id: string | null;
   status: UserStatus;
   created_at: number;
   updated_at: number;
@@ -107,10 +158,36 @@ export interface UserDTO {
   name: string;
   image: string | null;
   role: RoleId;
+  clientNumericId: string;
+  saleStatus: CrmStatus;
+  saleStatusScheduledAt: number | null;
+  phone: string;
+  address: string;
+  dateOfBirth: string;
+  department: CrmDepartment;
+  retentionStatus: RetentionStatus;
+  retentionStatusScheduledAt: number | null;
+  adSource: string;
+  countryCode: string;
+  timezone: string;
+  companyName: string;
+  managerId: string | null;
+  managerName: string | null;
+  managerRole: RoleId | null;
   status: UserStatus;
   emailVerified: boolean;
   createdAt: number;
   lastLoginAt: number | null;
+  financeSummary: {
+    totalDeposit: number;
+    totalBalance: number;
+  };
+  tradingSummary: {
+    orderCount: number;
+    totalNotional: number;
+    openPositions: number;
+    lastTradeAt: number | null;
+  };
 }
 
 export interface DeviceSessionDTO {
@@ -194,6 +271,25 @@ export interface AdminAnalyticsDTO {
   activeSessionCount: number;
 }
 
+export interface CrmOverviewDTO {
+  totalClients: number;
+  activeClients: number;
+  newClientsToday: number;
+  missingAdSource: number;
+  tradingOrderCount: number;
+  tradingVolume: number;
+  tradingActiveClients: number;
+  followUps: {
+    overdue: number;
+    today: number;
+    upcoming: number;
+  };
+  saleStatusBreakdown: AnalyticsBreakdownItem[];
+  retentionStatusBreakdown: AnalyticsBreakdownItem[];
+  adSourceBreakdown: AnalyticsBreakdownItem[];
+  teamRoleBreakdown: AnalyticsBreakdownItem[];
+}
+
 export interface Paginated<T> {
   items: T[];
   total: number;
@@ -232,6 +328,148 @@ export interface SecurityEventDTO {
   ip: string;
   metadata: Record<string, unknown>;
   createdAt: number;
+}
+
+export interface TradingClientDTO {
+  id: string;
+  clientNumericId: string;
+  name: string;
+  email: string;
+  phone: string;
+  adSource: string;
+  saleStatus: CrmStatus;
+  retentionStatus: CrmStatus;
+  managerName: string | null;
+}
+
+export interface TradingOrderDTO {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientNumericId: string;
+  actorEmail: string;
+  symbol: string;
+  market: string;
+  side: TradeSide;
+  orderType: TradeOrderType;
+  quantity: number;
+  price: number;
+  status: TradeOrderStatus;
+  brokerOrderId: string;
+  brokerMessage: string;
+  executionMode: "live";
+  notional: number;
+  pnl: number;
+  createdAt: number;
+}
+
+export interface TradingPositionDTO {
+  clientId: string;
+  clientName: string;
+  clientNumericId: string;
+  symbol: string;
+  quantity: number;
+  averagePrice: number;
+  currentPrice: number;
+  marketValue: number;
+  unrealizedPnl: number;
+}
+
+export interface TradingSymbolDTO {
+  symbol: string;
+  name: string;
+  market: string;
+  price: number;
+  change: number;
+}
+
+export interface TradingWorkspaceDTO {
+  clients: TradingClientDTO[];
+  symbols: TradingSymbolDTO[];
+  orders: TradingOrderDTO[];
+  positions: TradingPositionDTO[];
+  broker: {
+    configured: boolean;
+    provider: string;
+    message: string;
+  };
+  summary: {
+    equity: number;
+    availableMargin: number;
+    usedMargin: number;
+    openPositions: number;
+    dailyPnl: number;
+  };
+}
+
+export interface ClientCommentDTO {
+  id: string;
+  authorId: string | null;
+  authorName: string;
+  authorEmail: string;
+  body: string;
+  createdAt: number;
+}
+
+export interface ClientTradeAccountDTO {
+  id: string;
+  accountNo: string;
+  name: string;
+  accountType: "live" | "demo";
+  currency: string;
+  balance: number;
+  credit: number;
+  status: "active" | "disabled";
+  createdAt: number;
+}
+
+export interface ClientMoneyTransactionDTO {
+  id: string;
+  txType: "deposit" | "withdrawal" | "bonus" | "commission" | "swap" | "transfer";
+  amount: number;
+  currency: string;
+  method: string;
+  txStatus: "pending" | "approved" | "rejected";
+  referenceNo: string;
+  note: string;
+  createdAt: number;
+}
+
+export interface ClientDocumentDTO {
+  id: string;
+  title: string;
+  documentType: "verification" | "identity" | "address" | "other";
+  fileUrl: string;
+  docStatus: "pending" | "approved" | "rejected";
+  createdAt: number;
+}
+
+export interface ClientSupportMessageDTO {
+  id: string;
+  senderId: string | null;
+  senderName: string;
+  senderEmail: string;
+  senderRole: RoleId | string;
+  body: string;
+  createdAt: number;
+  mine?: boolean;
+}
+
+export interface ClientManagerOptionDTO {
+  id: string;
+  name: string;
+  role: RoleId;
+}
+
+export interface ClientDetailDTO {
+  user: UserDTO;
+  extraInfo: string;
+  comments: ClientCommentDTO[];
+  tradeAccounts: ClientTradeAccountDTO[];
+  moneyTransactions: ClientMoneyTransactionDTO[];
+  documents: ClientDocumentDTO[];
+  supportMessages: ClientSupportMessageDTO[];
+  managers: ClientManagerOptionDTO[];
 }
 
 // ----------------------------------------------------------------------------

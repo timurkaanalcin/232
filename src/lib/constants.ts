@@ -1,16 +1,86 @@
-import type { Permission, RoleId } from "@/types";
+import type { CrmDepartment, CrmStatus, Permission, RetentionStatus, RoleId } from "@/types";
 
-export const APP_NAME = "LiveTrack";
+export const APP_NAME = "ALS Yatırım";
 
-export const ADMIN_ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer"];
+export const ROLE_IDS = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale", "user"] as const;
+
+export const ADMIN_ROLES: RoleId[] = ["super_admin", "shift", "admin", "operator", "viewer", "retention", "sale"];
 
 export const ROLE_LABELS: Record<RoleId, string> = {
-  super_admin: "Super Admin",
-  admin: "Admin",
-  operator: "Operator",
-  viewer: "Viewer",
-  user: "User",
+  super_admin: "Admin",
+  shift: "Shift",
+  admin: "Head",
+  operator: "Retention Team Leader",
+  viewer: "Sale Team Leader",
+  retention: "Retention",
+  sale: "Sale",
+  user: "Client",
 };
+
+export const ROLE_RANK: Record<RoleId, number> = {
+  super_admin: 100,
+  shift: 90,
+  admin: 80,
+  operator: 60,
+  viewer: 60,
+  retention: 40,
+  sale: 40,
+  user: 0,
+};
+
+export const CRM_DEPARTMENT_LABELS: Record<CrmDepartment, string> = {
+  management: "Yönetim",
+  retention: "Retention",
+  sale: "Sale",
+  client: "Client",
+};
+
+export const CRM_STATUS_LABELS: Record<CrmStatus, string> = {
+  new: "New",
+  no_answer: "No Answer",
+  call_back: "Call Back",
+  not_interested: "Not Interested",
+  low_potential: "Low Potential",
+  potential: "Potential",
+  recovery: "Recovery",
+  active: "Active",
+  wrong_number: "Wrong Number",
+  wrong_person: "Wrong Person",
+  referral: "Referral",
+  test: "Test",
+  renew: "Renew",
+  depositor: "Depositor",
+  trash: "Trash",
+  never_answer: "Never Answer",
+};
+
+export const COUNTRY_TIMEZONES = [
+  { countryCode: "TR", label: "Türkiye", timezone: "Europe/Istanbul" },
+  { countryCode: "RU", label: "Rusya", timezone: "Europe/Moscow" },
+  { countryCode: "DE", label: "Almanya", timezone: "Europe/Berlin" },
+  { countryCode: "GB", label: "İngiltere", timezone: "Europe/London" },
+  { countryCode: "US", label: "Amerika", timezone: "America/New_York" },
+  { countryCode: "AE", label: "Birleşik Arap Emirlikleri", timezone: "Asia/Dubai" },
+] as const;
+
+export const DEFAULT_TIMEZONE = "Europe/Istanbul";
+export const DEFAULT_COUNTRY_CODE = "TR";
+
+export function isSupportedTimezone(timezone: string): boolean {
+  return COUNTRY_TIMEZONES.some((item) => item.timezone === timezone);
+}
+
+export function countryForTimezone(timezone: string): string {
+  return COUNTRY_TIMEZONES.find((item) => item.timezone === timezone)?.countryCode ?? DEFAULT_COUNTRY_CODE;
+}
+
+export const RETENTION_STATUS_LABELS: Record<RetentionStatus, string> = CRM_STATUS_LABELS;
+
+export const SCHEDULE_REQUIRED_STATUSES: CrmStatus[] = ["call_back", "active"];
+
+export function requiresStatusSchedule(status: CrmStatus): boolean {
+  return SCHEDULE_REQUIRED_STATUSES.includes(status);
+}
 
 export const AUDIT_ACTIONS = {
   LOGIN: "auth.login",
@@ -90,6 +160,7 @@ export const RATE_LIMITS = {
 export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
   super_admin: [
     "admin.access",
+    "admin.panel",
     "stats.view",
     "map.live_view",
     "sessions.view",
@@ -99,8 +170,53 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "users.manage",
     "roles.assign",
     "audit.view",
+    "customers.manage",
+    "tickets.manage",
+    "documents.manage",
+    "reports.view",
+    "settings.manage",
+    "trading.access",
+    "trading.order",
+  ],
+  shift: [
+    "admin.access",
+    "admin.panel",
+    "stats.view",
+    "map.live_view",
+    "sessions.view",
+    "sessions.manage",
+    "users.view",
+    "users.create",
+    "users.manage",
+    "roles.assign",
+    "audit.view",
+    "customers.manage",
+    "tickets.manage",
+    "documents.manage",
+    "reports.view",
+    "trading.access",
+    "trading.order",
   ],
   admin: [
+    "admin.access",
+    "admin.panel",
+    "stats.view",
+    "map.live_view",
+    "sessions.view",
+    "sessions.manage",
+    "users.view",
+    "users.create",
+    "users.manage",
+    "roles.assign",
+    "audit.view",
+    "customers.manage",
+    "tickets.manage",
+    "documents.manage",
+    "reports.view",
+    "trading.access",
+    "trading.order",
+  ],
+  operator: [
     "admin.access",
     "stats.view",
     "map.live_view",
@@ -109,9 +225,39 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "users.view",
     "users.create",
     "users.manage",
-    "audit.view",
+    "roles.assign",
+    "customers.manage",
+    "tickets.manage",
+    "documents.manage",
+    "reports.view",
+    "trading.access",
+    "trading.order",
   ],
-  operator: ["admin.access", "stats.view", "map.live_view", "sessions.view", "sessions.manage"],
-  viewer: ["admin.access", "stats.view", "map.live_view", "sessions.view"],
-  user: [],
+  viewer: [
+    "admin.access",
+    "stats.view",
+    "map.live_view",
+    "sessions.view",
+    "users.view",
+    "users.create",
+    "users.manage",
+    "roles.assign",
+    "customers.manage",
+    "tickets.manage",
+    "reports.view",
+    "trading.access",
+    "trading.order",
+  ],
+  retention: ["customers.manage", "tickets.manage", "documents.manage", "trading.access"],
+  sale: ["customers.manage", "tickets.manage", "trading.access", "trading.order"],
+  user: ["trading.access", "trading.order"],
 };
+
+export function canAssignRole(actorRole: RoleId, targetRole: RoleId): boolean {
+  if (actorRole === "super_admin") return true;
+  return ROLE_RANK[actorRole] > ROLE_RANK[targetRole];
+}
+
+export function canManageRole(actorRole: RoleId, targetRole: RoleId): boolean {
+  return canAssignRole(actorRole, targetRole);
+}

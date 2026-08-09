@@ -11,6 +11,7 @@ import {
   LogOutIcon,
   MapIcon,
   MenuIcon,
+  MessageSquareIcon,
   ScrollTextIcon,
   SettingsIcon,
   ShieldAlertIcon,
@@ -53,6 +54,7 @@ interface NavItem {
 
 const USER_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
+  { href: "/support", label: "Canlı Destek", icon: MessageSquareIcon },
   { href: "/history", label: "History", icon: HistoryIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -162,9 +164,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: ReactN
         <div className="flex flex-1 flex-col gap-1 overflow-y-auto py-3">
           <NavLinks user={user} />
         </div>
-        <div className="border-t p-4 text-xs text-muted-foreground">
-          Consent-first location sharing
-        </div>
+        <div className="border-t p-4 text-xs text-muted-foreground">Sale & Retention CRM operasyon paneli</div>
       </aside>
 
       {/* Mobile drawer */}

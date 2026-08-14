@@ -1,0 +1,15 @@
+{
+  "name": "LiveTrack",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "dev",
+      "command": "npm run dev",
+      "description": "Next.js dev server on http://localhost:3000 with local D1 bindings (via the OpenNext dev integration). Durable Objects (realtime WS) require `npm run preview` on :8787 instead."
+    }
+  ],
+  "ports": [
+    { "name": "next-dev", "port": 3000 },
+    { "name": "wrangler-preview", "port": 8787 }
+  ]
+}

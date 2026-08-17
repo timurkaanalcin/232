@@ -1,0 +1,122 @@
+import type { Instrument } from "@/types";
+
+const mk = (
+  id: string, symbol: string, name: string, basePrice: number,
+  volatility: number, digits: number, spread: number, exchange: string,
+): Instrument => ({
+  id, symbol, name, category: "stocks", basePrice, volatility, digits,
+  contractSize: 1, spread, tvSymbol: `${exchange}:${symbol}`,
+});
+
+export const EU_STOCKS: Instrument[] = [
+  // Germany — XETRA (20)
+  mk("sap", "SAP", "SAP SE", 172.0, 0.4, 2, 25, "XETR"),
+  mk("sie", "SIE", "Siemens AG", 175.0, 0.4, 2, 25, "XETR"),
+  mk("alv", "ALV", "Allianz SE", 280.0, 0.5, 2, 28, "XETR"),
+  mk("bas", "BAS", "BASF SE", 48.5, 0.15, 2, 22, "XETR"),
+  mk("bayn", "BAYN", "Bayer AG", 28.5, 0.1, 2, 20, "XETR"),
+  mk("dai", "DAI", "Daimler Truck Holding", 42.5, 0.15, 2, 22, "XETR"),
+  mk("mbg", "MBG", "Mercedes-Benz Group", 72.5, 0.2, 2, 22, "XETR"),
+  mk("bmw", "BMW", "BMW AG", 95.5, 0.25, 2, 22, "XETR"),
+  mk("vow3", "VOW3", "Volkswagen AG", 95.5, 0.25, 2, 22, "XETR"),
+  mk("pah3", "PAH3", "Porsche AG", 65.5, 0.2, 2, 22, "XETR"),
+  mk("ifx", "IFX", "Infineon Technologies", 35.5, 0.15, 2, 20, "XETR"),
+  mk("hen3", "HEN3", "Henkel AG", 95.5, 0.25, 2, 22, "XETR"),
+  mk("muv2", "MUV2", "Munich Re", 385.0, 0.8, 2, 28, "XETR"),
+  mk("dbk", "DBK", "Deutsche Bank AG", 18.5, 0.05, 2, 18, "XETR"),
+  mk("cbk", "CBK", "Commerzbank AG", 12.5, 0.05, 2, 18, "XETR"),
+  mk("rwe", "RWE", "RWE AG", 32.5, 0.1, 2, 18, "XETR"),
+  mk("eon", "EOAN", "E.ON SE", 12.5, 0.05, 2, 18, "XETR"),
+  mk("fre", "FRE", "Fresenius SE", 35.5, 0.15, 2, 20, "XETR"),
+  mk("hei", "HEI", "Heidelberg Materials", 95.5, 0.25, 2, 22, "XETR"),
+  mk("srt", "SRT", "Siemens Energy AG", 18.5, 0.05, 2, 18, "XETR"),
+
+  // France — Euronext Paris (15)
+  mk("mc", "MC", "LVMH Moet Hennessy", 685.0, 1.5, 2, 35, "EURONEXT"),
+  mk("ker", "KER", "Kering SA", 285.0, 0.6, 2, 28, "EURONEXT"),
+  mk("or", "OR", "L'Oreal SA", 385.0, 0.8, 2, 28, "EURONEXT"),
+  mk("tte", "TTE", "TotalEnergies SE", 62.5, 0.2, 2, 22, "EURONEXT"),
+  mk("san", "SAN", "Sanofi SA", 95.5, 0.25, 2, 22, "EURONEXT"),
+  mk("air", "AIR", "Airbus SE", 142.0, 0.4, 2, 28, "EURONEXT"),
+  mk("ora", "ORA", "Orange SA", 10.85, 0.05, 2, 20, "EURONEXT"),
+  mk("bn", "BN", "Danone SA", 62.5, 0.2, 2, 22, "EURONEXT"),
+  mk("ri", "RI", "Pernod Ricard SA", 125.0, 0.3, 2, 22, "EURONEXT"),
+  mk("aca", "ACA", "Credit Agricole", 14.5, 0.05, 2, 18, "EURONEXT"),
+  mk("bnp", "BNP", "BNP Paribas", 62.5, 0.2, 2, 22, "EURONEXT"),
+  mk("gle", "GLE", "Societe Generale", 32.5, 0.1, 2, 20, "EURONEXT"),
+  mk("vie", "VIE", "Veolia Environnement", 28.5, 0.1, 2, 18, "EURONEXT"),
+  mk("edp", "EDP", "EDP Energias de Portugal", 5.5, 0.02, 2, 15, "EURONEXT"),
+  mk("stla_eu", "STLA", "Stellantis N.V.", 22.5, 0.05, 2, 18, "EURONEXT"),
+
+  // UK — LSE (20)
+  mk("bp", "BP", "BP plc", 478.0, 2.0, 2, 25, "LSE"),
+  mk("shell", "SHEL", "Shell plc", 2850.0, 8.0, 2, 30, "LSE"),
+  mk("azn", "AZN", "AstraZeneca plc", 12500.0, 30, 2, 40, "LSE"),
+  mk("gsk", "GSK", "GSK plc", 1485.0, 5.0, 2, 28, "LSE"),
+  mk("ulvr", "ULVR", "Unilever plc", 4250.0, 12, 2, 35, "LSE"),
+  mk("rio", "RIO", "Rio Tinto plc", 5150.0, 15, 2, 35, "LSE"),
+  mk("barc", "BARC", "Barclays plc", 268.0, 1.0, 2, 22, "LSE"),
+  mk("hsba", "HSBA", "HSBC Holdings", 685.0, 2.5, 2, 28, "LSE"),
+  mk("stan", "STAN", "Standard Chartered", 685.0, 2.5, 2, 28, "LSE"),
+  mk("lloy", "LLOY", "Lloyds Banking Group", 52.5, 0.2, 2, 18, "LSE"),
+  mk("bats", "BATS", "British American Tobacco", 2850.0, 8.0, 2, 30, "LSE"),
+  mk("imb", "IMB", "Imperial Brands", 2850.0, 8.0, 2, 30, "LSE"),
+  mk("dge", "DG", "Diageo plc", 2850.0, 8.0, 2, 30, "LSE"),
+  mk("relx", "REL", "RELX plc", 3850.0, 10, 2, 32, "LSE"),
+  mk("pson", "PSON", "Pearson plc", 985.0, 3.0, 2, 25, "LSE"),
+  mk("rr", "RR", "Rolls-Royce Holdings", 385.0, 1.5, 2, 25, "LSE"),
+  mk("baes", "BA", "BAE Systems plc", 1285.0, 4.0, 2, 28, "LSE"),
+  mk("glen", "GLEN", "Glencore plc", 425.0, 1.5, 2, 25, "LSE"),
+  mk("anto", "ANTO", "Antofagasta plc", 1685.0, 5.0, 2, 28, "LSE"),
+  mk("land", "LAND", "Land Securities Group", 685.0, 2.5, 2, 28, "LSE"),
+
+  // Switzerland — SIX (10)
+  mk("novn", "NOVN", "Novartis AG", 92.5, 0.3, 2, 25, "SIX"),
+  mk("rog", "ROG", "Roche Holding AG", 235.0, 0.6, 2, 28, "SIX"),
+  mk("nesn", "NESN", "Nestle SA", 95.5, 0.25, 2, 25, "SIX"),
+  mk("abbn", "ABBN", "ABB Ltd", 2850.0, 8.0, 2, 30, "SIX"),
+  mk("zurn", "ZURN", "Zurich Insurance Group", 485.0, 1.5, 2, 28, "SIX"),
+  mk("ubsg", "UBSG", "UBS Group AG", 28.5, 0.1, 2, 20, "SIX"),
+  mk("lonn", "LONN", "Lonza Group AG", 385.0, 1.0, 2, 28, "SIX"),
+  mk("sgsn", "SGSN", "SGS SA", 2850.0, 8.0, 2, 30, "SIX"),
+  mk("givn", "GIVN", "Givaudan SA", 3850.0, 10, 2, 32, "SIX"),
+  mk("cssmn", "CSSMN", "Credit Suisse Group AG", 2.5, 0.02, 2, 15, "SIX"),
+
+  // Netherlands — Euronext Amsterdam (8)
+  mk("asml", "ASML", "ASML Holding NV", 925.0, 2.0, 2, 30, "EURONEXT"),
+  mk("inga", "INGA", "ING Groep NV", 14.5, 0.05, 2, 18, "EURONEXT"),
+  mk("rand", "RAND", "Randstad NV", 42.5, 0.15, 2, 20, "EURONEXT"),
+  mk("ad", "AD", "Ahold Delhaize", 28.5, 0.1, 2, 18, "EURONEXT"),
+  mk("heia", "HEIA", "Heineken NV", 95.5, 0.25, 2, 22, "EURONEXT"),
+  mk("phia", "PHIA", "Philips NV", 28.5, 0.1, 2, 18, "EURONEXT"),
+  mk("akza", "AKZA", "Akzo Nobel NV", 62.5, 0.2, 2, 22, "EURONEXT"),
+  mk("unm", "UNM", "Unilever NV", 52.5, 0.15, 2, 20, "EURONEXT"),
+
+  // Spain — BME (6)
+  mk("san2", "SAN", "Banco Santander", 4.5, 0.02, 2, 15, "BME"),
+  mk("bbva", "BBVA", "BBVA Banco Bilbao", 12.5, 0.05, 2, 18, "BME"),
+  mk("itx", "ITX", "Inditex (Zara)", 42.5, 0.15, 2, 20, "BME"),
+  mk("ele", "ELE", "Endesa SA", 22.5, 0.05, 2, 18, "BME"),
+  mk("rep", "REP", "Repsol SA", 15.5, 0.05, 2, 18, "BME"),
+  mk("clnx", "CLNX", "Cellnex Telecom", 35.5, 0.15, 2, 20, "BME"),
+
+  // Italy — Borsa Italiana (8)
+  mk("eni", "ENI", "Eni SpA", 15.5, 0.05, 2, 18, "MIL"),
+  mk("enel", "ENEL", "Enel SpA", 6.5, 0.02, 2, 15, "MIL"),
+  mk("isp", "ISP", "Intesa Sanpaolo", 3.5, 0.02, 2, 15, "MIL"),
+  mk("ucg", "UCG", "UniCredit SpA", 32.5, 0.1, 2, 20, "MIL"),
+  mk("stl", "STL", "Stellantis N.V.", 22.5, 0.05, 2, 18, "MIL"),
+  mk("pry", "PRY", "Prysmian Group", 52.5, 0.15, 2, 20, "MIL"),
+  mk("race", "RACE", "Ferrari N.V.", 425.0, 1.0, 2, 28, "MIL"),
+  mk("cnh", "CNH", "CNH Industrial", 12.5, 0.05, 2, 18, "MIL"),
+
+  // Nordics (8)
+  mk("novob", "NOVOB", "Novo Nordisk", 685.0, 1.5, 2, 28, "CSE"),
+  mk("nzym", "NZYM", "Novozymes", 385.0, 1.0, 2, 25, "CSE"),
+  mk("carl", "CARL", "Carlsberg A/S", 985.0, 3.0, 2, 28, "CSE"),
+  mk("dnb", "DNB", "DNB Bank ASA", 18.5, 0.05, 2, 18, "OSE"),
+  mk("eqnr", "EQNR", "Equinor ASA", 32.5, 0.1, 2, 20, "OSE"),
+  mk("telia", "TELIA", "Telia Company", 3.5, 0.02, 2, 15, "SSE"),
+  mk("eric", "ERIC", "Ericsson AB", 5.5, 0.02, 2, 15, "SSE"),
+  mk("volv", "VOLV", "Volvo AB", 28.5, 0.1, 2, 18, "SSE"),
+];

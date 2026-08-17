@@ -12,6 +12,7 @@ import { getTotpPref, verifyTotp } from "@/lib/totp";
 import { sendLoginOtp } from "@/lib/emailService";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useMessages } from "@/lib/i18n";
+import { getBrandTheme } from "@/lib/brands";
 
 interface Props {
   onSuccess: () => void;
@@ -176,7 +177,7 @@ export default function CustomerLoginPage({ onSuccess, onBack, onGoRegister }: P
           ) : (
             <span />
           )}
-          <img src="/ubs-logo.png" alt="UBS" className="h-8 w-auto object-contain" />
+          <img src={getBrandTheme().logo} alt={getBrandTheme().logoAlt} className="h-8 w-auto object-contain" />
           <LanguageSwitcher tone="brand" compact />
         </div>
       </header>

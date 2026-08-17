@@ -3,6 +3,7 @@ import { Mail, User, ArrowLeft, ShieldCheck, Delete } from "lucide-react";
 import { registerCustomer } from "@/lib/customerAuth";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useMessages } from "@/lib/i18n";
+import { getBrandTheme } from "@/lib/brands";
 import { bumpReferralUse, findInviterByCode, makeReferralCode, saveReferral } from "@/lib/referral";
 
 interface Props {
@@ -123,7 +124,7 @@ export default function CustomerRegisterPage({ onSuccess, onBack, onGoLogin }: P
           ) : (
             <span />
           )}
-          <img src="/ubs-logo.png" alt="UBS" className="h-8 w-auto object-contain" />
+          <img src={getBrandTheme().logo} alt={getBrandTheme().logoAlt} className="h-8 w-auto object-contain" />
           <LanguageSwitcher tone="brand" compact />
         </div>
       </header>
@@ -188,7 +189,7 @@ export default function CustomerRegisterPage({ onSuccess, onBack, onGoLogin }: P
                   type="text"
                   value={referral}
                   onChange={(e) => setReferral(e.target.value.toUpperCase())}
-                  placeholder="UBSXXXX"
+                  placeholder={`${getBrandTheme().accountPrefix}XXXX`}
                   className="w-full border-b border-black/15 bg-transparent py-3 text-[14px] outline-none focus:border-[#E60000]"
                 />
               </label>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Menu, X, ChevronRight, Play } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { fill, useMessages } from "@/lib/i18n";
+import { getBrandTheme } from "@/lib/brands";
 
 interface Props {
   onLaunchTerminal: () => void;
@@ -80,6 +81,17 @@ const THEMES = {
   },
 } as const;
 
+function brandMarkTheme(theme: keyof typeof THEMES) {
+  if (theme !== "ubs") return THEMES[theme];
+  const live = getBrandTheme();
+  return {
+    ...THEMES.ubs,
+    brand: live.name,
+    accent: live.accent,
+    logo: live.logo,
+  };
+}
+
 /** Transparent / white text on black — no frames */
 const btnGhost =
   "bg-transparent text-white/80 hover:text-white transition";
@@ -116,11 +128,11 @@ function Logo({
   className?: string;
   theme: keyof typeof THEMES;
 }) {
-  const t = THEMES[theme];
+  const t = brandMarkTheme(theme);
   if (theme === "ubs" || t.logo) {
     return (
       <img
-        src={theme === "ubs" ? "/ubs-logo.png" : (t.logo as string)}
+        src={t.logo || "/ubs-logo.png"}
         alt={t.brand}
         className={`w-auto object-contain object-left bg-transparent ${className}`}
         style={{ background: "transparent", mixBlendMode: "normal" }}
@@ -144,7 +156,7 @@ export default function OlympLandingPage({
   theme = "olymp",
 }: Props) {
   const m = useMessages();
-  const t = THEMES[theme];
+  const t = brandMarkTheme(theme);
   const btnAccent = t.btnAccent;
   const accent = t.accent;
   const brand = t.brand;

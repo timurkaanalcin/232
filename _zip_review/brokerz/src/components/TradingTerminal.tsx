@@ -21,6 +21,7 @@ import type {
   Order,
 } from "@/types";
 import { INSTRUMENTS } from "@/data/instruments";
+import { getBrandTheme } from "@/lib/brands";
 import {
   getBidAsk,
   formatPrice,
@@ -354,10 +355,10 @@ export default function TradingTerminal({
           </button>
           <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
             <div className="flex h-8 items-center rounded-sm bg-white px-1.5 sm:h-9 sm:px-2">
-              <img src="/ubs-logo.png" alt="UBS" className="h-6 w-auto bg-transparent object-contain sm:h-7" />
+              <img src={getBrandTheme().logo} alt={getBrandTheme().logoAlt} className="h-6 w-auto bg-transparent object-contain sm:h-7" />
             </div>
             <div className="min-w-0 leading-tight">
-              <div className="truncate text-[12px] font-bold tracking-wide text-[#fff6ed] sm:text-[13px]">UBS WebTrader</div>
+              <div className="truncate text-[12px] font-bold tracking-wide text-[#fff6ed] sm:text-[13px]">{getBrandTheme().name} WebTrader</div>
               <div className="hidden text-[10px] font-medium text-[#ffb2c7]/60 sm:block">TradingView desk</div>
             </div>
             <span className="hidden rounded-full bg-[#f83b00] px-2 py-0.5 text-[10px] font-semibold text-white xs:inline sm:ml-1">

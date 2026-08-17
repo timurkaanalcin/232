@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Send, X, Bot, UserRound } from "lucide-react";
 import { createSupportTicket } from "@/lib/adminOps";
 import { getCustomerSession } from "@/lib/customerAuth";
+import { getBrandTheme } from "@/lib/brands";
 
 type Msg = { id: string; role: "user" | "bot"; text: string };
 
 function aiReply(input: string): string {
+  const brand = getBrandTheme().name;
   const q = input.toLowerCase();
   if (/temsilci|agent|insan|operatör|operator/.test(q)) return "HAND_OFF";
   if (/para yat|deposit|yatır/.test(q))
@@ -15,16 +17,21 @@ function aiReply(input: string): string {
   if (/kyc|kimlik/.test(q)) return "KYC sekmesinden belge yükleyin; admin onaylar.";
   if (/pin|otp|2fa|giriş/.test(q)) return "Giriş: e-posta OTP + PIN (+ 2FA). Biyometrik açılabilir.";
   if (/merhaba|selam|hello|hi\b/.test(q))
-    return "Merhaba! UBS AI destek. İnsan agent için 'temsilci' yazın.";
+    return `Merhaba! ${brand} AI destek. İnsan agent için 'temsilci' yazın.`;
   return "Para yatırma, çekme, KYC veya 'temsilci' yazabilirsiniz.";
 }
 
 export default function AiSupportChat() {
+  const brandName = getBrandTheme().name;
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([
-    { id: "welcome", role: "bot", text: "Merhaba — UBS AI. 'temsilci' ile insan agent'a aktarın." },
+    {
+      id: "welcome",
+      role: "bot",
+      text: `Merhaba — ${brandName} AI. 'temsilci' ile insan agent'a aktarın.`,
+    },
   ]);
   const endRef = useRef<HTMLDivElement>(null);
 

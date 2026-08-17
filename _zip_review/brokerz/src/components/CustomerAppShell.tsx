@@ -23,6 +23,7 @@ import WithdrawPanel from "@/components/WithdrawPanel";
 import ProfileExtras from "@/components/ProfileExtras";
 import AiSupportChat from "@/components/AiSupportChat";
 import { useMessages } from "@/lib/i18n";
+import { getBrandTheme } from "@/lib/brands";
 
 type Tab = "home" | "trade" | "kyc" | "account";
 
@@ -179,7 +180,7 @@ function HomeTab({
         <button type="button" onClick={onBackSite} className="rounded-full p-2 text-black/50 hover:bg-black/5">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <img src="/ubs-logo.png" alt="UBS" className="h-8 object-contain" />
+        <img src={getBrandTheme().logo} alt={getBrandTheme().logoAlt} className="h-8 object-contain" />
         <div className="flex items-center gap-0.5">
           <NotificationBell customerId={session.id} />
           <LanguageSwitcher tone="brand" compact />

@@ -26,6 +26,12 @@ import {
   getCustomerSession,
   type CustomerSession,
 } from "@/lib/customerAuth";
+import {
+  applyBrandTheme,
+  brandLandingTheme,
+  getBrandTheme,
+  shouldForceAdminView,
+} from "@/lib/brands";
 
 type View = "site" | "auth" | "app" | "admin";
 type AppTab = "home" | "trade" | "kyc" | "account";
@@ -49,7 +55,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [view, setView] = useState<View>("site");
+  const [view, setView] = useState<View>(() => (shouldForceAdminView() ? "admin" : "site"));
   const [authMode, setAuthMode] = useState<"login" | "register">("register");
   const [appTab, setAppTab] = useState<AppTab>("home");
   const [session, setSession] = useState<CustomerSession | null>(() => getCustomerSession());
@@ -59,9 +65,14 @@ export default function App() {
     if (hash === "home2") return "home";
     return "home";
   });
+  const brand = getBrandTheme();
   const needsTemplate =
     view === "site" && page !== "home" && page !== "olymp";
   const siteReady = useTemplateAssets(needsTemplate);
+
+  useEffect(() => {
+    applyBrandTheme();
+  }, []);
 
   const openCustomerApp = (tab: AppTab = "home") => {
     window.scrollTo(0, 0);
@@ -138,11 +149,15 @@ export default function App() {
   useEffect(() => {
     document.documentElement.setAttribute("data-bs-theme", "dark");
     document.documentElement.classList.remove("theme-tickmill", "theme-olymp", "theme-ubs");
-    if (page === "olymp") document.documentElement.classList.add("theme-olymp");
-    else if (page === "home" || view === "auth" || view === "app")
+    if (page === "olymp" || brand.id === "7fx") {
+      document.documentElement.classList.add("theme-olymp");
+    } else if (page === "home" || view === "auth" || view === "app" || brand.id === "ubs") {
       document.documentElement.classList.add("theme-ubs");
-    else document.documentElement.classList.add("theme-tickmill");
-  }, [page, view]);
+    } else {
+      document.documentElement.classList.add("theme-tickmill");
+    }
+    applyBrandTheme();
+  }, [page, view, brand.id]);
 
   useEffect(() => {
     if (view === "app" && !getCustomerSession()) {
@@ -252,7 +267,7 @@ export default function App() {
       <>
         <InstallAppBanner />
         <OlympLandingPage
-          theme="ubs"
+          theme={brandLandingTheme(brand.id)}
           onLaunchTerminal={launchTerminal}
           onLogin={() => openAuth("login")}
           onRegister={() => openAuth("register")}

@@ -1,8 +1,8 @@
-# brokerz
+# ubs
 
-- **Host:** `brokerz.customer.org.tr`
+- **Host:** `ubs.customer.org.tr`
 - **Title (index):** Tickbase
-- **Files:** 89 (~4.7 MB)
-- **Desc:** Brokerz / Tickbase live build
+- **Files:** 88 (~4.7 MB)
+- **Desc:** UBS / Tickbase-branded live build
 
 Production Vite SPA mirror (compiled JS/CSS + public assets). Original TypeScript source: `_zip_review/brokerz/`.

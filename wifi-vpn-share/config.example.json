@@ -1,0 +1,14 @@
+{
+  "ssid": "VPN-Share",
+  "password": "changeme123",
+  "mode": "vpn",
+  "vpn_kind": "wireguard",
+  "vpn_config": "/etc/wireguard/wg0.conf",
+  "wifi_iface": "",
+  "share_iface": "",
+  "band": "bg",
+  "channel": 6,
+  "gateway_ip": "10.42.0.1",
+  "proxy_port": 1080,
+  "upstream": ""
+}

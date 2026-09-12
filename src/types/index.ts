@@ -20,7 +20,8 @@ export type Permission =
   | "users.create"
   | "users.manage"
   | "roles.assign"
-  | "audit.view";
+  | "audit.view"
+  | "finance.manage";
 
 // ----------------------------------------------------------------------------
 // Database rows

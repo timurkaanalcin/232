@@ -19,6 +19,7 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('super_admin', 'users.manage'),
   ('super_admin', 'roles.assign'),
   ('super_admin', 'audit.view'),
+  ('super_admin', 'finance.manage'),
   -- admin
   ('admin', 'admin.access'),
   ('admin', 'stats.view'),
@@ -29,6 +30,7 @@ INSERT OR IGNORE INTO permissions (role_id, permission) VALUES
   ('admin', 'users.create'),
   ('admin', 'users.manage'),
   ('admin', 'audit.view'),
+  ('admin', 'finance.manage'),
   -- operator
   ('operator', 'admin.access'),
   ('operator', 'stats.view'),

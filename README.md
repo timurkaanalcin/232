@@ -1,6 +1,8 @@
 # LiveTrack — Consent-First Real-Time Location Sharing
 
-LiveTrack is an enterprise-grade platform for sharing live location **only with explicit user consent**, with full audit trails, role-based administration, and GDPR/KVKK-compliant data handling. It runs entirely on Cloudflare's free tier.
+borsahatti is an original market dashboard (indexes, stocks, FX, crypto, commodities, news, videos, watchlists) with a finance CMS admin panel. It is **not** a copy of Google Finance — branding, imagery, and page markup are independent.
+
+The same codebase also includes LiveTrack, a consent-first location-sharing module with audit trails and role-based administration. It runs on Cloudflare's free tier.
 
 > **Privacy by design.** Nothing is ever transmitted until a user grants their browser's geolocation permission *and* accepts an in-app consent screen. There is no silent, hidden, or background tracking. Users can stop sharing at any moment, export all of their data, and permanently delete their account.
 

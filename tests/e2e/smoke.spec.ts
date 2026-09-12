@@ -1,24 +1,28 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("public surface", () => {
-  test("landing page renders the core sections", async ({ page }) => {
+  test("landing page renders the market dashboard", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /built on consent/i })).toBeVisible();
-    await expect(page.locator("#features")).toBeVisible();
-    await expect(page.locator("#security")).toBeVisible();
-    await expect(page.locator("#compliance")).toBeVisible();
-    await expect(page.locator("#faq")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /piyasa özeti/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /piyasalar/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /haberler/i }).first()).toBeVisible();
+  });
+
+  test("can open a quote from the markets table", async ({ page }) => {
+    await page.goto("/markets");
+    await expect(page.getByRole("heading", { name: /piyasalar/i })).toBeVisible();
+    const symbol = page.getByRole("link", { name: /XU100|S&P 500|NASDAQ|BIST/i }).first();
+    await expect(symbol).toBeVisible();
+    await symbol.click();
+    await expect(page).toHaveURL(/\/quote\//);
+    await expect(page.getByRole("heading")).toBeVisible();
   });
 
   test("can navigate to register and login", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("link", { name: /get started/i }).first().click();
-    await expect(page).toHaveURL(/\/register/);
-    await expect(page.getByLabel(/full name/i)).toBeVisible();
-
-    await page.getByRole("link", { name: /sign in/i }).click();
-    await expect(page).toHaveURL(/\/login/);
+    await page.goto("/login");
     await expect(page.getByLabel("Email")).toBeVisible();
+    await page.goto("/register");
+    await expect(page.getByLabel(/full name/i)).toBeVisible();
   });
 
   test("forgot password shows a privacy-preserving confirmation", async ({ page }) => {
@@ -26,6 +30,11 @@ test.describe("public surface", () => {
     await page.getByLabel("Email").fill("nobody@example.com");
     await page.getByRole("button", { name: /send reset link/i }).click();
     await expect(page.getByText(/a password reset link is on its way/i)).toBeVisible();
+  });
+
+  test("news index lists articles", async ({ page }) => {
+    await page.goto("/news");
+    await expect(page.getByRole("heading", { name: /haberler/i })).toBeVisible();
   });
 });
 
@@ -47,5 +56,13 @@ test.describe("health", () => {
     expect([200, 503]).toContain(response.status());
     const body = await response.json();
     expect(body).toHaveProperty("checks");
+  });
+
+  test("markets overview api returns ticker data", async ({ request }) => {
+    const response = await request.get("/api/markets/overview");
+    expect(response.ok()).toBeTruthy();
+    const body = await response.json();
+    expect(body.overview.featured.length).toBeGreaterThan(0);
+    expect(body.overview.news.length).toBeGreaterThan(0);
   });
 });

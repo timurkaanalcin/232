@@ -22,10 +22,15 @@ export function AdminLocationShell({
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="flex h-12 shrink-0 items-center justify-between border-b px-4">
-        <Link href="/admin/map" className="flex items-center gap-2 text-sm font-semibold">
-          <MapPinIcon className="size-4 text-amber-600" />
-          {SITE_NAME} · Konum
-        </Link>
+        <div className="flex items-center gap-3 text-sm">
+          <Link href="/admin/map" className="flex items-center gap-2 font-semibold">
+            <MapPinIcon className="size-4 text-amber-600" />
+            {SITE_NAME} · Konum
+          </Link>
+          <Link href="/admin/markets" className="text-muted-foreground hover:text-foreground">
+            Piyasalar
+          </Link>
+        </div>
         <div className="flex items-center gap-1">
           {onRefresh && (
             <Button

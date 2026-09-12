@@ -3,22 +3,21 @@ import { expect, test } from "@playwright/test";
 test.describe("public surface", () => {
   test("landing page renders the core sections", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /built on consent/i })).toBeVisible();
-    await expect(page.locator("#features")).toBeVisible();
-    await expect(page.locator("#security")).toBeVisible();
-    await expect(page.locator("#compliance")).toBeVisible();
-    await expect(page.locator("#faq")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /platform sitesi/i })).toBeVisible();
+    await expect(page.locator("#ozellikler")).toBeVisible();
+    await expect(page.locator("#cozumler")).toBeVisible();
+    await expect(page.locator("#paketler")).toBeVisible();
   });
 
   test("can navigate to register and login", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: /get started/i }).first().click();
-    await expect(page).toHaveURL(/\/register/);
-    await expect(page.getByLabel(/full name/i)).toBeVisible();
-
-    await page.getByRole("link", { name: /sign in/i }).click();
+    await page.getByRole("link", { name: /giriş/i }).first().click();
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByLabel("Email")).toBeVisible();
+
+    await page.getByRole("link", { name: /create an account/i }).click();
+    await expect(page).toHaveURL(/\/register/);
+    await expect(page.getByLabel(/full name/i)).toBeVisible();
   });
 
   test("forgot password shows a privacy-preserving confirmation", async ({ page }) => {

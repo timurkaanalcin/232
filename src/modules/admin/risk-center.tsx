@@ -114,11 +114,14 @@ export function RiskCenter() {
   const actionPending = acknowledge.isPending || resolve.isPending;
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-4 p-4 sm:p-6">
+    <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div>
         <div className="flex items-center gap-2">
-          <ShieldAlertIcon className="size-5 text-amber-600" />
-          <h1 className="text-xl font-semibold tracking-tight">Risk & compliance center</h1>
+          <ShieldAlertIcon className="size-5 text-amber-500" />
+          <div>
+            <p className="hud-label mb-1">Risk</p>
+            <h1 className="text-xl font-semibold tracking-tight">Risk & compliance center</h1>
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
           AI, wallet, trading, liquidation and market-control alerts — updates every 10s.

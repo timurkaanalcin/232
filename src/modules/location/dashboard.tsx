@@ -86,6 +86,10 @@ export function DashboardModule() {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-4 lg:grid-cols-5">
       <div className="flex flex-col gap-4 lg:col-span-2">
+        <div>
+          <p className="hud-label mb-1">İstasyon</p>
+          <h1 className="text-xl font-semibold tracking-tight">Konum komutası</h1>
+        </div>
         {/* Sharing control card */}
         <Card>
           <CardHeader>

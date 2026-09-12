@@ -52,6 +52,7 @@ export function SecurityCenter() {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div>
+        <p className="hud-label mb-1">Tehdit</p>
         <h1 className="text-xl font-semibold tracking-tight">Security center</h1>
         <p className="text-sm text-muted-foreground">
           Failed logins, rate limits and suspicious activity — updates every 15s.

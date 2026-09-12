@@ -11,10 +11,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "CanlıSite — Anında güncellenen web sitesi",
+    default: "CanlıSite — Komuta merkezi",
     template: "%s · CanlıSite",
   },
-  description: "Hot reload destekli modern Next.js web sitesi.",
+  description: "İzin temelli konum paylaşımı, admin operasyonları ve risk/cüzdan kontrolü için komuta merkezi.",
   applicationName: "CanlıSite",
   robots: { index: true, follow: true },
 };
@@ -22,15 +22,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
-    { media: "(prefers-color-scheme: dark)", color: "#16181d" },
-  ],
+  themeColor: "#0b1511",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang="tr" className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>

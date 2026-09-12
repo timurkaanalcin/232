@@ -68,6 +68,7 @@ export function UserManagement() {
     <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
+          <p className="hud-label mb-1">Kimlik</p>
           <h1 className="text-xl font-semibold tracking-tight">User management</h1>
           <p className="text-sm text-muted-foreground">Create users, assign roles and manage access.</p>
         </div>

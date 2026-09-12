@@ -57,8 +57,9 @@ export function AdminDashboard() {
     <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Command center</h1>
-          <p className="text-sm text-muted-foreground">Live operational overview · updates every 10s</p>
+          <p className="hud-label mb-1">Operasyon</p>
+          <h1 className="text-xl font-semibold tracking-tight">Komuta merkezi</h1>
+          <p className="text-sm text-muted-foreground">Canlı operasyon özeti · 10 sn yenileme</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>

@@ -114,12 +114,15 @@ export function WalletCenter() {
   const stats = statsQuery.data?.stats;
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-4 p-4 sm:p-6">
+    <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <WalletIcon className="size-5 text-emerald-600" />
-            <h1 className="text-xl font-semibold tracking-tight">Internal wallets</h1>
+            <WalletIcon className="size-5 text-primary" />
+            <div>
+              <p className="hud-label mb-1">Ledger</p>
+              <h1 className="text-xl font-semibold tracking-tight">Internal wallets</h1>
+            </div>
           </div>
           <p className="text-sm text-muted-foreground">
             Create, freeze, transfer, reverse and audit internal balances.

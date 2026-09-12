@@ -34,7 +34,7 @@ export function AuthShell({
       <div className="relative hidden overflow-hidden bg-[#07140f] lg:block">
         <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgb(52_211_153/0.18)_1px,transparent_1px),linear-gradient(90deg,rgb(52_211_153/0.18)_1px,transparent_1px)] [background-size:32px_32px]" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
-        <div className="relative flex h-full flex-col justify-end p-12 text-emerald-50">
+        <div className="relative flex h-full flex-col justify-center p-12 text-emerald-50">
           <ShieldCheckIcon className="mb-6 size-12 text-emerald-300" />
           <p className="hud-label mb-3 text-emerald-300">Komuta merkezi</p>
           <blockquote className="text-2xl font-medium leading-snug">

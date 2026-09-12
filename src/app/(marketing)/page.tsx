@@ -3,11 +3,11 @@ import { InstantWebsite } from "@/modules/marketing/instant-website";
 import { SITE_URL } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: "CanlıSite — Anında güncellenen web sitesi",
-  description: "Hot reload destekli modern Next.js web sitesi.",
+  title: "CanlıSite — Komuta merkezi",
+  description: "İzin temelli konum paylaşımı, admin operasyonları ve risk/cüzdan kontrolü için komuta merkezi.",
   openGraph: {
     title: "CanlıSite",
-    description: "Değiştir, kaydet, web sitesini anında gör.",
+    description: "Karanlık komuta arayüzü: operasyon, risk, cüzdan ve canlı harita.",
     url: SITE_URL,
     siteName: "CanlıSite",
     type: "website",

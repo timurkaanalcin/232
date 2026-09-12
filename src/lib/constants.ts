@@ -99,6 +99,7 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "users.manage",
     "roles.assign",
     "audit.view",
+    "finance.manage",
   ],
   admin: [
     "admin.access",
@@ -110,6 +111,7 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "users.create",
     "users.manage",
     "audit.view",
+    "finance.manage",
   ],
   operator: ["admin.access", "stats.view", "map.live_view", "sessions.view", "sessions.manage"],
   viewer: ["admin.access", "stats.view", "map.live_view", "sessions.view"],

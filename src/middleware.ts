@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
 
   // Signed-in users do not need the auth pages.
   if (isAuthenticated && AUTH_PAGES.some((p) => pathname.startsWith(p))) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (PROTECTED_PREFIXES.some((p) => pathname.startsWith(p))) {

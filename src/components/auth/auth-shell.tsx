@@ -31,7 +31,7 @@ export function AuthShell({
       </div>
 
       {/* Brand panel */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-[#1a73e8] via-[#174ea6] to-[#0b57d0] lg:block">
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-primary via-[#174ea6] to-[#0b57d0] lg:block">
         <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:28px_28px]" />
         <div className="relative flex h-full flex-col justify-end p-12 text-white">
           <LineChartIcon className="mb-6 size-12" />

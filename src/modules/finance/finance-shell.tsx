@@ -56,7 +56,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
   const results = search.data?.results ?? [];
 
   return (
-    <div className="min-h-dvh bg-[#f8f9fa] text-[#202124] dark:bg-background dark:text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur dark:bg-background/95">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setOpen(true)} aria-label="Menü">
@@ -74,7 +74,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
                   href={item.href}
                   className={cn(
                     "rounded-full px-3 py-1.5 text-sm",
-                    active ? "bg-[#e8f0fe] font-medium text-[#1967d2] dark:bg-accent" : "text-muted-foreground hover:bg-muted",
+                    active ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted",
                   )}
                 >
                   {item.label}
@@ -95,7 +95,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
                 }
               }}
               placeholder="Hisse, endeks, döviz veya kripto ara"
-              className="h-10 rounded-full bg-[#f1f3f4] pl-9 dark:bg-muted"
+              className="h-10 rounded-full bg-secondary pl-9"
               aria-label="Piyasa ara"
             />
             {focused && query.trim() && (
@@ -152,7 +152,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
               <Link key={item.instrumentId} href={`/quote/${item.instrumentId}`} className="flex shrink-0 items-center gap-2">
                 <span className="font-medium">{item.symbol}</span>
                 <span className="tabular-nums">{formatPrice(item.price, item.currency)}</span>
-                <span className={item.changePct >= 0 ? "text-emerald-700" : "text-rose-700"}>{formatPct(item.changePct)}</span>
+                <span className={item.changePct >= 0 ? "text-gain" : "text-loss"}>{formatPct(item.changePct)}</span>
               </Link>
             ))}
           </div>

@@ -89,8 +89,8 @@ export function QuotePage({ symbol }: { symbol: string }) {
             <div
               className={cn(
                 "text-lg tabular-nums",
-                tone === "up" && "text-emerald-700",
-                tone === "down" && "text-rose-700",
+                tone === "up" && "text-gain",
+                tone === "down" && "text-loss",
               )}
             >
               {formatSigned(quote.changeAbs)} ({formatPct(quote.changePct)})
@@ -145,7 +145,7 @@ export function QuotePage({ symbol }: { symbol: string }) {
         <div className="grid gap-3">
           {(newsQuery.data?.news ?? []).map((article) => (
             <Link key={article.id} href={`/news/${article.slug}`} className="rounded-xl border bg-white p-4 dark:bg-card">
-              <div className="text-xs text-[#1967d2]">{article.category}</div>
+              <div className="text-xs text-primary">{article.category}</div>
               <div className="mt-1 font-medium">{article.title}</div>
               <div className="mt-1 text-xs text-muted-foreground">
                 {article.author} · {formatNewsTime(article.publishedAt)}

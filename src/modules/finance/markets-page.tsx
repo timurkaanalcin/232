@@ -30,7 +30,7 @@ export function MarketsPage({ category }: { category?: string }) {
             href={item === "indexes" ? "/markets" : `/markets/${item}`}
             className={cn(
               "rounded-full px-3 py-1.5 text-sm",
-              active === item ? "bg-[#1a73e8] text-white" : "bg-white hover:bg-muted dark:bg-card",
+              active === item ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted",
             )}
           >
             {CATEGORY_LABELS[item]}
@@ -53,7 +53,7 @@ export function MarketsPage({ category }: { category?: string }) {
             {quotes.map((quote) => (
               <tr key={quote.instrumentId} className="border-b last:border-0 hover:bg-muted/40">
                 <td className="px-4 py-3">
-                  <Link href={`/quote/${quote.instrumentId}`} className="font-semibold text-[#1967d2]">
+                  <Link href={`/quote/${quote.instrumentId}`} className="font-semibold text-primary">
                     {quote.symbol}
                   </Link>
                 </td>
@@ -62,7 +62,7 @@ export function MarketsPage({ category }: { category?: string }) {
                   <Sparkline points={quote.sparkline} up={quote.changePct >= 0} />
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">{formatPrice(quote.price, quote.currency)}</td>
-                <td className={`px-4 py-3 text-right tabular-nums ${quote.changePct >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                <td className={`px-4 py-3 text-right tabular-nums ${quote.changePct >= 0 ? "text-gain" : "text-loss"}`}>
                   {formatPct(quote.changePct)}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{formatVolume(quote.volume)}</td>

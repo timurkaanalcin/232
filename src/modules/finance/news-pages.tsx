@@ -31,7 +31,7 @@ export function NewsIndex({ category }: { category?: string }) {
             <Link
               key={item}
               href={href}
-              className={`rounded-full px-3 py-1.5 text-sm ${active ? "bg-[#1a73e8] text-white" : "bg-white dark:bg-card"}`}
+              className={`rounded-full px-3 py-1.5 text-sm ${active ? "bg-primary text-primary-foreground" : "bg-card"}`}
             >
               {item}
             </Link>
@@ -44,7 +44,7 @@ export function NewsIndex({ category }: { category?: string }) {
             <Link key={article.id} href={`/news/${article.slug}`} className="grid overflow-hidden rounded-xl border bg-white sm:grid-cols-[220px_1fr] dark:bg-card">
               <img src={article.imageUrl} alt="" className="h-40 w-full object-cover sm:h-full" />
               <div className="p-4">
-                <div className="text-xs font-medium text-[#1967d2]">{article.category}</div>
+                <div className="text-xs font-medium text-primary">{article.category}</div>
                 <h2 className="mt-1 text-lg font-semibold leading-snug">{article.title}</h2>
                 <p className="mt-2 text-sm text-muted-foreground">{article.summary}</p>
                 <div className="mt-3 text-xs text-muted-foreground">
@@ -82,7 +82,7 @@ export function NewsArticlePage({ slug }: { slug: string }) {
 
   return (
     <article className="mx-auto max-w-3xl">
-      <div className="text-sm text-[#1967d2]">{article.category}</div>
+      <div className="text-sm text-primary">{article.category}</div>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">{article.title}</h1>
       <div className="mt-2 text-sm text-muted-foreground">
         {article.author} · {formatNewsTime(article.publishedAt)}

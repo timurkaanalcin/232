@@ -11,8 +11,8 @@ export function ChangeText({ value, className }: { value: number; className?: st
   return (
     <span
       className={cn(
-        tone === "up" && "text-emerald-700 dark:text-emerald-400",
-        tone === "down" && "text-rose-700 dark:text-rose-400",
+        tone === "up" && "text-gain",
+        tone === "down" && "text-loss",
         tone === "flat" && "text-muted-foreground",
         className,
       )}

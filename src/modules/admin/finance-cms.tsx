@@ -25,12 +25,12 @@ export function FinanceCms() {
   });
 
   return (
-    <div className="min-h-dvh bg-[#f8f9fa] dark:bg-background">
+    <div className="min-h-dvh bg-background">
       <header className="border-b bg-white dark:bg-background">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-4 text-sm">
             <span className="font-semibold">{SITE_NAME} admin</span>
-            <Link href="/admin/markets" className="text-[#1967d2]">
+            <Link href="/admin/markets" className="text-primary">
               Piyasalar
             </Link>
             <Link href="/admin/map" className="text-muted-foreground hover:text-foreground">

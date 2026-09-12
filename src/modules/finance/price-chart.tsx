@@ -89,13 +89,13 @@ export function PriceChart({
         >
           <defs>
             <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={up ? "#137333" : "#c5221f"} stopOpacity="0.22" />
-              <stop offset="100%" stopColor={up ? "#137333" : "#c5221f"} stopOpacity="0" />
+              <stop offset="0%" stopColor={up ? "var(--gain)" : "var(--loss)"} stopOpacity="0.22" />
+              <stop offset="100%" stopColor={up ? "var(--gain)" : "var(--loss)"} stopOpacity="0" />
             </linearGradient>
           </defs>
           {area ? <path d={area} fill="url(#chartFill)" /> : null}
           {path ? (
-            <path d={path} fill="none" stroke={up ? "#137333" : "#c5221f"} strokeWidth="3" strokeLinejoin="round" />
+            <path d={path} fill="none" stroke={up ? "var(--gain)" : "var(--loss)"} strokeWidth="3" strokeLinejoin="round" />
           ) : null}
         </svg>
         {hover ? (

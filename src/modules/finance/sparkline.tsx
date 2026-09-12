@@ -22,7 +22,7 @@ export function Sparkline({
       return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
     })
     .join(" ");
-  const color = up ? "#137333" : "#c5221f";
+  const color = up ? "var(--gain)" : "var(--loss)";
 
   return (
     <svg viewBox="0 0 100 32" className={cn("h-8 w-24 overflow-visible", className)} aria-hidden>

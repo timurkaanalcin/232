@@ -37,12 +37,12 @@ export function ComparePage() {
         <CompareCard quote={b.data?.quote} />
       </div>
       <svg viewBox="0 0 1000 360" className="h-72 w-full rounded-xl border bg-white dark:bg-card">
-        {pathA ? <path d={pathA} fill="none" stroke="#1a73e8" strokeWidth="3" /> : null}
-        {pathB ? <path d={pathB} fill="none" stroke="#e37400" strokeWidth="3" /> : null}
+        {pathA ? <path d={pathA} fill="none" stroke="var(--primary)" strokeWidth="3" /> : null}
+        {pathB ? <path d={pathB} fill="none" stroke="var(--chart-3)" strokeWidth="3" /> : null}
       </svg>
       <div className="flex gap-4 text-sm">
-        <span className="text-[#1a73e8]">{a.data?.quote.symbol ?? left}</span>
-        <span className="text-[#e37400]">{b.data?.quote.symbol ?? right}</span>
+        <span className="text-primary">{a.data?.quote.symbol ?? left}</span>
+        <span className="text-[var(--chart-3)]">{b.data?.quote.symbol ?? right}</span>
       </div>
     </div>
   );
@@ -56,7 +56,7 @@ function CompareCard({ quote }: { quote?: QuoteDTO }) {
         {quote.nameTr} · {quote.symbol}
       </div>
       <div className="mt-1 text-2xl tabular-nums">{formatPrice(quote.price, quote.currency)}</div>
-      <div className={quote.changePct >= 0 ? "text-emerald-700" : "text-rose-700"}>{formatPct(quote.changePct)}</div>
+      <div className={quote.changePct >= 0 ? "text-gain" : "text-loss"}>{formatPct(quote.changePct)}</div>
     </div>
   );
 }

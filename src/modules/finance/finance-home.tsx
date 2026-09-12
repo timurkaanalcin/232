@@ -14,7 +14,7 @@ function MarketCard({ quote }: { quote: QuoteDTO }) {
     <Link href={`/quote/${quote.instrumentId}`} className="min-w-[176px] rounded-xl border bg-white p-3 shadow-sm dark:bg-card">
       <div className="text-sm font-medium">{quote.symbol}</div>
       <div className="mt-1 text-lg font-semibold tabular-nums">{formatPrice(quote.price, quote.currency)}</div>
-      <div className={quote.changePct >= 0 ? "text-sm text-emerald-700" : "text-sm text-rose-700"}>{formatPct(quote.changePct)}</div>
+      <div className={quote.changePct >= 0 ? "text-sm text-gain" : "text-sm text-loss"}>{formatPct(quote.changePct)}</div>
       <Sparkline points={quote.sparkline} up={quote.changePct >= 0} className="mt-2 w-full" />
     </Link>
   );
@@ -60,7 +60,7 @@ export function FinanceHome() {
           <div className="rounded-xl border bg-white p-3 dark:bg-card">
             <div className="mb-2 flex items-center justify-between px-2">
               <h2 className="font-semibold">İzlenenler</h2>
-              <Link href="/watchlist" className="text-sm text-[#1967d2]">
+              <Link href="/watchlist" className="text-sm text-primary">
                 Tümünü gör
               </Link>
             </div>
@@ -78,7 +78,7 @@ export function FinanceHome() {
         <div className="grid gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Piyasa haberleri</h2>
-            <Link href="/news" className="text-sm text-[#1967d2]">
+            <Link href="/news" className="text-sm text-primary">
               Haberler
             </Link>
           </div>
@@ -90,7 +90,7 @@ export function FinanceHome() {
             >
               <img src={article.imageUrl} alt="" className={index === 0 ? "h-48 w-full object-cover" : "h-full w-28 object-cover"} />
               <div className="p-3">
-                <div className="text-xs font-medium text-[#1967d2]">
+                <div className="text-xs font-medium text-primary">
                   {article.category}
                   {article.breaking ? " · Son dakika" : ""}
                 </div>

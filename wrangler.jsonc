@@ -37,6 +37,11 @@
     // Non-secret variables. Secrets (AUTH_SECRET, GOOGLE_CLIENT_SECRET, ...)
     // must be set with `wrangler secret put <NAME>` - never here.
     "AUTH_TRUST_HOST": "true",
-    "NEXT_PUBLIC_SITE_URL": "https://borsahatti.timurkaanalcin.workers.dev"
-  }
+    "NEXT_PUBLIC_SITE_URL": "https://googlefinance.login.org.tr",
+    "AUTH_URL": "https://googlefinance.login.org.tr"
+  },
+  // Zone login.org.tr Cloudflare hesabına eklendikten sonra etkinleşir.
+  // Natro'da nameserver Cloudflare'e çevrilmeden deploy bu satır yüzünden düşmesin diye
+  // custom_domain kaydı `scripts/infra/attach-natro-domain.mjs` ile eklenir.
+  "workers_dev": true
 }

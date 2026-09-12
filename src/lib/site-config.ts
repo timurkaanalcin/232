@@ -7,6 +7,9 @@ export const WORKER_NAME = "borsahatti";
  */
 export const WORKERS_SUBDOMAIN = "timurkaanalcin";
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  `https://${WORKER_NAME}.${WORKERS_SUBDOMAIN}.workers.dev`;
+/** Natro üzerinde yönetilen kanonik üretim adresi */
+export const CUSTOM_DOMAIN = "googlefinance.login.org.tr";
+
+export const WORKERS_DEV_URL = `https://${WORKER_NAME}.${WORKERS_SUBDOMAIN}.workers.dev`;
+
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? `https://${CUSTOM_DOMAIN}`;

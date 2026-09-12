@@ -23,7 +23,7 @@ Never commit secrets. Set them with Wrangler:
 
 ```bash
 npx wrangler secret put AUTH_SECRET           # openssl rand -base64 32
-npx wrangler secret put AUTH_URL              # e.g. https://control.org.tr
+npx wrangler secret put AUTH_URL              # https://googlefinance.login.org.tr
 npx wrangler secret put GOOGLE_CLIENT_ID      # optional
 npx wrangler secret put GOOGLE_CLIENT_SECRET  # optional
 npx wrangler secret put RESEND_API_KEY        # optional (password reset email)
@@ -65,32 +65,47 @@ npm run infra:bootstrap
 
 Or use Actions → **Infrastructure Bootstrap** without pushing from your machine.
 
-## 5. Custom domain (e.g. `control.org.tr`)
+## 5. Natro üzerinden `googlefinance.login.org.tr`
 
-You do **not** need traditional/shared hosting — the app runs on Cloudflare's edge. Point your domain at Cloudflare instead:
+Uygulama paylaşımlı hosting istemez; Cloudflare Worker üzerinde çalışır. Natro yalnızca **alan adı kaydı ve nameserver** içindir.
 
-### Option A — Move the domain to Cloudflare (recommended, free auto-SSL)
+Canlı yedek adres (şimdi çalışıyor): https://borsahatti.timurkaanalcin.workers.dev
 
-1. In the Cloudflare dashboard: **Add a site** → enter `control.org.tr`.
-2. Cloudflare shows two **nameservers**. Log in to your registrar (e.g. Natro) and replace the domain's nameservers with the Cloudflare ones. (Keep the registrar as-is; you're only changing nameservers.)
-3. Wait for propagation (minutes to a few hours). Cloudflare then manages DNS and issues a **free Universal SSL certificate automatically** — no manual certificate purchase needed.
-4. In **Workers & Pages → your Worker → Settings → Domains & Routes**, add the custom domain `control.org.tr` (and `www` if desired). Cloudflare provisions the route and TLS.
-5. Set `AUTH_URL` to `https://control.org.tr` and update Google OAuth redirect URIs.
+Kanonik adres: `https://googlefinance.login.org.tr`
 
-### Option B — Keep DNS at your registrar
+### Natro adımları
 
-If you must keep DNS at the registrar, use a **CNAME** record pointing your hostname to the Worker's `*.workers.dev` route, and manage TLS at the registrar. Option A is strongly preferred because Cloudflare handles SSL and routing natively.
+1. [Natro müşteri paneli](https://www.natro.com/) → **Alan Adı Yönetimi**.
+2. `login.org.tr` henüz yoksa satın alın / transfer edin (`.org.tr` için TRABIS kuruluş belgesi isteyebilir).
+3. Cloudflare Dashboard → **Add a site** → `login.org.tr`. Cloudflare iki nameserver verir (ör. `xxx.ns.cloudflare.com`).
+4. Natro → ilgili alan adı → **Nameserver Değiştir** → Cloudflare NS1 / NS2 yapıştır → kaydet. Registrar Natro kalır; sadece NS değişir.
+5. NS yayıldıktan sonra (dakikalar–saatler) yerel makinede:
 
-### Subdomains
+```bash
+npx wrangler login
+node scripts/infra/attach-natro-domain.mjs
+```
 
-With the domain on Cloudflare (Option A), subdomains are trivial: add a custom domain like `app.control.org.tr` or a wildcard route to the same Worker, and TLS is issued automatically. This makes the platform "subdomain-ready" out of the box.
+Bu komut Worker'a `googlefinance.login.org.tr` custom domain ekler, ücretsiz SSL keser ve `AUTH_URL` secret'ını günceller. Cloudflare, `googlefinance` için DNS kaydını kendisi yazar — Natro'da ayrıca CNAME açmanıza gerek yoktur.
 
-> SSL note: Cloudflare Universal SSL is free and automatic once the domain uses Cloudflare nameservers. Set **SSL/TLS mode** to *Full (strict)*. HSTS is already sent by the app.
+### Nameserver'ı Natro'da bırakmak (önerilmez)
+
+Natro DNS'te şu CNAME tek başına HTTPS vermez (sertifika `*.workers.dev` içindir):
+
+| Tür | Ad | Değer |
+|-----|----|--------|
+| CNAME | `googlefinance` | `borsahatti.timurkaanalcin.workers.dev` |
+
+SSL için yine Cloudflare custom domain + zone gerekir. Bu yüzden nameserver'ı Cloudflare'e almak doğru yoldur.
+
+> SSL: Cloudflare Universal SSL ücretsizdir. **SSL/TLS** modunu *Full (strict)* yapın. HSTS uygulama zaten gönderir.
 
 ## 6. Post-deploy verification
 
 ```bash
-curl https://control.org.tr/api/health   # {"status":"healthy", ...}
+curl https://googlefinance.login.org.tr/api/health
+# veya
+curl https://borsahatti.timurkaanalcin.workers.dev/api/health
 ```
 
 - Register / sign in.

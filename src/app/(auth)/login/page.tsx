@@ -5,18 +5,18 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { LoginForm } from "@/modules/auth/login-form";
 import { isGoogleEnabled } from "@/lib/auth-config";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Giriş" };
 
 export default function LoginPage() {
   return (
     <AuthShell
-      title="Welcome back"
-      description="Sign in to manage your location sharing and sessions."
+      title="Tekrar hoş geldiniz"
+      description="Rezervasyon, favori ve değerlemelerinizi yönetmek için giriş yapın."
       footer={
         <>
-          New to LiveTrack?{" "}
+          Hesabınız yok mu?{" "}
           <Link href="/register" className="text-primary hover:underline">
-            Create an account
+            Kayıt olun
           </Link>
         </>
       }

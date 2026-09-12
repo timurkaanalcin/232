@@ -20,6 +20,7 @@ const csp = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://lh3.googleusercontent.com https://*.googleusercontent.com https://images.unsplash.com https://i.ytimg.com https://img.youtube.com",
+  "media-src 'self' https://videos.pexels.com blob:",
   "font-src 'self'",
   "connect-src 'self' wss: https://*.tile.openstreetmap.org",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",

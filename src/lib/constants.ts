@@ -1,6 +1,6 @@
 import type { Permission, RoleId } from "@/types";
 
-export const APP_NAME = "LiveTrack";
+export const APP_NAME = "Pista";
 
 export const ADMIN_ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer"];
 

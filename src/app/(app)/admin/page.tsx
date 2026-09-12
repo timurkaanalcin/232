@@ -1,5 +1,8 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { MarketplaceDashboard } from "@/modules/admin/marketplace-dashboard";
+
+export const metadata: Metadata = { title: "Operasyon" };
 
 export default function AdminPage() {
-  redirect("/admin/map");
+  return <MarketplaceDashboard />;
 }

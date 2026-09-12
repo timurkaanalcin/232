@@ -1,22 +1,17 @@
-# LiveTrack — Consent-First Real-Time Location Sharing
+# Pista — Güvenilir ikinci el otomobil platformu
 
-LiveTrack is an enterprise-grade platform for sharing live location **only with explicit user consent**, with full audit trails, role-based administration, and GDPR/KVKK-compliant data handling. It runs entirely on Cloudflare's free tier.
+Pista is an original used-car marketplace (not a copy of any third-party brand). Buyers browse inspected inventory with 240-point reports, 14-day returns and 12-month warranty. Sellers get an online valuation, book a center appointment and receive a same-day offer. Operators manage stock, leads and reservations from `/admin`.
 
-> **Privacy by design.** Nothing is ever transmitted until a user grants their browser's geolocation permission *and* accepts an in-app consent screen. There is no silent, hidden, or background tracking. Users can stop sharing at any moment, export all of their data, and permanently delete their account.
+Demo catalog, images (Unsplash) and hero video (Pexels) are licensed stock assets — not scraped from another dealer.
 
 ---
 
 ## Highlights
 
-- **Consent-first sharing** — explicit, timestamped consent stored per session.
-- **Instant stop** — stopping halts transmission immediately, client- and server-side.
-- **Realtime** — WebSockets over Cloudflare Durable Objects, with a REST fallback.
-- **Live admin map** — OpenStreetMap + Leaflet, real-time markers, search & filtering.
-- **RBAC** — Super Admin, Admin, Operator, Viewer roles with granular permissions.
-- **Full audit log** — append-only record of every auth, consent, session, and admin action.
-- **GDPR/KVKK** — data export (right of access) and account erasure (right to be forgotten).
-- **Security** — JWT sessions with server-side revocation, PBKDF2 hashing, CSP, CSRF & rate limiting.
-- **Light/dark mode**, mobile-first responsive UI, skeleton loaders, empty & error states.
+- Public storefront: home, inventory filters, vehicle detail, valuation wizard, finance calculator, centers, warranty, FAQ, legal.
+- Lead capture: valuations, appointments, inquiries, reservations with deposit.
+- Admin panel: stock CRUD, valuation pipeline, appointments, reservations, users, audit.
+- Existing auth (Auth.js), RBAC and Cloudflare/D1 deploy path are reused.
 
 ## Tech stack
 

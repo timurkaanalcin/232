@@ -13,6 +13,7 @@ import { apiGet } from "@/lib/client-api";
 import { formatPct, formatPrice } from "@/lib/finance/format";
 import type { QuoteDTO } from "@/lib/finance/types";
 import { SITE_NAME } from "@/modules/marketing/news-articles";
+import { FinanceLogo } from "@/modules/finance/logo";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -22,19 +23,6 @@ const NAV = [
   { href: "/watchlist", label: "İzleme listesi" },
   { href: "/compare", label: "Karşılaştır" },
 ];
-
-export function FinanceLogo({ className }: { className?: string }) {
-  return (
-    <span className={cn("inline-flex items-center gap-2 font-semibold tracking-tight", className)}>
-      <span className="flex size-8 items-center justify-center rounded-lg bg-[#1a73e8] text-white">
-        <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden>
-          <path d="M4 16l4-5 3 3 5-7 4 4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </span>
-      <span className="text-[17px]">{SITE_NAME}</span>
-    </span>
-  );
-}
 
 export function FinanceShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();

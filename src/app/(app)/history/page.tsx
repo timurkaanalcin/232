@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HistoryModule } from "@/modules/location/history";
 
-export const metadata: Metadata = { title: "Session history" };
+export const metadata: Metadata = { title: "Geçmiş" };
 
 export default async function HistoryPage({
   searchParams,

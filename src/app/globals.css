@@ -142,6 +142,8 @@
     color: var(--color-foreground);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
+  }
+  html.dark body {
     background-image:
       linear-gradient(rgb(16 185 129 / 0.035) 1px, transparent 1px),
       linear-gradient(90deg, rgb(16 185 129 / 0.035) 1px, transparent 1px);

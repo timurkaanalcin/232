@@ -14,9 +14,9 @@ import { apiPost, ClientApiError } from "@/lib/client-api";
 import { cn } from "@/lib/utils";
 
 const RULES = [
-  { test: (v: string) => v.length >= 10, label: "At least 10 characters" },
-  { test: (v: string) => /[a-z]/.test(v) && /[A-Z]/.test(v), label: "Upper and lower case" },
-  { test: (v: string) => /[0-9]/.test(v), label: "At least one digit" },
+  { test: (v: string) => v.length >= 10, label: "En az 10 karakter" },
+  { test: (v: string) => /[a-z]/.test(v) && /[A-Z]/.test(v), label: "Büyük ve küçük harf" },
+  { test: (v: string) => /[0-9]/.test(v), label: "En az bir rakam" },
 ];
 
 export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
@@ -44,7 +44,7 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
       router.refresh();
     } catch (registerError) {
       setError(
-        registerError instanceof ClientApiError ? registerError.message : "Registration failed. Try again.",
+        registerError instanceof ClientApiError ? registerError.message : "Kayıt başarısız. Tekrar deneyin.",
       );
     } finally {
       setLoading(false);
@@ -59,7 +59,7 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
           <div className="relative">
             <Separator />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">
-              or
+              veya
             </span>
           </div>
         </>
@@ -72,7 +72,7 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
           </Alert>
         )}
         <div className="grid gap-2">
-          <Label htmlFor="name">Full name</Label>
+          <Label htmlFor="name">Ad soyad</Label>
           <Input id="name" autoComplete="name" required value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="grid gap-2">
@@ -87,7 +87,7 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">Şifre</Label>
           <Input
             id="password"
             type="password"
@@ -112,11 +112,11 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
         </div>
         <Button type="submit" disabled={loading || !passwordValid || !name || !email} className="w-full">
           {loading && <Loader2Icon className="animate-spin" />}
-          Create account
+          Hesap oluştur
         </Button>
         <p className="text-xs text-muted-foreground">
-          By creating an account you agree that location is only ever shared with your explicit consent, and
-          you can stop or delete your data at any time.
+          Hesap oluşturarak konumun yalnızca açık izninizle paylaşılacağını kabul edersiniz. Paylaşımı
+          istediğiniz an durdurabilir veya verilerinizi silebilirsiniz.
         </p>
       </form>
     </div>

@@ -5,11 +5,11 @@ export const APP_NAME = "CanlıSite";
 export const ADMIN_ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer"];
 
 export const ROLE_LABELS: Record<RoleId, string> = {
-  super_admin: "Super Admin",
+  super_admin: "Süper admin",
   admin: "Admin",
-  operator: "Operator",
-  viewer: "Viewer",
-  user: "User",
+  operator: "Operatör",
+  viewer: "İzleyici",
+  user: "Kullanıcı",
 };
 
 export const AUDIT_ACTIONS = {

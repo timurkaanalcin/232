@@ -120,26 +120,26 @@ export function RiskCenter() {
           <ShieldAlertIcon className="size-5 text-amber-500" />
           <div>
             <p className="hud-label mb-1">Risk</p>
-            <h1 className="text-xl font-semibold tracking-tight">Risk & compliance center</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Risk ve uyum merkezi</h1>
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          AI, wallet, trading, liquidation and market-control alerts — updates every 10s.
+          Cüzdan, işlem ve pazar uyarılarını filtreleyin, onaylayın ve çözün — 10 sn yenileme.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Open risks" value={stats?.open} loading={statsQuery.isLoading} accent />
-        <StatCard label="Critical open" value={stats?.criticalOpen} loading={statsQuery.isLoading} danger />
-        <StatCard label="High score open" value={stats?.highScoreOpen} loading={statsQuery.isLoading} danger />
-        <StatCard label="Resolved today" value={stats?.resolvedToday} loading={statsQuery.isLoading} success />
+        <StatCard label="Açık risk" value={stats?.open} loading={statsQuery.isLoading} accent />
+        <StatCard label="Açık kritik" value={stats?.criticalOpen} loading={statsQuery.isLoading} danger />
+        <StatCard label="Yüksek skor açık" value={stats?.highScoreOpen} loading={statsQuery.isLoading} danger />
+        <StatCard label="Bugün çözülen" value={stats?.resolvedToday} loading={statsQuery.isLoading} success />
       </div>
 
       <Card>
         <CardHeader className="gap-3">
           <div>
-            <CardTitle className="text-base">Live risk events</CardTitle>
-            <CardDescription>Filter by workflow status, severity or subject identifier.</CardDescription>
+            <CardTitle className="text-base">Canlı risk olayları</CardTitle>
+            <CardDescription>Durum, şiddet veya konu kimliğine göre filtreleyin.</CardDescription>
           </div>
           <div className="grid gap-2 sm:grid-cols-[160px_160px_1fr]">
             <Select

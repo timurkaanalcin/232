@@ -121,11 +121,11 @@ export function WalletCenter() {
             <WalletIcon className="size-5 text-primary" />
             <div>
               <p className="hud-label mb-1">Ledger</p>
-              <h1 className="text-xl font-semibold tracking-tight">Internal wallets</h1>
+              <h1 className="text-xl font-semibold tracking-tight">İç cüzdanlar</h1>
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Create, freeze, transfer, reverse and audit internal balances.
+            İç bakiyeleri oluşturun, dondurun, transfer edin, geri alın ve denetleyin.
           </p>
         </div>
         <div className="flex gap-2">
@@ -133,7 +133,7 @@ export function WalletCenter() {
             <ArrowLeftRightIcon /> Transfer
           </Button>
           <Button onClick={() => setCreateOpen(true)}>
-            <PlusIcon /> New wallet
+            <PlusIcon /> Yeni cüzdan
           </Button>
         </div>
       </div>
@@ -148,7 +148,7 @@ export function WalletCenter() {
       {stats && stats.balancesByCurrency.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Balances by currency</CardTitle>
+            <CardTitle className="text-base">Para birimine göre bakiye</CardTitle>
             <CardDescription>Aggregated non-archived wallet balances.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
@@ -359,7 +359,7 @@ function WalletHistory({ wallet, onChanged }: { wallet: WalletDTO; onChanged: ()
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Transaction history</CardTitle>
+        <CardTitle className="text-base">İşlem geçmişi</CardTitle>
         <CardDescription>
           {wallet.walletType} wallet for {wallet.userEmail || wallet.userId}
         </CardDescription>

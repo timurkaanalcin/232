@@ -66,24 +66,24 @@ const STATS = [
 ];
 
 const SOLUTIONS = [
-  "Admin command center",
-  "Risk event inbox",
-  "Internal wallet operations",
-  "User and role management",
-  "Security monitoring",
-  "Live preview website",
+  "Admin komuta merkezi",
+  "Risk olay kutusu",
+  "İç cüzdan operasyonları",
+  "Kullanıcı ve rol yönetimi",
+  "Güvenlik izleme",
+  "İzin temelli canlı konum",
 ];
 
 const PLANS = [
   {
     name: "Launch",
     price: "Hızlı başlangıç",
-    features: ["Modern landing page", "Hot reload preview", "Admin giriş akışı"],
+    features: ["Modern vitrin", "Anlık önizleme", "Admin giriş akışı"],
   },
   {
     name: "Operate",
     price: "Operasyon paketi",
-    features: ["Risk merkezi", "Wallet control plane", "Audit & security logs"],
+    features: ["Risk merkezi", "Cüzdan kontrolü", "Audit ve güvenlik kayıtları"],
     highlighted: true,
   },
   {

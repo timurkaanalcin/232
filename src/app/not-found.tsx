@@ -10,10 +10,10 @@ export default function NotFound() {
       </div>
       <h1 className="text-3xl font-semibold">404</h1>
       <p className="max-w-sm text-sm text-muted-foreground">
-        We couldn&apos;t find that page. It may have moved or never existed.
+        Bu sayfa bulunamadı. Taşınmış veya hiç var olmamış olabilir.
       </p>
       <Button asChild>
-        <Link href="/">Back home</Link>
+        <Link href="/">Ana sayfa</Link>
       </Button>
     </div>
   );

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { ResetPasswordForm } from "@/modules/auth/reset-password-form";
 
-export const metadata: Metadata = { title: "Set new password" };
+export const metadata: Metadata = { title: "Yeni şifre" };
 
 export default async function ResetPasswordPage({
   searchParams,
@@ -13,11 +13,11 @@ export default async function ResetPasswordPage({
   const { token } = await searchParams;
   return (
     <AuthShell
-      title="Set a new password"
-      description="Choose a strong password. This signs you out of all devices."
+      title="Yeni şifre belirleyin"
+      description="Güçlü bir şifre seçin. Bu işlem tüm cihazlardan çıkış yaptırır."
       footer={
         <Link href="/login" className="text-primary hover:underline">
-          Back to sign in
+          Girişe dön
         </Link>
       }
     >

@@ -36,17 +36,18 @@ import type { DeviceSessionDTO, UserDTO } from "@/types";
 export function SettingsModule() {
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <h1 className="mb-1 text-xl font-semibold tracking-tight">Settings</h1>
+      <p className="hud-label mb-1">İstasyon</p>
+      <h1 className="mb-1 text-xl font-semibold tracking-tight">Ayarlar</h1>
       <p className="mb-6 text-sm text-muted-foreground">
-        Manage your profile, security, devices and personal data.
+        Profil, güvenlik, cihazlar ve kişisel verilerinizi yönetin.
       </p>
       <Tabs defaultValue="profile">
         <TabsList className="mb-4 w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="devices">Devices</TabsTrigger>
-          <TabsTrigger value="datetime">Date &amp; time</TabsTrigger>
-          <TabsTrigger value="privacy">Privacy &amp; data</TabsTrigger>
+          <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="security">Güvenlik</TabsTrigger>
+          <TabsTrigger value="devices">Cihazlar</TabsTrigger>
+          <TabsTrigger value="datetime">Tarih ve saat</TabsTrigger>
+          <TabsTrigger value="privacy">Gizlilik</TabsTrigger>
         </TabsList>
         <TabsContent value="profile">
           <ProfileTab />
@@ -82,10 +83,10 @@ function DateTimeTab() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <ClockIcon className="size-4" /> Date &amp; time
+          <ClockIcon className="size-4" /> Tarih ve saat
         </CardTitle>
         <CardDescription>
-          Dates and times are automatically shown in your browser region and time zone.
+          Tarih ve saatler tarayıcınızın bölgesine ve saat dilimine göre gösterilir.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -93,27 +94,27 @@ function DateTimeTab() {
           <div className="rounded-lg border p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Globe2Icon className="size-4 text-muted-foreground" />
-              Region format
+              Bölge biçimi
             </div>
-            <p className="mt-2 text-2xl font-semibold">{preferences?.locale ?? "Detecting..."}</p>
+            <p className="mt-2 text-2xl font-semibold">{preferences?.locale ?? "Algılanıyor..."}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Example: Turkish users see Turkish date text; German users see German date text.
+              Örnek: Türkiye’de Türkçe tarih metni; Almanya’da Almanca tarih metni.
             </p>
           </div>
           <div className="rounded-lg border p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <ClockIcon className="size-4 text-muted-foreground" />
-              Time zone
+              Saat dilimi
             </div>
-            <p className="mt-2 text-2xl font-semibold">{preferences?.timeZone ?? "Detecting..."}</p>
+            <p className="mt-2 text-2xl font-semibold">{preferences?.timeZone ?? "Algılanıyor..."}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Example: Turkey uses Europe/Istanbul, Germany uses Europe/Berlin.
+              Örnek: Türkiye Europe/Istanbul, Almanya Europe/Berlin kullanır.
             </p>
           </div>
         </div>
         <div className="rounded-lg border bg-accent/30 p-4">
-          <p className="text-sm text-muted-foreground">Current localized time</p>
-          <p className="mt-1 text-xl font-semibold">{preferences ? formatDateTime(now, preferences) : "Detecting..."}</p>
+          <p className="text-sm text-muted-foreground">Şu anki yerelleştirilmiş saat</p>
+          <p className="mt-1 text-xl font-semibold">{preferences ? formatDateTime(now, preferences) : "Algılanıyor..."}</p>
         </div>
       </CardContent>
     </Card>
@@ -139,7 +140,7 @@ function ProfileTab() {
   const mutation = useMutation({
     mutationFn: (newName: string) => apiPatch("/api/profile", { name: newName }),
     onSuccess: () => {
-      toast.success("Profile updated");
+      toast.success("Profil güncellendi");
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onError: (error) => toast.error(errorMessage(error)),
@@ -154,9 +155,9 @@ function ProfileTab() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <UserIcon className="size-4" /> Profile
+          <UserIcon className="size-4" /> Profil
         </CardTitle>
-        <CardDescription>Your account information.</CardDescription>
+        <CardDescription>Hesap bilgileriniz.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="grid gap-2">
@@ -164,7 +165,7 @@ function ProfileTab() {
           <Input id="profile-email" value={user.email} disabled />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="profile-name">Display name</Label>
+          <Label htmlFor="profile-name">Görünen ad</Label>
           <Input id="profile-name" value={value} maxLength={100} onChange={(e) => setName(e.target.value)} />
         </div>
         <div>
@@ -172,7 +173,7 @@ function ProfileTab() {
             onClick={() => mutation.mutate(value)}
             disabled={mutation.isPending || value.trim().length === 0 || value === user.name}
           >
-            {mutation.isPending ? "Saving…" : "Save changes"}
+            {mutation.isPending ? "Kaydediliyor…" : "Değişiklikleri kaydet"}
           </Button>
         </div>
       </CardContent>

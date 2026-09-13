@@ -15,9 +15,9 @@ test.describe("public surface", () => {
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByLabel("Email")).toBeVisible();
 
-    await page.getByRole("link", { name: /create an account/i }).click();
+    await page.getByRole("link", { name: /hesap oluştur/i }).click();
     await expect(page).toHaveURL(/\/register/);
-    await expect(page.getByLabel(/full name/i)).toBeVisible();
+    await expect(page.getByLabel(/ad soyad/i)).toBeVisible();
   });
 
   test("forgot password shows a privacy-preserving confirmation", async ({ page }) => {

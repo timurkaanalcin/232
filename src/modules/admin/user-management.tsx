@@ -69,11 +69,11 @@ export function UserManagement() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="hud-label mb-1">Kimlik</p>
-          <h1 className="text-xl font-semibold tracking-tight">User management</h1>
-          <p className="text-sm text-muted-foreground">Create users, assign roles and manage access.</p>
+          <h1 className="text-xl font-semibold tracking-tight">Kullanıcı yönetimi</h1>
+          <p className="text-sm text-muted-foreground">Kullanıcı oluşturun, rol atayın ve erişimi yönetin.</p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
-          <PlusIcon /> New user
+          <PlusIcon /> Yeni kullanıcı
         </Button>
       </div>
 
@@ -83,7 +83,7 @@ export function UserManagement() {
             <div className="relative flex-1">
               <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by name or email"
+                placeholder="Ad veya e-posta ara"
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);

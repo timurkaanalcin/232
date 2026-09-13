@@ -56,7 +56,7 @@ export function AdminLocationShell({
           <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
           Komuta · Konum
         </Link>
-        <nav className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto md:flex">
+        <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
           {items.map((item) => {
             const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
             return (

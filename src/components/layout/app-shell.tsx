@@ -11,6 +11,7 @@ import {
   LogOutIcon,
   MapIcon,
   MenuIcon,
+  RadioIcon,
   ScrollTextIcon,
   SettingsIcon,
   ShieldAlertIcon,
@@ -63,6 +64,7 @@ const USER_NAV: NavItem[] = [
 const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Operasyon", icon: ActivityIcon, permission: "stats.view" },
   { href: "/admin/map", label: "Canlı harita", icon: MapIcon, permission: "map.live_view" },
+  { href: "/admin/sessions", label: "Oturumlar", icon: RadioIcon, permission: "sessions.view" },
   { href: "/admin/users", label: "Kullanıcılar", icon: UsersIcon, permission: "users.view" },
   { href: "/admin/audit", label: "Audit", icon: ScrollTextIcon, permission: "audit.view" },
   { href: "/admin/security", label: "Güvenlik", icon: ShieldAlertIcon, permission: "audit.view" },

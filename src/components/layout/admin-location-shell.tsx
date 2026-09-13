@@ -7,6 +7,7 @@ import {
   ActivityIcon,
   LogOutIcon,
   MapIcon,
+  RadioIcon,
   RefreshCwIcon,
   ScrollTextIcon,
   ShieldAlertIcon,
@@ -24,6 +25,7 @@ import type { ReactNode } from "react";
 const OPS_NAV: { href: string; label: string; icon: typeof MapIcon; permission?: Permission }[] = [
   { href: "/admin", label: "Operasyon", icon: ActivityIcon, permission: "stats.view" },
   { href: "/admin/map", label: "Harita", icon: MapIcon, permission: "map.live_view" },
+  { href: "/admin/sessions", label: "Oturum", icon: RadioIcon, permission: "sessions.view" },
   { href: "/admin/users", label: "Kullanıcı", icon: UsersIcon, permission: "users.view" },
   { href: "/admin/audit", label: "Audit", icon: ScrollTextIcon, permission: "audit.view" },
   { href: "/admin/security", label: "Güvenlik", icon: ShieldAlertIcon, permission: "audit.view" },

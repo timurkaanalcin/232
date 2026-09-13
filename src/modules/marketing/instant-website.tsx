@@ -296,9 +296,15 @@ export function InstantWebsite() {
       <footer className="relative z-10 border-t border-emerald-400/15">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 font-mono text-xs uppercase tracking-[0.12em] text-emerald-200/50 sm:px-6 md:flex-row md:items-center md:justify-between">
           <p>© 2026 CanlıSite. Komuta merkezi ve admin altyapısı.</p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <Link href="/login" className="hover:text-white">
               Giriş
+            </Link>
+            <Link href="/gizlilik" className="hover:text-white">
+              Gizlilik
+            </Link>
+            <Link href="/sartlar" className="hover:text-white">
+              Şartlar
             </Link>
             <Link href="/admin" className="hover:text-white">
               Admin

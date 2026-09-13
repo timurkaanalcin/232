@@ -67,6 +67,11 @@ export function AdminDashboard() {
               <MapIcon /> Canlı harita
             </Link>
           </Button>
+          <Button variant="outline" asChild>
+            <Link href="/admin/sessions">
+              <RadioIcon /> Oturumlar
+            </Link>
+          </Button>
           <Button asChild>
             <Link href="/admin/users">
               <UsersIcon /> Kullanıcılar

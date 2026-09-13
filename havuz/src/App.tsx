@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BrandMark } from "./components/BrandMark";
+import { IconCheck, IconCopy, IconMenu, IconSend, IconSettings, IconStop } from "./components/Icons";
 import { ModelPicker } from "./components/ModelPicker";
 import { SettingsModal } from "./components/SettingsModal";
 import { Sidebar } from "./components/Sidebar";
 import { Toasts, type Toast } from "./components/Toasts";
 import { fetchModels, streamChat } from "./lib/api";
-import { CURATED_MODELS, formatContext, mergePool, PROVIDER_LABELS } from "./lib/catalog";
+import { CURATED_MODELS, formatContext, mergePool, PROVIDER_COLORS, PROVIDER_LABELS } from "./lib/catalog";
 import { t, type Locale } from "./lib/i18n";
 import { Markdown } from "./lib/Markdown";
 import {
@@ -107,6 +109,11 @@ export function App() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setPickerOpen(true);
+      }
+      if (e.key === "Escape") {
+        setPickerOpen(false);
+        setSettingsOpen(false);
+        setSidebarOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -290,15 +297,16 @@ export function App() {
             aria-label={t(locale, "mobileMenu")}
             onClick={() => setSidebarOpen(true)}
           >
-            ☰
+            <IconMenu />
           </button>
           <button type="button" className="model-btn" onClick={() => setPickerOpen(true)}>
-            <div className="mark" style={{ width: 28, height: 28 }} />
+            <BrandMark size={30} />
             <div style={{ minWidth: 0 }}>
               <strong>{currentModel?.displayName ?? t(locale, "pickModel")}</strong>
               <div className="chips" style={{ marginTop: 4 }}>
                 {currentModel && (
                   <span className="chip">
+                    <i className="dot" style={{ background: PROVIDER_COLORS[currentModel.provider] }} />
                     {PROVIDER_LABELS[currentModel.provider][locale]}
                   </span>
                 )}
@@ -334,8 +342,9 @@ export function App() {
               EN
             </button>
           </div>
-          <button type="button" className="btn" onClick={() => setSettingsOpen(true)}>
-            {t(locale, "settings")}
+          <button type="button" className="btn btn-settings" onClick={() => setSettingsOpen(true)}>
+            <IconSettings size={16} />
+            <span>{t(locale, "settings")}</span>
           </button>
         </header>
 
@@ -344,9 +353,12 @@ export function App() {
         <div className="thread" ref={threadRef}>
           {!active || active.messages.length === 0 ? (
             <div className="empty">
-              <div className="rings" />
+              <div className="hero-mark">
+                <BrandMark size={132} animated />
+              </div>
               <h2>{t(locale, "emptyTitle")}</h2>
               <p>{t(locale, "emptyBody")}</p>
+              <p className="empty-domain">{t(locale, "domain")}</p>
               <div className="suggestions">
                 {suggestions.map((s) => (
                   <button key={s} type="button" onClick={() => void send(s)}>
@@ -358,7 +370,9 @@ export function App() {
           ) : (
             active.messages.map((msg) => (
               <article key={msg.id} className={`msg ${msg.role}`}>
-                <div className="avatar">{msg.role === "user" ? "TK" : "Hv"}</div>
+                <div className={`avatar ${msg.role === "assistant" ? "avatar-ai" : "avatar-user"}`}>
+                  {msg.role === "assistant" ? <BrandMark size={28} /> : locale === "tr" ? "Siz" : "You"}
+                </div>
                 <div className={`bubble ${msg.error ? "err" : ""}`}>
                   {msg.role === "assistant" && !msg.content && busy ? (
                     <div className="typing" aria-label={t(locale, "thinking")}>
@@ -384,6 +398,7 @@ export function App() {
                           setTimeout(() => setCopied(null), 1200);
                         }}
                       >
+                        {copied === msg.id ? <IconCheck size={13} /> : <IconCopy size={13} />}
                         {copied === msg.id ? t(locale, "copied") : t(locale, "copy")}
                       </button>
                       {msg.error && (
@@ -426,11 +441,11 @@ export function App() {
                 onClick={() => abortRef.current?.abort()}
                 aria-label={t(locale, "stop")}
               >
-                ■
+                <IconStop size={16} />
               </button>
             ) : (
-              <button type="submit" className="send" aria-label={t(locale, "send")}>
-                →
+              <button type="submit" className="send" aria-label={t(locale, "send")} disabled={!draft.trim()}>
+                <IconSend size={16} />
               </button>
             )}
           </form>

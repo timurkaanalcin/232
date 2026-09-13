@@ -461,6 +461,19 @@ export const CURATED_MODELS: CatalogModel[] = [
   },
 ];
 
+export const PROVIDER_COLORS: Record<ProviderId, string> = {
+  anthropic: "#d4a27f",
+  cursor: "#8eb4ff",
+  google: "#8ab4f8",
+  zai: "#3ce6c8",
+  openai: "#5ee0a0",
+  moonshot: "#c9a0ff",
+  meta: "#66b3ff",
+  xai: "#e8e8e8",
+  openrouter: "#9ad4c8",
+  other: "#8aa3a0",
+};
+
 export const PROVIDER_LABELS: Record<ProviderId, { tr: string; en: string }> = {
   anthropic: { tr: "Anthropic", en: "Anthropic" },
   cursor: { tr: "Cursor", en: "Cursor" },

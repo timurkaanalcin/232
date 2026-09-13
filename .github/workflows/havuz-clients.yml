@@ -22,6 +22,8 @@ jobs:
           cache-dependency-path: havuz/package-lock.json
       - name: Build web + Windows installer
         working-directory: havuz
+        env:
+          VITE_HAVUZ_API_BASE: https://aipo.customer.org.tr
         run: |
           npm ci
           npm run build
@@ -42,6 +44,8 @@ jobs:
           cache-dependency-path: havuz/package-lock.json
       - name: Build web + macOS disk image
         working-directory: havuz
+        env:
+          VITE_HAVUZ_API_BASE: https://aipo.customer.org.tr
         run: |
           npm ci
           npm run build
@@ -67,6 +71,8 @@ jobs:
       - uses: android-actions/setup-android@v3
       - name: Build debug APK
         working-directory: havuz
+        env:
+          VITE_HAVUZ_API_BASE: https://aipo.customer.org.tr
         run: |
           npm ci
           npm run build

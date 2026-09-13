@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CURATED_MODELS, formatContext, guessProvider, mergePool } from "./catalog";
+import { CURATED_MODELS, formatContext, guessProvider, mergePool, PROVIDER_COLORS, PROVIDER_LABELS } from "./catalog";
+import { PRODUCTION_ORIGIN } from "./site";
 
 describe("curated catalog", () => {
   it("includes every requested display name", () => {
@@ -91,5 +92,13 @@ describe("mergePool", () => {
     expect(formatContext(200_000)).toBe("200k");
     expect(formatContext(1_000_000)).toBe("1M");
     expect(formatContext(null)).toBe("—");
+  });
+
+  it("keeps a color for every provider label", () => {
+    expect(Object.keys(PROVIDER_COLORS).sort()).toEqual(Object.keys(PROVIDER_LABELS).sort());
+  });
+
+  it("pins the production origin", () => {
+    expect(PRODUCTION_ORIGIN).toBe("https://aipo.customer.org.tr");
   });
 });

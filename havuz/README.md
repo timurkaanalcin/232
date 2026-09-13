@@ -56,6 +56,8 @@ Sohbet geçmişi tarayıcıda `localStorage` içindedir. Blobs yalnızca üretil
 
 ## Deploy
 
+Üretim adresi: **https://aipo.customer.org.tr**
+
 1. Netlify’ye giriş: `npx netlify login`
 2. Site bağla veya oluştur: `npx netlify init` (base: `havuz`, publish: `dist`, command: `npm run build`)
 3. **En az bir production deploy** yapın — AI Gateway bundan sonra açılır:
@@ -63,8 +65,14 @@ Sohbet geçmişi tarayıcıda `localStorage` içindedir. Blobs yalnızca üretil
    cd havuz && npm run build && npx netlify deploy --prod --dir=dist
    ```
    veya Git ile `main` push (kök `netlify.toml` base’i `havuz` yapar).
-4. Netlify UI’da **AI Features** açık olsun.
-5. Preview: PR deploy veya `npx netlify deploy` (draft URL).
+4. Netlify UI → Domain management → `aipo.customer.org.tr` ekleyin.
+5. Natro DNS (`customer.org.tr`, ns1/ns2.natrohost.com) kaydı:
+   ```
+   aipo   CNAME   <site-adı>.netlify.app
+   ```
+   Netlify’nin gösterdiği hedefi kullanın. Apex `customer.org.tr` boş LiteSpeed 404; yalnızca `aipo` alt alanını işaretleyin.
+6. Netlify UI’da **AI Features** açık olsun.
+7. Preview: PR deploy veya `npx netlify deploy` (draft URL).
 
 Gizli anahtar uydurmayın ve commit etmeyin.
 

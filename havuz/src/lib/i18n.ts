@@ -4,6 +4,7 @@ const strings = {
   tr: {
     brand: "Havuz",
     tagline: "Tüm modeller. Tek havuz.",
+    domain: "aipo.customer.org.tr",
     newChat: "Yeni sohbet",
     searchChats: "Sohbetlerde ara",
     searchModels: "Model ara",
@@ -51,13 +52,14 @@ const strings = {
     pickModel: "Model seç",
     defaultModel: "Varsayılan model",
     siteUrl: "Sunucu adresi",
-    siteUrlHint: "Netlify production URL (ör. https://havuz.netlify.app). Masaüstü/Android için gerekli.",
+    siteUrlHint: "Üretim adresi: https://aipo.customer.org.tr — masaüstü ve Android için.",
     mobileMenu: "Menü",
-    powered: "Netlify AI Gateway · anahtarsız çoklu model",
+    powered: "AIPO · Netlify AI Gateway",
   },
   en: {
     brand: "Havuz",
     tagline: "Every model. One pool.",
+    domain: "aipo.customer.org.tr",
     newChat: "New chat",
     searchChats: "Search chats",
     searchModels: "Search models",
@@ -105,9 +107,9 @@ const strings = {
     pickModel: "Choose model",
     defaultModel: "Default model",
     siteUrl: "Server URL",
-    siteUrlHint: "Netlify production URL (e.g. https://havuz.netlify.app). Required for desktop/Android chat.",
+    siteUrlHint: "Production: https://aipo.customer.org.tr — required for desktop and Android.",
     mobileMenu: "Menu",
-    powered: "Netlify AI Gateway · multi-model, no provider keys",
+    powered: "AIPO · Netlify AI Gateway",
   },
 } as const;
 

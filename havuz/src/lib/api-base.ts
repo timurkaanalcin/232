@@ -1,4 +1,11 @@
+import { PRODUCTION_ORIGIN } from "./site";
 import { loadSettings } from "./storage";
+
+function isPackagedClient(): boolean {
+  if (typeof window === "undefined") return false;
+  const proto = window.location.protocol;
+  return proto === "file:" || proto === "capacitor:" || proto === "app:";
+}
 
 export function getApiBase(): string {
   if (typeof window !== "undefined") {
@@ -13,6 +20,7 @@ export function getApiBase(): string {
   }
   const fromEnv = import.meta.env.VITE_HAVUZ_API_BASE;
   if (typeof fromEnv === "string" && fromEnv.trim()) return fromEnv.trim().replace(/\/$/, "");
+  if (isPackagedClient()) return PRODUCTION_ORIGIN;
   return "";
 }
 

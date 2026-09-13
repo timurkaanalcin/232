@@ -1,3 +1,5 @@
+import { BrandMark } from "./BrandMark";
+import { IconPlus, IconSearch, IconTrash } from "./Icons";
 import { t, type Locale } from "../lib/i18n";
 import type { Conversation } from "../lib/types";
 
@@ -45,7 +47,7 @@ export function Sidebar({
   return (
     <aside className={`sidebar ${open ? "open" : ""}`}>
       <div className="brand">
-        <div className="mark" aria-hidden="true" />
+        <BrandMark size={42} />
         <div>
           <h1>{t(locale, "brand")}</h1>
           <p>{t(locale, "tagline")}</p>
@@ -53,15 +55,19 @@ export function Sidebar({
       </div>
       <div className="sidebar-actions">
         <button type="button" className="btn btn-primary" onClick={onNew}>
+          <IconPlus size={16} />
           {t(locale, "newChat")}
         </button>
       </div>
-      <input
-        className="search"
-        placeholder={t(locale, "searchChats")}
-        value={query}
-        onChange={(e) => onQuery(e.target.value)}
-      />
+      <label className="search-wrap">
+        <IconSearch size={15} />
+        <input
+          className="search"
+          placeholder={t(locale, "searchChats")}
+          value={query}
+          onChange={(e) => onQuery(e.target.value)}
+        />
+      </label>
       <div className="conv-list">
         {filtered.length === 0 && <div className="empty-side">{t(locale, "emptyHistory")}</div>}
         {[...groups.entries()].map(([label, rows]) => (
@@ -76,7 +82,12 @@ export function Sidebar({
               >
                 <div style={{ minWidth: 0 }}>
                   <div className="conv-title">{conv.title}</div>
-                  <div className="conv-meta">{new Date(conv.updatedAt).toLocaleTimeString()}</div>
+                  <div className="conv-meta">
+                    {new Date(conv.updatedAt).toLocaleTimeString(locale === "tr" ? "tr-TR" : "en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
                 </div>
                 <span
                   className="conv-x"
@@ -91,13 +102,14 @@ export function Sidebar({
                   }}
                   aria-label={t(locale, "deleteChat")}
                 >
-                  ×
+                  <IconTrash />
                 </span>
               </button>
             ))}
           </div>
         ))}
       </div>
+      <div className="sidebar-foot">{t(locale, "domain")}</div>
     </aside>
   );
 }

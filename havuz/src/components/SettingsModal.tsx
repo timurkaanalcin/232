@@ -1,5 +1,7 @@
+import { PRODUCTION_ORIGIN } from "../lib/site";
 import { t, type Locale } from "../lib/i18n";
 import type { AppSettings, PoolModel } from "../lib/types";
+import { IconClose } from "./Icons";
 
 export function SettingsModal({
   locale,
@@ -16,12 +18,12 @@ export function SettingsModal({
 }) {
   return (
     <div className="modal-backdrop" onClick={onClose} role="presentation">
-      <div className="modal" role="dialog" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h2>{t(locale, "settingsTitle")}</h2>
+          <h2 id="settings-title">{t(locale, "settingsTitle")}</h2>
           <div className="top-spacer" />
-          <button type="button" className="btn" onClick={onClose}>
-            {t(locale, "close")}
+          <button type="button" className="btn btn-icon" onClick={onClose} aria-label={t(locale, "close")}>
+            <IconClose />
           </button>
         </div>
         <div className="field">
@@ -54,17 +56,17 @@ export function SettingsModal({
             className="search"
             style={{ margin: 0, width: "100%" }}
             type="url"
-            placeholder="https://….netlify.app"
+            placeholder={PRODUCTION_ORIGIN}
             value={settings.apiBase}
             onChange={(e) => onChange({ ...settings, apiBase: e.target.value })}
           />
-          <span style={{ color: "var(--muted)", fontSize: 12 }}>{t(locale, "siteUrlHint")}</span>
+          <span className="field-hint">{t(locale, "siteUrlHint")}</span>
         </div>
         <div className="field">
           <label htmlFor="def">{t(locale, "defaultModel")}</label>
           <select
             id="def"
-            className="search"
+            className="search select"
             style={{ margin: 0, width: "100%" }}
             value={settings.defaultModelId}
             onChange={(e) => onChange({ ...settings, defaultModelId: e.target.value })}

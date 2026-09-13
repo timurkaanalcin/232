@@ -1,0 +1,16 @@
+{
+  "name": "Havuz",
+  "short_name": "Havuz",
+  "description": "Tüm modeller. Tek havuz.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#05090c",
+  "theme_color": "#05090c",
+  "lang": "tr",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ]
+}

@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { formatContext, PROVIDER_LABELS } from "../lib/catalog";
+import { formatContext, PROVIDER_COLORS, PROVIDER_LABELS } from "../lib/catalog";
 import { t, type Locale } from "../lib/i18n";
 import type { PoolModel, ProviderId } from "../lib/types";
+import { IconClose, IconRefresh } from "./Icons";
 
 const FILTERS: Array<ProviderId | "all"> = [
   "all",
@@ -55,6 +56,7 @@ export function ModelPicker({
       <div
         className="picker"
         role="dialog"
+        aria-modal="true"
         aria-label={t(locale, "pickModel")}
         onClick={(e) => e.stopPropagation()}
       >
@@ -68,10 +70,11 @@ export function ModelPicker({
             onChange={(e) => setQ(e.target.value)}
           />
           <button type="button" className="btn" onClick={onRefresh} disabled={refreshing}>
+            <IconRefresh size={15} />
             {refreshing ? t(locale, "refreshing") : t(locale, "refreshModels")}
           </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            {t(locale, "close")}
+          <button type="button" className="btn btn-icon" onClick={onClose} aria-label={t(locale, "close")}>
+            <IconClose />
           </button>
         </div>
         <div className="filters">
@@ -82,6 +85,7 @@ export function ModelPicker({
               className={`filter ${provider === id ? "on" : ""}`}
               onClick={() => setProvider(id)}
             >
+              {id !== "all" && <i className="dot" style={{ background: PROVIDER_COLORS[id] }} />}
               {id === "all" ? t(locale, "allProviders") : PROVIDER_LABELS[id][locale]}
             </button>
           ))}
@@ -98,7 +102,10 @@ export function ModelPicker({
               onClick={() => onSelect(model.id)}
             >
               <div>
-                <div className="model-name">{model.displayName}</div>
+                <div className="model-name">
+                  <i className="dot" style={{ background: PROVIDER_COLORS[model.provider] }} />
+                  {model.displayName}
+                </div>
                 <div className="model-sub">
                   {PROVIDER_LABELS[model.provider][locale]}
                   {model.resolvedGatewayId ? ` · ${model.resolvedGatewayId}` : ""}

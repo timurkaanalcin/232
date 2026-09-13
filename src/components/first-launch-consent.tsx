@@ -38,14 +38,10 @@ export function FirstLaunchConsentGate() {
 
   const persist = async (next: FirstLaunchChoices) => {
     setBusy(true);
-    try {
-      writeFirstLaunchConsent(next);
-      await syncNotificationPreferences(next.notifications);
-      await requestAcceptedRuntimePermissions(next);
-      setNeeded(false);
-    } finally {
-      setBusy(false);
-    }
+    writeFirstLaunchConsent(next);
+    setNeeded(false);
+    void syncNotificationPreferences(next.notifications);
+    void requestAcceptedRuntimePermissions(next);
   };
 
   if (!needed) return null;

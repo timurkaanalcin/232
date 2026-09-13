@@ -34,7 +34,7 @@ test.describe("first-launch bulk consent", () => {
       "false",
     );
 
-    await page.getByRole("button", { name: "Seçtiklerimle devam et" }).click({ force: true });
+    await page.getByRole("button", { name: "İkisini de reddet" }).click({ force: true });
     await expect(dialog).toHaveCount(0);
     await expect(page.getByRole("heading", { name: /platform sitesi/i })).toBeVisible();
 

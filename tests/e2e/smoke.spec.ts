@@ -21,20 +21,21 @@ test.describe("first-launch bulk consent", () => {
     });
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /izinler — gizli değil/i })).toBeVisible();
-    await expect(page.getByText(/konum \(livetrack \/ canlısite\)/i)).toBeVisible();
-    await expect(page.getByText(/^bildirimler$/i).first()).toBeVisible();
-    await expect(page.getByRole("switch", { name: /konum iznini kabul et/i })).toHaveAttribute(
+    const dialog = page.getByRole("dialog", { name: /gizli değil/ });
+    await expect(dialog).toBeVisible();
+    await expect(page.getByText("Konum (LiveTrack / CanlıSite)")).toBeVisible();
+    await expect(page.getByText("Bildirimler", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Konum iznini kabul et" })).toHaveAttribute(
       "aria-checked",
       "false",
     );
-    await expect(page.getByRole("switch", { name: /bildirim iznini kabul et/i })).toHaveAttribute(
+    await expect(page.getByRole("switch", { name: "Bildirim iznini kabul et" })).toHaveAttribute(
       "aria-checked",
       "false",
     );
 
-    await page.getByRole("button", { name: /seçtiklerimle devam et/i }).click();
-    await expect(page.getByRole("heading", { name: /izinler — gizli değil/i })).toHaveCount(0);
+    await page.getByRole("button", { name: "Seçtiklerimle devam et" }).click();
+    await expect(dialog).toHaveCount(0);
     await expect(page.getByRole("heading", { name: /platform sitesi/i })).toBeVisible();
 
     geoCalls = await page.evaluate(() => (window as unknown as { __geoCalls?: number }).__geoCalls ?? 0);
@@ -68,9 +69,11 @@ test.describe("first-launch bulk consent", () => {
     });
 
     await page.goto("/login");
-    await page.getByRole("switch", { name: /konum iznini kabul et/i }).click();
-    await page.getByRole("button", { name: /seçtiklerimle devam et/i }).click();
-    await expect(page.getByRole("heading", { name: /izinler — gizli değil/i })).toHaveCount(0);
+    const dialog = page.getByRole("dialog", { name: /gizli değil/ });
+    await expect(dialog).toBeVisible();
+    await page.getByRole("switch", { name: "Konum iznini kabul et" }).click();
+    await page.getByRole("button", { name: "Seçtiklerimle devam et" }).click();
+    await expect(dialog).toHaveCount(0);
 
     const geoCalls = await page.evaluate(() => (window as unknown as { __geoCalls?: number }).__geoCalls ?? 0);
     expect(geoCalls).toBeGreaterThan(0);
@@ -114,7 +117,7 @@ test.describe("public surface", () => {
     await page.goto("/gizlilik");
     await expect(page.getByRole("heading", { name: /gizlilik bildirimi/i })).toBeVisible();
     await expect(page.getByText(/gizli izleme/i)).toBeVisible();
-    await expect(page.getByText(/ilk açılışta konum ve bildirimler/i)).toBeVisible();
+    await expect(page.getByText(/açılışta konum ve bildirimler/)).toBeVisible();
   });
 });
 

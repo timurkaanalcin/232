@@ -168,8 +168,9 @@ export function DashboardModule() {
             )}
 
             <p className="text-xs text-muted-foreground">
-              Paylaşım açık izninizi ve tarayıcı konum iznini gerektirir. İstediğiniz an durdurabilirsiniz —
-              yayın hem cihazda hem sunucuda hemen kesilir.
+              Paylaşım açık izninizi ve tarayıcı konum iznini gerektirir. İlk açılışta reddettiyseniz burada
+              oturum onayıyla tekrar açabilirsiniz. İstediğiniz an durdurabilirsiniz — yayın hem cihazda hem
+              sunucuda hemen kesilir.
             </p>
           </CardContent>
         </Card>

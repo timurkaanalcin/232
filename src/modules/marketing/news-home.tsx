@@ -18,8 +18,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { ensureGuestSession } from "@/lib/ensure-guest-session";
+import {
+  FIRST_LAUNCH_CONSENT_EVENT,
+  hasCompletedFirstLaunchConsent,
+  isLocationConsentAccepted,
+} from "@/lib/first-launch-consent";
 import { geolocationErrorMessage, geolocationUnavailableMessage } from "@/lib/geolocation-errors";
-import { getGeolocationPermission, requestCurrentPosition } from "@/lib/geolocation-permission";
+import { requestCurrentPosition } from "@/lib/geolocation-permission";
 import { formatCalendarDate } from "@/lib/utils";
 import { useLocationSharing } from "@/hooks/use-location-sharing";
 import {
@@ -42,64 +47,35 @@ export function NewsHome() {
   const [consentOpen, setConsentOpen] = useState(false);
   const [declined, setDeclined] = useState(false);
   const [geoBusy, setGeoBusy] = useState(false);
+  const [locationAllowed, setLocationAllowed] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const resumedRef = useRef(false);
 
-  // Pop-up: reddedilmediyse ve paylaşım yoksa göster
+  useEffect(() => {
+    const sync = () => {
+      setOnboardingDone(hasCompletedFirstLaunchConsent());
+      setLocationAllowed(isLocationConsentAccepted());
+    };
+    sync();
+    window.addEventListener(FIRST_LAUNCH_CONSENT_EVENT, sync);
+    return () => window.removeEventListener(FIRST_LAUNCH_CONSENT_EVENT, sync);
+  }, []);
+
   useEffect(() => {
     if (sessionStorage.getItem(DECLINED_KEY) === "1") {
       setDeclined(true);
-      return;
     }
-    if (sharing.state === "sharing" || sharing.state === "starting") return;
-
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    void getGeolocationPermission().then((perm) => {
-      if (cancelled || perm === "granted") return;
-      timer = setTimeout(() => setConsentOpen(true), 400);
-    });
-
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, [sharing.state]);
-
-  // Tarayıcı izni zaten verilmişse oturumu sürdür (yeniden sormadan)
-  useEffect(() => {
-    if (resumedRef.current || sharing.state !== "idle") return;
-
-    let cancelled = false;
-
-    void (async () => {
-      const perm = await getGeolocationPermission();
-      if (cancelled || perm !== "granted") return;
-
-      try {
-        await ensureGuestSession();
-        const position = await requestCurrentPosition();
-        if (cancelled) return;
-        resumedRef.current = true;
-        await sharing.start(SESSION_LABEL, position);
-        sessionStorage.removeItem(DECLINED_KEY);
-        setDeclined(false);
-        setConsentOpen(false);
-      } catch {
-        if (!cancelled) setConsentOpen(true);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [sharing.state, sharing.start]);
+  }, []);
 
   /**
    * KRİTİK: getCurrentPosition bu fonksiyonun içinde, tıklama anında senkron başlamalı.
    * Önce await/signIn yapılmaz.
    */
   const handleConsentConfirm = () => {
+    if (!isLocationConsentAccepted()) {
+      toast.error("İlk açılışta konum izni kapalı. Ayarlar’dan açabilirsiniz.");
+      return;
+    }
     const blocked = geolocationUnavailableMessage();
     if (blocked) {
       toast.error(blocked);
@@ -193,6 +169,17 @@ export function NewsHome() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            {onboardingDone && locationAllowed && !isSharing && !declined && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="hidden sm:inline-flex"
+                onClick={() => setConsentOpen(true)}
+              >
+                <RadioIcon className="size-4" />
+                Konumu paylaş
+              </Button>
+            )}
             <Button variant="ghost" size="icon" className="md:hidden" aria-label="Menü">
               <MenuIcon className="size-5" />
             </Button>
@@ -235,7 +222,13 @@ export function NewsHome() {
         </div>
       )}
 
-      {declined && !isSharing && (
+      {onboardingDone && !locationAllowed && !isSharing && (
+        <div className="border-b bg-amber-500/10 px-4 py-2 text-center text-sm">
+          İlk açılışta konum izni reddedildi. Canlı paylaşım için Ayarlar veya aşağıdaki bağlantıyı kullanın.
+        </div>
+      )}
+
+      {declined && locationAllowed && !isSharing && (
         <div className="border-b bg-amber-500/10 px-4 py-2 text-center text-sm">
           Konum izni verilmedi.{" "}
           <button type="button" className="font-medium text-amber-700 underline" onClick={() => setConsentOpen(true)}>
@@ -312,7 +305,7 @@ export function NewsHome() {
       </footer>
 
       <NewsConsentDialog
-        open={consentOpen}
+        open={consentOpen && onboardingDone && locationAllowed}
         onClose={handleDecline}
         onConfirm={handleConsentConfirm}
         busy={busy}

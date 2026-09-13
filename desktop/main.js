@@ -34,9 +34,34 @@ function createWindow() {
   });
 }
 
+function readInAppConsent(webContents, key) {
+  return webContents
+    .executeJavaScript(
+      `(() => {
+        try {
+          const raw = localStorage.getItem("canlisite.firstLaunchConsent.v1");
+          const parsed = raw ? JSON.parse(raw) : null;
+          return Boolean(parsed && parsed.${key});
+        } catch {
+          return false;
+        }
+      })()`,
+    )
+    .catch(() => false);
+}
+
 app.whenReady().then(() => {
-  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
-    callback(permission === "geolocation" || permission === "notifications");
+  // OS dialogs only after the in-app first-launch screen stores consent.
+  session.defaultSession.setPermissionRequestHandler((wc, permission, callback) => {
+    if (permission === "geolocation") {
+      void readInAppConsent(wc, "location").then((ok) => callback(Boolean(ok)));
+      return;
+    }
+    if (permission === "notifications") {
+      void readInAppConsent(wc, "notifications").then((ok) => callback(Boolean(ok)));
+      return;
+    }
+    callback(false);
   });
 
   createWindow();

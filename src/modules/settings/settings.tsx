@@ -34,6 +34,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { apiDelete, apiGet, apiPatch, apiPost, ClientApiError } from "@/lib/client-api";
+import {
+  FIRST_LAUNCH_CONSENT_EVENT,
+  isLocationConsentAccepted,
+  isNotificationConsentAccepted,
+  readFirstLaunchConsent,
+  writeFirstLaunchConsent,
+} from "@/lib/first-launch-consent";
+import { requestAcceptedRuntimePermissions } from "@/lib/runtime-permissions";
 import { ACTION_LABELS } from "@/modules/admin/action-labels";
 import { formatDateTime, formatRelative, getUserDateTimePreferences, type UserDateTimePreferences } from "@/lib/utils";
 import type { AuditLogDTO, DeviceSessionDTO, Paginated, PrivacyPreferencesDTO, UserDTO } from "@/types";
@@ -343,6 +351,100 @@ function DevicesTab() {
   );
 }
 
+function FirstLaunchPrefsCard() {
+  const queryClient = useQueryClient();
+  const [consent, setConsent] = useState(() =>
+    typeof window === "undefined" ? null : readFirstLaunchConsent(),
+  );
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setConsent(readFirstLaunchConsent());
+    sync();
+    window.addEventListener(FIRST_LAUNCH_CONSENT_EVENT, sync);
+    return () => window.removeEventListener(FIRST_LAUNCH_CONSENT_EVENT, sync);
+  }, []);
+
+  const update = async (patch: { location?: boolean; notifications?: boolean }) => {
+    const current = readFirstLaunchConsent();
+    const next = {
+      location: patch.location ?? current?.location ?? false,
+      notifications: patch.notifications ?? current?.notifications ?? false,
+    };
+    setBusy(true);
+    try {
+      writeFirstLaunchConsent(next);
+      if (patch.notifications !== undefined) {
+        try {
+          await apiPatch("/api/privacy/preferences", {
+            notifySession: next.notifications,
+            notifySecurity: next.notifications,
+            notifyConsent: next.notifications,
+            marketingOptIn: false,
+          });
+          void queryClient.invalidateQueries({ queryKey: ["privacy-prefs"] });
+        } catch {
+          /* guest */
+        }
+      }
+      await requestAcceptedRuntimePermissions({
+        location: patch.location === true,
+        notifications: patch.notifications === true,
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <ShieldCheckIcon className="size-4" /> İlk açılış izinleri
+        </CardTitle>
+        <CardDescription>
+          Konum ve bildirimler tek tek yönetilir. Sistem iznini geri almak için cihaz veya tarayıcı Ayarları’nı
+          kullanın. Pazarlama bu listede yoktur.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+          <div>
+            <p className="text-sm font-medium">Konum (LiveTrack / CanlıSite)</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {isLocationConsentAccepted()
+                ? "Uygulama içi konum izni açık. Paylaşım yine oturum onayı ister."
+                : "Uygulama içi konum izni kapalı."}
+            </p>
+          </div>
+          <Switch
+            checked={consent?.location === true}
+            disabled={busy}
+            onCheckedChange={(location) => void update({ location })}
+            aria-label="Konum iznini güncelle"
+          />
+        </div>
+        <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+          <div>
+            <p className="text-sm font-medium">Bildirimler</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {isNotificationConsentAccepted()
+                ? "Uygulama içi bildirim izni açık."
+                : "Uygulama içi bildirim izni kapalı."}
+            </p>
+          </div>
+          <Switch
+            checked={consent?.notifications === true}
+            disabled={busy}
+            onCheckedChange={(notifications) => void update({ notifications })}
+            aria-label="Bildirim iznini güncelle"
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function PrivacyTab() {
   const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -418,7 +520,8 @@ function PrivacyTab() {
           </CardTitle>
           <CardDescription>
             CanlıSite konum toplamaz ta ki siz açıkça bir oturum başlatana kadar. Paylaşımı buradan da
-            durdurabilirsiniz.
+            durdurabilirsiniz. Sistem konum iznini Ayarlar → Konum (veya tarayıcı site izinleri) üzerinden geri
+            alabilirsiniz.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
@@ -439,6 +542,8 @@ function PrivacyTab() {
           )}
         </CardContent>
       </Card>
+
+      <FirstLaunchPrefsCard />
 
       <Card>
         <CardHeader>
@@ -638,6 +743,8 @@ function NotificationsTab() {
         </CardTitle>
         <CardDescription>
           Uygulama içi uyarılar varsayılan açıktır. Pazarlama iletileri kapalı başlar — açık rıza gerekir.
+          İlk açılışta bildirimleri reddettiyseniz sistem izni istenmez; buradan açabilirsiniz. Geri alma:
+          cihaz Ayarları → Bildirimler.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">

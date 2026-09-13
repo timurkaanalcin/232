@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { markLocationConsentAccepted } from "@/lib/first-launch-consent";
 
 const CONSENT_POINTS = [
   {
@@ -99,7 +100,7 @@ export function ConsentDialog({
           />
           <span className="text-sm">
             Yukarıda anlatıldığı şekilde gerçek zamanlı konumumu paylaşmayı açıkça kabul ediyorum. İstediğim
-            an <strong>Paylaşımı durdur</strong> ile iptal edebileceğimi biliyorum.
+            an <strong>Paylaşımı durdur</strong> veya Ayarlar’dan iptal edebileceğimi biliyorum.
           </span>
         </label>
 
@@ -107,7 +108,13 @@ export function ConsentDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={busy}>
             Vazgeç
           </Button>
-          <Button onClick={() => onConfirm(label)} disabled={!accepted || busy}>
+          <Button
+            onClick={() => {
+              markLocationConsentAccepted();
+              onConfirm(label);
+            }}
+            disabled={!accepted || busy}
+          >
             {busy ? "Başlatılıyor…" : "Paylaşımı başlat"}
           </Button>
         </DialogFooter>

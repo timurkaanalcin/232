@@ -13,9 +13,9 @@ export default function PrivacyPage() {
       <p className="hud-label mb-2">KVKK / GDPR</p>
       <h1 className="text-3xl font-semibold tracking-tight">Gizlilik bildirimi</h1>
       <p className="mt-3 text-sm text-muted-foreground">
-        {APP_NAME} bir izin-öncelikli konum paylaşım ürünüdür. Gizli izleme, ekran kaydı, tuş kaydı veya
-        yetkisiz uzaktan kontrol yoktur.
-      </p>
+          {APP_NAME} bir izin-öncelikli konum paylaşım ürünüdür. Gizli izleme, ekran kaydı, tuş kaydı veya
+          yetkisiz uzaktan kontrol yoktur. İlk açılışta konum ve bildirimler tek tek, kapalı başlayarak sorulur.
+        </p>
 
       <section className="mt-8 grid gap-6 text-sm leading-relaxed">
         <div>
@@ -23,7 +23,8 @@ export default function PrivacyPage() {
           <p className="mt-2 text-muted-foreground">
             Hesap bilgileri (ad, e-posta) ve sizin başlattığınız cihaz oturumları. Konum (koordinat,
             doğruluk, hız, yön) yalnızca açık onay kutusunu işaretleyip paylaşımı başlattığınız sürece
-            kaydedilir.
+            kaydedilir. Uygulama içi konum iznini ilk açılış ekranından veya Ayarlar’dan kapatabilirsiniz;
+            cihaz ayarlarından da geri alabilirsiniz.
           </p>
         </div>
         <div>

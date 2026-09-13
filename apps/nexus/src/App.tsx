@@ -41,6 +41,33 @@ export function App() {
     saveChats(chats);
   }, [chats]);
 
+  const landingModels = useMemo(() => {
+    const highlight = new Set([
+      "claude-sonnet-5",
+      "claude-opus-5",
+      "claude-fable-5.1",
+      "gpt-5.6-sol",
+      "gpt-5.6-terra",
+      "gemini-3.8-flash",
+      "gemini-3.1-pro",
+      "grok-4.6",
+      "kimi-k3",
+      "glm-5.2",
+      "composer-2.5",
+      "muse-spark-1.3",
+    ]);
+    const seenVendor = new Set<string>();
+    const picks: PoolModel[] = [];
+    for (const model of featured) {
+      if (picks.length >= 18) break;
+      if (!seenVendor.has(model.vendor) || highlight.has(model.key)) {
+        seenVendor.add(model.vendor);
+        picks.push(model);
+      }
+    }
+    return picks;
+  }, [featured]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const pool = query ? models : featured;
@@ -215,7 +242,7 @@ export function App() {
           <h1 className="serif">{t(locale, "tagline")}</h1>
           <p style={{ color: "var(--muted)", maxWidth: 640, fontSize: 18 }}>{t(locale, "subtitle")}</p>
           <div className="constellation">
-            {(featured.length ? featured : []).slice(0, 18).map((model) => (
+            {landingModels.map((model) => (
               <button key={model.id} className="chip" onClick={() => selectModel(model)}>
                 {model.name}
               </button>

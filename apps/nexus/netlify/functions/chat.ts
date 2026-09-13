@@ -23,7 +23,7 @@ export default async (req: Request) => {
 
   let body: { modelId?: string; messages?: IncomingMessage[]; system?: string };
   try {
-    body = await req.json();
+    body = (await req.json()) as { modelId?: string; messages?: IncomingMessage[]; system?: string };
   } catch {
     return Response.json({ error: "Geçersiz JSON" }, { status: 400, headers: cors() });
   }

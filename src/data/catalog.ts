@@ -479,7 +479,7 @@ const DRAFTS: Draft[] = [
     fuel: "benzin",
     transmission: "otomatik",
     body: "sedan",
-    color: "Siyah",
+    color: "Beyaz",
     doors: 4,
     seats: 5,
     engineCc: 1496,

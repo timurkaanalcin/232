@@ -1,5 +1,6 @@
 import type { Config } from "@netlify/functions";
 import { findModel } from "../../src/lib/catalog";
+import { isPoolId, pickBestModel } from "../../src/lib/pick";
 import { loadCatalog } from "./_shared/catalog";
 import { gatewayReady } from "./_shared/env";
 import { streamModel, type IncomingMessage } from "./_shared/router";
@@ -29,7 +30,11 @@ export default async (req: Request) => {
   }
 
   const catalog = await loadCatalog();
-  const model = body.modelId ? findModel(catalog.models, body.modelId) : undefined;
+  const lastUser = [...(body.messages ?? [])].reverse().find((message) => message.role === "user")?.content ?? "";
+  const picked = isPoolId(body.modelId)
+    ? pickBestModel(catalog.models, lastUser)
+    : undefined;
+  const model = picked?.model ?? (body.modelId ? findModel(catalog.models, body.modelId) : undefined);
   if (!model) {
     return Response.json({ error: "Model bulunamadı" }, { status: 404, headers: cors() });
   }
@@ -62,8 +67,19 @@ export default async (req: Request) => {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
       };
       try {
+        if (picked) {
+          send({
+            picked: {
+              id: model.id,
+              name: model.name,
+              reason: picked.reason,
+              task: picked.task,
+              score: picked.score,
+            },
+          });
+        }
         if (!gatewayReady()) {
-          await demoStream(model.name, messages, (text) => send({ delta: text }));
+          await demoStream(model.name, messages, (text) => send({ delta: text }), picked?.reason.tr);
           send({ done: true, demo: true });
           controller.close();
           return;
@@ -103,15 +119,18 @@ function allow(ip: string) {
   return true;
 }
 
-async function demoStream(name: string, messages: IncomingMessage[], onText: (text: string) => void) {
+async function demoStream(
+  name: string,
+  messages: IncomingMessage[],
+  onText: (text: string) => void,
+  reason?: string,
+) {
   const last = [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
   const text =
-    `**${name}** şu anda yerel önizlemede.\n\n` +
-    `Netlify'a bir kez production deploy edip sitede AI Features'ı açınca bu model gerçekten yanıt verir. ` +
-    `Gateway, listedeki yeni modelleri otomatik çeker.\n\n` +
-    `> ${last.slice(0, 240) || "Merhaba"}\n\n` +
-    `İstediğin gibi sohbet, karşılaştırma ve model değiştirme arayüzü hazır. ` +
-    `Production'da Anthropic, OpenAI, Gemini, Grok, Kimi, GLM ve canlı katalogdaki diğer modeller aynı havuzdan akar.`;
+    `Havuz seçimi: **${name}**\n\n` +
+    `${reason ?? "Bu soruda en yüksek doğruluk potansiyeline sahip model."}\n\n` +
+    `Yerel önizlemedesin — Netlify production + AI Features sonrası ${name} gerçek yanıtı üretir.\n\n` +
+    `> ${last.slice(0, 280) || "Merhaba"}`;
   for (const piece of text.match(/.{1,24}/gs) ?? [text]) {
     onText(piece);
     await new Promise((resolve) => setTimeout(resolve, 12));

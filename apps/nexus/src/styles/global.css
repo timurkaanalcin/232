@@ -202,6 +202,10 @@ button {
   font-size: 11px;
 }
 
+.model-item.active .name {
+  color: var(--gold);
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

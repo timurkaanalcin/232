@@ -3,6 +3,7 @@ import { ArrowUp, Columns2, Menu, RefreshCw, Sparkles, Square, X } from "lucide-
 import { fetchCatalog, streamChat } from "@/lib/api";
 import { formatContext } from "@/lib/catalog";
 import { t, type Locale } from "@/lib/i18n";
+import { isPoolId, POOL_ID, poolModel } from "@/lib/pick";
 import { loadChats, loadLastModel, loadLocale, loadSystem, saveChats, saveLastModel, saveLocale, saveSystem, uid } from "@/lib/storage";
 import type { CatalogResponse, ChatMessage, Conversation, PoolModel } from "@/lib/types";
 import { Markdown } from "./components/Markdown";
@@ -22,10 +23,14 @@ export function App() {
   const [compareOn, setCompareOn] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
+  const pool = poolModel(locale);
   const models = catalog?.models ?? [];
-  const featured = catalog?.featured ?? [];
+  const featured = [pool, ...(catalog?.featured ?? [])];
   const active = chats.find((chat) => chat.id === activeId) ?? null;
-  const selected = models.find((model) => model.id === (active?.modelId ?? loadLastModel())) ?? featured[0] ?? models[0];
+  const selectedId = active?.modelId ?? loadLastModel() ?? POOL_ID;
+  const selected = isPoolId(selectedId)
+    ? pool
+    : models.find((model) => model.id === selectedId) ?? pool;
   const compareModel =
     models.find((model) => model.id === active?.compareIds[0]) ??
     featured.find((model) => model.id !== selected?.id && model.live) ??
@@ -155,6 +160,27 @@ export function App() {
             system,
             signal: controller.signal,
             messages: history.map((message) => ({ role: message.role, content: message.content })),
+            onPicked: (picked) => {
+              setChats((current) =>
+                current.map((item) =>
+                  item.id === nextChat.id
+                    ? {
+                        ...item,
+                        messages: item.messages.map((message) =>
+                          message.id === assistantId
+                            ? {
+                                ...message,
+                                modelId: picked.id,
+                                modelName: picked.name,
+                                pickReason: picked.reason[locale],
+                              }
+                            : message,
+                        ),
+                      }
+                    : item,
+                ),
+              );
+            },
             onDelta: (delta) => {
               setChats((current) =>
                 current.map((item) =>
@@ -249,8 +275,15 @@ export function App() {
             ))}
           </div>
           <div className="toolbar">
-            <button className="btn primary" onClick={() => setView("app")}>
-              {t(locale, "start")}
+            <button
+              className="btn primary"
+              onClick={() => {
+                saveLastModel(POOL_ID);
+                setActiveId(null);
+                setView("app");
+              }}
+            >
+              {t(locale, "askPool")}
             </button>
             <button className="btn" onClick={() => setView("app")}>
               {t(locale, "browse")}
@@ -297,6 +330,7 @@ export function App() {
               className="btn primary"
               style={{ flex: 1 }}
               onClick={() => {
+                saveLastModel(POOL_ID);
                 setActiveId(null);
                 setDraft("");
               }}
@@ -355,7 +389,7 @@ export function App() {
                   <Menu size={16} />
                 </button>
                 <h2 className="hero-title serif" style={{ fontSize: 22, margin: 0 }}>
-                  {selected?.name ?? "Nexus"}
+                  {selected?.name ?? t(locale, "pool")}
                 </h2>
               </div>
               <div className="chips" style={{ marginTop: 8 }}>
@@ -400,6 +434,11 @@ export function App() {
               <div className="empty">
                 <h2 className="serif">{t(locale, "emptyTitle")}</h2>
                 <p>{t(locale, "emptyBody")}</p>
+                {isPoolId(selected.id) && (
+                  <button className="btn primary" onClick={() => void send(t(locale, "sampleQuestion"))}>
+                    {t(locale, "sampleQuestion")}
+                  </button>
+                )}
               </div>
             )}
             {compareOn && active?.messages.length ? (
@@ -497,8 +536,15 @@ function MessageView({ message, locale }: { message: ChatMessage; locale: Locale
   return (
     <article className={`message ${message.role}`}>
       <div className="who">
-        {message.role === "user" ? "You" : message.pending ? t(locale, "thinking") : "Nexus"}
+        {message.role === "user"
+          ? "You"
+          : message.pending
+            ? t(locale, "thinking")
+            : message.modelName
+              ? `${t(locale, "poolPicked")}: ${message.modelName}`
+              : "Nexus"}
       </div>
+      {message.pickReason && <p className="hint" style={{ padding: "0 0 8px" }}>{message.pickReason}</p>}
       <Markdown text={message.error ? `**${t(locale, "error")}:** ${message.error}` : message.content} />
       {message.images?.map((image) => (
         <img key={image.dataUrl.slice(0, 24)} className="gen" src={image.dataUrl} alt="" />

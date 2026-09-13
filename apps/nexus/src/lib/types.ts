@@ -67,6 +67,8 @@ export type ChatMessage = {
   role: Exclude<ChatRole, "system">;
   content: string;
   modelId?: string;
+  modelName?: string;
+  pickReason?: string;
   createdAt: number;
   pending?: boolean;
   error?: string;

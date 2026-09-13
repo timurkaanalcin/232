@@ -15,6 +15,7 @@ export async function streamChat(input: {
   signal?: AbortSignal;
   onDelta: (text: string) => void;
   onImage?: (image: { mimeType: string; data: string }) => void;
+  onPicked?: (picked: { id: string; name: string; reason: { tr: string; en: string } }) => void;
 }): Promise<{ demo?: boolean }> {
   const response = await fetch("/api/chat", {
     method: "POST",
@@ -52,8 +53,10 @@ export async function streamChat(input: {
         error?: string;
         demo?: boolean;
         done?: boolean;
+        picked?: { id: string; name: string; reason: { tr: string; en: string } };
       };
       if (event.error) throw new Error(event.error);
+      if (event.picked) input.onPicked?.(event.picked);
       if (event.delta) input.onDelta(event.delta);
       if (event.image) input.onImage?.(event.image);
       if (event.demo) demo = true;

@@ -7,8 +7,8 @@ import type {
   VehicleImage,
 } from "@/types/marketplace";
 
-const img = (id: string, alt: string, extra = ""): VehicleImage => ({
-  url: `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1600&q=80${extra}`,
+const wiki = (file: string, alt: string): VehicleImage => ({
+  url: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`,
   alt,
 });
 
@@ -204,9 +204,9 @@ const DRAFTS: Draft[] = [
     description:
       "R-Line donanımlı, bakımlı ve ekspertiz skoru yüksek bir Golf. Şehir içi kullanım ve uzun yol için dengeli bir seçenek.",
     images: [
-      img("photo-1617814076367-b759c7d10e3e", "Volkswagen Golf dış görünüm"),
-      img("photo-1617531653520-bd266f9c3840", "Volkswagen Golf ön"),
-      img("photo-1503376780353-7e6692767b70", "Volkswagen Golf detay"),
+      wiki("VW Golf VIII GTD.jpg", "Volkswagen Golf VIII ön üç çeyrek"),
+      wiki("Volkswagen Golf VIII Sindelfingen 2020 IMG 2377.jpg", "Volkswagen Golf VIII yan görünüm"),
+      wiki("Volkswagen Golf VIII phase 2 (intérieur).jpg", "Volkswagen Golf iç mekan"),
     ],
     seed: 11,
     extras: ["Dijital kokpit", "Adaptif cruise"],
@@ -237,9 +237,9 @@ const DRAFTS: Draft[] = [
     badge: "Hibrit",
     description: "Düşük yakıt tüketimi ve Toyota hibrit güvenilirliği. Tek el, hasarsız kayıt.",
     images: [
-      img("photo-1619767886558-efdc259cde1a", "Toyota Corolla beyaz sedan"),
-      img("photo-1542362567-b07e54358753", "Sedan iç mekan"),
-      img("photo-1489824904134-891ab64532f1", "Sedan yan görünüm"),
+      wiki("Toyota Corolla Hybrid Sedan, GIMS 2019, Le Grand-Saconnex (GIMS1338).jpg", "Toyota Corolla Hybrid sedan"),
+      wiki("TOYOTA COROLLA SEDAN (E210) China.jpg", "Toyota Corolla E210 ön"),
+      wiki("2019 Toyota Corolla Hybrid Saloon Interior.jpg", "Toyota Corolla iç mekan"),
     ],
     seed: 22,
   },
@@ -269,8 +269,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "Şehir içi manevra kabiliyeti yüksek, ekonomik Clio. Pista 240 puanlık kontrolden geçti.",
     images: [
-      img("photo-1511919884226-fd3cad54694b", "Renault Clio kırmızı-turuncu hatchback"),
-      img("photo-1544636331-e26879cd4d9b", "Hatchback detay"),
+      wiki("Renault Clio V 1X7A0392.jpg", "Renault Clio V ön"),
+      wiki("Renault Clio V 1X7A0393.jpg", "Renault Clio V yan"),
+      wiki("Renault Clio V (2023) 1X7A1577.jpg", "Renault Clio V 2023"),
     ],
     seed: 7,
   },
@@ -299,8 +300,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "İlk araç veya filo sonrası bireysel kullanım için sade ve bakımlı Egea.",
     images: [
-      img("photo-1489824904134-891ab64532f1", "Beyaz sedan Fiat Egea"),
-      img("photo-1492144534655-ae79c964c9d7", "Sedan ön"),
+      wiki("Fiat Tipo Sedan Facelift Leonberg 2022 1X7A0412.jpg", "Fiat Egea / Tipo sedan"),
+      wiki("Fiat Tipo Saloon.jpg", "Fiat Tipo sedan yan"),
+      wiki("Fiat Egea in Pendik Istanbul.jpg", "Fiat Egea İstanbul"),
     ],
     seed: 4,
   },
@@ -330,9 +332,9 @@ const DRAFTS: Draft[] = [
     badge: "Popüler",
     description: "Yeni nesil Tucson tasarımı, geniş iç hacim ve zengin güvenlik donanımı.",
     images: [
-      img("photo-1606664515524-ed2f786a0bd6", "Hyundai Tucson SUV"),
-      img("photo-1519641471654-76ce0107ad1b", "SUV yan görünüm"),
-      img("photo-1549317661-bd32c8ce0db2", "SUV detay"),
+      wiki("Hyundai Tucson (NX4) 1X7A0424.jpg", "Hyundai Tucson NX4"),
+      wiki("Hyundai Tucson (NX4, SWB) PHEV 1X7A1858.jpg", "Hyundai Tucson yan"),
+      wiki("Hyundai Tucson Inspiration NX4 Gray Interior (4).jpg", "Hyundai Tucson iç mekan"),
     ],
     seed: 31,
     extras: ["360 kamera", "Kablosuz şarj"],
@@ -362,8 +364,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "ST-Line paket, sportif sürüş ve dijital gösterge. Pista ekspertiz notu 94.",
     images: [
-      img("photo-1552519507-da3b142c6e3d", "Ford Focus"),
-      img("photo-1494976388531-d1058494cdd8", "Hatchback"),
+      wiki("Ford Focus Mk IV Facelift 1X7A5729.jpg", "Ford Focus Mk IV"),
+      wiki("2018 Ford Focus ST-Line TDCi 1.5 Front.jpg", "Ford Focus ST-Line ön"),
+      wiki("Ford Focus Mk IV Facelift Leonberg 2022 1X7A0452.jpg", "Ford Focus yan"),
     ],
     seed: 18,
   },
@@ -392,8 +395,9 @@ const DRAFTS: Draft[] = [
     featured: true,
     description: "Geniş bagaj, düşük tüketim ve aile kullanımı için ideal Octavia.",
     images: [
-      img("photo-1542362567-b07e54358753", "Skoda Octavia sedan"),
-      img("photo-1619767886558-efdc259cde1a", "Sedan dış"),
+      wiki("2024 Skoda Octavia 110TSI Select front.jpg", "Škoda Octavia ön"),
+      wiki("2024 Skoda Octavia 110TSI Select rear.jpg", "Škoda Octavia arka"),
+      wiki("Škoda Octavia IV Scout IMG 7906.jpg", "Škoda Octavia IV"),
     ],
     seed: 15,
     extras: ["Elektrikli bagaj"],
@@ -424,8 +428,9 @@ const DRAFTS: Draft[] = [
     badge: "Dizel",
     description: "GT donanım, i-Cockpit ve uzun yol konforu. Şehirler arası kullanım için ekonomik.",
     images: [
-      img("photo-1519641471654-76ce0107ad1b", "Peugeot 3008 SUV"),
-      img("photo-1605559424843-9e4c228bf1c2", "Siyah SUV"),
+      wiki("Peugeot-3008-II-BegMeil-2-byRundvald.jpg", "Peugeot 3008 II"),
+      wiki("Peugeot-3008-II-BegMeil-3-byRundvald.jpg", "Peugeot 3008 yan"),
+      wiki("Peugeot-3008-II-BegMeil-4-byRundvald.jpg", "Peugeot 3008 arka"),
     ],
     seed: 26,
   },
@@ -455,9 +460,9 @@ const DRAFTS: Draft[] = [
     badge: "M Sport",
     description: "M Sport paket, arkadan itiş ve canlı sürüş. Yetkili servis bakımlı.",
     images: [
-      img("photo-1555215695-3004980ad54e", "BMW 3 Serisi"),
-      img("photo-1617531653332-bd460b66828b", "BMW ön ızgara"),
-      img("photo-1617469767053-d3a8234680ec", "Premium sedan"),
+      wiki("BMW G20 (2022) IMG 7316.jpg", "BMW 3 Serisi G20"),
+      wiki("BMW G20 (2022) 1X7A6118.jpg", "BMW 320e yan"),
+      wiki("BMW G20 LCI Sensatec Perforated Cognac (1).jpg", "BMW 3 Serisi iç mekan"),
     ],
     seed: 41,
     extras: ["Harman Kardon", "Ambiyans aydınlatma"],
@@ -488,9 +493,9 @@ const DRAFTS: Draft[] = [
     badge: "AMG",
     description: "Yeni nesil C Serisi, MBUX ve AMG görünüm paketi. Pista garanti kapsamında.",
     images: [
-      img("photo-1618843479313-40f8afb4b4d8", "Mercedes-Benz C Serisi"),
-      img("photo-1605559424843-9e4c228bf1c2", "Mercedes detay"),
-      img("photo-1489824904134-891ab64532f1", "Siyah sedan"),
+      wiki("Mercedes-Benz C 200 AVANTGARDE (W206) front.jpg", "Mercedes-Benz C 200 ön"),
+      wiki("Mercedes-Benz C 200 AVANTGARDE (W206).jpg", "Mercedes-Benz C 200"),
+      wiki("Mercedes-Benz C 200 AVANTGARDE (W206) interior.jpg", "Mercedes-Benz C 200 iç mekan"),
     ],
     seed: 44,
     extras: ["Burmester", "Head-up display"],
@@ -520,9 +525,9 @@ const DRAFTS: Draft[] = [
     featured: true,
     description: "S Line, Virtual Cockpit ve düşük kilometre. Premium kompakt sınıfın dengeli örneği.",
     images: [
-      img("photo-1606664515524-ed2f786a0bd6", "Audi A3"),
-      img("photo-1617469767053-d3a8234680ec", "Audi ön"),
-      img("photo-1492144534655-ae79c964c9d7", "Audi yan"),
+      wiki("Audi A3 8Y 1X7A6468.jpg", "Audi A3 Sportback"),
+      wiki("Audi A3 8Y IMG 0367.jpg", "Audi A3 8Y"),
+      wiki("2024 Audi A3 8Y Sedan IMG 1019.jpg", "Audi A3 ön"),
     ],
     seed: 28,
   },
@@ -551,8 +556,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "Turbo Civic, sportif karakter ve Honda güvenilirliği.",
     images: [
-      img("photo-1511919884226-fd3cad54694b", "Honda Civic kırmızı"),
-      img("photo-1549317661-bd32c8ce0db2", "Sport sedan"),
+      wiki("2022 Honda Civic LX Sedan, front right, 11-02-2022.jpg", "Honda Civic sedan"),
+      wiki("Honda 6BA-FL1 Civic EX (22082811081).jpg", "Honda Civic EX"),
+      wiki("Honda 6BA-FL1 Civic LX (22091511084).jpg", "Honda Civic LX yan"),
     ],
     seed: 19,
   },
@@ -582,8 +588,9 @@ const DRAFTS: Draft[] = [
     badge: "Az KM",
     description: "Yeni kasa Sportage, 7 yıl / 150.000 km üretici garanti devri mümkün.",
     images: [
-      img("photo-1519641471654-76ce0107ad1b", "Kia Sportage"),
-      img("photo-1549317661-bd32c8ce0db2", "SUV"),
+      wiki("Kia Sportage (NQ5) 1X7A0326.jpg", "Kia Sportage NQ5"),
+      wiki("Kia Sportage (NQ5) 1X7A0319.jpg", "Kia Sportage yan"),
+      wiki("Kia Sportage Plug-in-Hybrid (NQ5) 1X7A0317.jpg", "Kia Sportage ön"),
     ],
     seed: 33,
   },
@@ -612,8 +619,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "Volvo güvenlik paketi, City Safety ve premium iç malzeme.",
     images: [
-      img("photo-1617814076367-b759c7d10e3e", "Volvo XC40"),
-      img("photo-1605559424843-9e4c228bf1c2", "Premium SUV"),
+      wiki("Volvo XC40 Recharge Facelift IMG 8127.jpg", "Volvo XC40"),
+      wiki("Volvo XC40 Recharge Facelift Leonberg 2022 1X7A0435.jpg", "Volvo XC40 yan"),
+      wiki("Volvo XC40 Recharge Facelift IMG 8130.jpg", "Volvo XC40 arka"),
     ],
     seed: 37,
     extras: ["Pilot Assist"],
@@ -643,8 +651,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "Yüksek yerden yükseklik, uygun fiyat ve bakımı kolay SUV.",
     images: [
-      img("photo-1511919884226-fd3cad54694b", "Dacia Duster"),
-      img("photo-1519641471654-76ce0107ad1b", "SUV dış"),
+      wiki("Dacia Duster II Facelift IAA 2021 1X7A0132.jpg", "Dacia Duster II"),
+      wiki("Dacia Duster, GIMS 2024, Le Grand-Saconnex (GIMS0126).jpg", "Dacia Duster 2024"),
+      wiki("Prior Duster, EMS 2023, Essen (P1160957).jpg", "Duster detay"),
     ],
     seed: 9,
   },
@@ -673,8 +682,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "Kompakt, otomatik ve şehir içi kullanım için pratik Corsa.",
     images: [
-      img("photo-1544636331-e26879cd4d9b", "Opel Corsa"),
-      img("photo-1549317661-bd32c8ce0db2", "Kompakt hatchback"),
+      wiki("Opel Corsa F IMG 5815.jpg", "Opel Corsa F"),
+      wiki("2023 Opel Corsa F IMG 9924.jpg", "Opel Corsa 2023"),
+      wiki("Opel Corsa F IMG 8196.jpg", "Opel Corsa yan"),
     ],
     seed: 6,
   },
@@ -704,8 +714,9 @@ const DRAFTS: Draft[] = [
     badge: "Rezerve",
     description: "FR paket, sportif süspansiyon. Ön ödeme alınmış, stok güncelleniyor.",
     images: [
-      img("photo-1617814076367-b759c7d10e3e", "Seat Leon"),
-      img("photo-1503376780353-7e6692767b70", "Hatchback"),
+      wiki("Seat Leon FR (IV) – f 01012023.jpg", "Seat Leon FR ön"),
+      wiki("Seat Leon FR (IV) – h 01012023.jpg", "Seat Leon FR arka"),
+      wiki("SEAT Leon Mk4 1X7A5844.jpg", "Seat Leon Mk4"),
     ],
     seed: 13,
   },
@@ -734,8 +745,9 @@ const DRAFTS: Draft[] = [
     featured: true,
     description: "Yeni kasa Qashqai, ProPILOT ve geniş cam tavan seçeneği.",
     images: [
-      img("photo-1619767886558-efdc259cde1a", "Nissan Qashqai"),
-      img("photo-1519641471654-76ce0107ad1b", "Crossover"),
+      wiki("2024 Nissan Qashqai (J12) IMG 1831.jpg", "Nissan Qashqai J12"),
+      wiki("Nissan Qashqai (III) – f 25042024.jpg", "Nissan Qashqai ön"),
+      wiki("Nissan Qashqai (J12) Automesse Ludwigsburg 2022 1X7A5875.jpg", "Nissan Qashqai yan"),
     ],
     seed: 24,
     extras: ["ProPILOT"],
@@ -766,8 +778,9 @@ const DRAFTS: Draft[] = [
     badge: "Az KM",
     description: "Konfor odaklı süspansiyon ve düşük kilometre. Tek kullanıcı.",
     images: [
-      img("photo-1542362567-b07e54358753", "Citroen C4"),
-      img("photo-1544636331-e26879cd4d9b", "Hatchback yan"),
+      wiki("Citroen C4 (2020) 1X7A5854.jpg", "Citroën C4 III"),
+      wiki("Citroën ë-C4 Feel (III) – f 14042024.jpg", "Citroën C4 ön"),
+      wiki("Citroën ë-C4 Feel (III) – h 14042024.jpg", "Citroën C4 arka"),
     ],
     seed: 21,
   },
@@ -796,8 +809,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "Kodo tasarım, doğal emişli motor ve sürüş odaklı SUV.",
     images: [
-      img("photo-1511919884226-fd3cad54694b", "Mazda CX-5"),
-      img("photo-1549317661-bd32c8ce0db2", "Kırmızı SUV"),
+      wiki("Mazda CX-5 (KF) Facelift 1X7A0331 (2).jpg", "Mazda CX-5"),
+      wiki("Mazda CX-5 Newground 1X7A6786.jpg", "Mazda CX-5 Newground"),
+      wiki("2017 Mazda CX-5 (KF) Maxx 2WD wagon (2018-11-02) 01.jpg", "Mazda CX-5 yan"),
     ],
     seed: 29,
   },
@@ -827,8 +841,9 @@ const DRAFTS: Draft[] = [
     badge: "4x4",
     description: "AWD hibrit RAV4, yüksek yerden yükseklik ve düşük tüketim.",
     images: [
-      img("photo-1519641471654-76ce0107ad1b", "Toyota RAV4 SUV"),
-      img("photo-1533473359331-0135ef1b58bf", "SUV 4x4 dış"),
+      wiki("Toyota RAV4 Hybrid (XA50) DSC 2709.jpg", "Toyota RAV4 Hybrid"),
+      wiki("2021 Toyota RAV4 PHV.jpg", "Toyota RAV4 PHV"),
+      wiki("Toyota RAV4 Plug-in Hybrid GR Sport IMG 9896.jpg", "Toyota RAV4 GR Sport"),
     ],
     seed: 39,
     extras: ["AWD", "JBL ses"],
@@ -858,8 +873,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "Aile SUV’u, Digital Cockpit ve geniş ikinci sıra.",
     images: [
-      img("photo-1617814076367-b759c7d10e3e", "Volkswagen Tiguan"),
-      img("photo-1605559424843-9e4c228bf1c2", "Gri SUV"),
+      wiki("Volkswagen Tiguan (Mk II) Washington DC Metro Area, USA.jpg", "Volkswagen Tiguan II"),
+      wiki("VOLKSWAGEN TIGUAN L TIGUAN ALLSPACE (33).jpg", "Volkswagen Tiguan Allspace"),
+      wiki("Volkswagen Tiguan II Facelift Frontansicht, FV-520, Finanzpolizei Österreich, Leoben, 2025.jpg", "Volkswagen Tiguan facelift"),
     ],
     seed: 27,
   },
@@ -888,8 +904,9 @@ const DRAFTS: Draft[] = [
     featured: false,
     description: "Az kullanılmış i20, şehir içi ve ilk araç için uygun.",
     images: [
-      img("photo-1544636331-e26879cd4d9b", "Hyundai i20"),
-      img("photo-1542362567-b07e54358753", "Kompakt"),
+      wiki("Hyundai i20 (BC3) 1X7A6488.jpg", "Hyundai i20"),
+      wiki("Hyundai i20 (BC3) Facelift IMG 8591.jpg", "Hyundai i20 facelift"),
+      wiki("Hyundai i20 (BC3) 174119.jpg", "Hyundai i20 yan"),
     ],
     seed: 8,
   },
@@ -919,8 +936,9 @@ const DRAFTS: Draft[] = [
     badge: "Satıldı",
     description: "Teslim edilmiş Megane. Arşiv kaydı — benzerlerini stokta arayın.",
     images: [
-      img("photo-1489824904134-891ab64532f1", "Renault Megane"),
-      img("photo-1492144534655-ae79c964c9d7", "Sedan"),
+      wiki("Renault Megane IV Sedan 1X7A0225.jpg", "Renault Megane sedan"),
+      wiki("Renault Megane IV Grandtour E-Tech IMG 3333.jpg", "Renault Megane Grandtour"),
+      wiki("2019 Renault Megane R.S. 300 Trophy 1.8 Front.jpg", "Renault Megane ön"),
     ],
     seed: 14,
   },
@@ -948,4 +966,7 @@ export const MODELS_BY_BRAND = BRANDS.reduce<Record<string, string[]>>((acc, bra
 export const HERO_VIDEO =
   "https://videos.pexels.com/video-files/1075985/1075985-hd_1920_1080_25fps.mp4";
 
-export const HERO_POSTER = "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=2000&q=70";
+export const HERO_POSTER =
+  "https://commons.wikimedia.org/wiki/Special:FilePath/" +
+  encodeURIComponent("Volkswagen Golf VIII Sindelfingen 2020 IMG 2377.jpg") +
+  "?width=2000";

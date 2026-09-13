@@ -3,6 +3,7 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var workspace: WorkspaceModel
+    @EnvironmentObject private var grok: GrokSession
     @FocusState private var filterFocused: Bool
 
     var body: some View {
@@ -10,7 +11,13 @@ struct RootView: View {
             toolbar
             Rectangle().fill(ForgeTheme.rule).frame(height: 1)
             if workspace.rootURL == nil {
-                WelcomeView()
+                HSplitView {
+                    WelcomeView()
+                    if grok.showPanel {
+                        GrokPanel()
+                            .frame(minWidth: 280, idealWidth: 340, maxWidth: 480)
+                    }
+                }
             } else {
                 workspaceSplit
             }
@@ -19,6 +26,13 @@ struct RootView: View {
         }
         .background(ForgeTheme.canvas)
         .focusable()
+        .onChange(of: grok.includeFile) { _, _ in grok.persistPreferences() }
+        .onChange(of: grok.includeSelection) { _, _ in grok.persistPreferences() }
+        .onChange(of: grok.showPanel) { _, _ in grok.persistPreferences() }
+        .sheet(isPresented: $grok.showSettings) {
+            GrokSettingsSheet()
+                .environmentObject(grok)
+        }
     }
 
     private var toolbar: some View {
@@ -66,6 +80,17 @@ struct RootView: View {
             ) {
                 workspace.showRunner.toggle()
             }
+            toolbarButton(
+                grok.showPanel ? "sparkles" : "sparkle",
+                title: grok.showPanel ? "Hide Grok" : "Show Grok"
+            ) {
+                grok.showPanel.toggle()
+                grok.persistPreferences()
+            }
+            toolbarButton("key", title: "xAI Key") {
+                grok.refreshKeyStatus()
+                grok.showSettings = true
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -91,7 +116,11 @@ struct RootView: View {
                     EditorPane()
                 }
             }
-            .frame(minWidth: 480)
+            .frame(minWidth: 420)
+            if grok.showPanel {
+                GrokPanel()
+                    .frame(minWidth: 280, idealWidth: 340, maxWidth: 480)
+            }
         }
     }
 
@@ -117,7 +146,7 @@ struct WelcomeView: View {
             Text("LocalForge")
                 .font(.system(size: 32, weight: .semibold, design: .serif))
                 .foregroundStyle(ForgeTheme.ink)
-            Text("A local folder workspace for UTF-8 text and shell commands.\nNothing is sent to a network. There is no agent chat or model picker.")
+            Text("An independent folder workspace with a Grok assist panel.\nTalks only to xAI with your own key — not Cursor.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(ForgeTheme.muted)
                 .frame(maxWidth: 460)
@@ -132,6 +161,7 @@ struct WelcomeView: View {
                 shortcutRow("⌘S", "Save file")
                 shortcutRow("⌘F", "Filter files")
                 shortcutRow("⌘R", "Run command")
+                shortcutRow("⌘L", "Show Grok")
                 shortcutRow("⌘.", "Stop command")
             }
             .padding(.top, 12)
@@ -269,15 +299,14 @@ struct EditorPane: View {
                     message: "Choose a text file in the tree, or create a new one with ⌘N."
                 )
             } else {
-                TextEditor(text: Binding(
-                    get: { workspace.editorText },
-                    set: { workspace.updateText($0) }
-                ))
-                .font(ForgeTheme.mono)
-                .foregroundStyle(ForgeTheme.ink)
-                .scrollContentBackground(.hidden)
-                .padding(8)
-                .background(ForgeTheme.canvas)
+                ForgeTextEditor(
+                    text: Binding(
+                        get: { workspace.editorText },
+                        set: { workspace.updateText($0) }
+                    ),
+                    selectedText: $workspace.selectedText,
+                    onEdit: { workspace.updateText($0) }
+                )
             }
         }
         .background(ForgeTheme.canvas)

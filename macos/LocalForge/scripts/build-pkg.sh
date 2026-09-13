@@ -8,7 +8,7 @@ DIST="$ROOT/dist"
 APP="$DIST/LocalForge.app"
 MACOS="$APP/Contents/MacOS"
 RES="$APP/Contents/Resources"
-VERSION="1.1.0"
+VERSION="1.2.0"
 PKG="$DIST/LocalForge-${VERSION}.pkg"
 IDENT="com.timurkaanalcin.localforge"
 
@@ -49,6 +49,7 @@ swiftc -parse-as-library \
   -target "$TARGET" \
   -framework SwiftUI \
   -framework AppKit \
+  -framework Security \
   -o "$MACOS/LocalForge" \
   "${SOURCES[@]}"
 

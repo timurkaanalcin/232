@@ -30,6 +30,7 @@ final class WorkspaceModel: ObservableObject {
     @Published var showRunner: Bool = true
     @Published var lineCount: Int = 0
     @Published var characterCount: Int = 0
+    @Published var selectedText: String = ""
 
     private let fm = FileManager.default
     private var lastSavedText: String = ""
@@ -274,6 +275,7 @@ final class WorkspaceModel: ObservableObject {
         isDirty = false
         lineCount = 0
         characterCount = 0
+        selectedText = ""
     }
 
     private func recount() {

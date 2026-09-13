@@ -4,12 +4,14 @@ import AppKit
 @main
 struct LocalForgeApp: App {
     @StateObject private var workspace = WorkspaceModel()
+    @StateObject private var grok = GrokSession()
     @NSApplicationDelegateAdaptor(ForgeAppDelegate.self) private var appDelegate
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(workspace)
+                .environmentObject(grok)
                 .frame(minWidth: 960, minHeight: 620)
                 .onAppear {
                     appDelegate.workspace = workspace
@@ -58,6 +60,11 @@ struct LocalForgeApp: App {
                     workspace.showRunner.toggle()
                 }
                 .keyboardShortcut("j", modifiers: [.command])
+                Button(grok.showPanel ? "Hide Grok Assist" : "Show Grok Assist") {
+                    grok.showPanel.toggle()
+                    grok.persistPreferences()
+                }
+                .keyboardShortcut("l", modifiers: [.command])
                 Divider()
                 Button("Run Command") {
                     workspace.runCommand()
@@ -69,6 +76,19 @@ struct LocalForgeApp: App {
                 }
                 .keyboardShortcut(".", modifiers: [.command])
                 .disabled(!workspace.isRunning)
+            }
+            CommandMenu("Grok") {
+                Button("xAI API Key…") {
+                    grok.refreshKeyStatus()
+                    grok.showSettings = true
+                }
+                .keyboardShortcut(",", modifiers: [.command, .option])
+                Button("Clear Conversation") {
+                    grok.clearChat()
+                }
+                Divider()
+                Toggle("Attach Current File", isOn: $grok.includeFile)
+                Toggle("Attach Selection", isOn: $grok.includeSelection)
             }
         }
     }

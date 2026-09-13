@@ -112,3 +112,12 @@ export function IconCheck(props: IconProps) {
     </Svg>
   );
 }
+
+export function IconUser(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="9" r="3.2" />
+      <path d="M5.8 18.2a6.4 6.4 0 0 1 12.4 0" />
+    </Svg>
+  );
+}

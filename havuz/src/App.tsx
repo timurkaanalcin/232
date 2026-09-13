@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrandMark } from "./components/BrandMark";
-import { IconCheck, IconCopy, IconMenu, IconSend, IconSettings, IconStop } from "./components/Icons";
+import { IconCheck, IconCopy, IconMenu, IconSend, IconSettings, IconStop, IconUser } from "./components/Icons";
 import { ModelPicker } from "./components/ModelPicker";
 import { SettingsModal } from "./components/SettingsModal";
 import { Sidebar } from "./components/Sidebar";
@@ -371,7 +371,7 @@ export function App() {
             active.messages.map((msg) => (
               <article key={msg.id} className={`msg ${msg.role}`}>
                 <div className={`avatar ${msg.role === "assistant" ? "avatar-ai" : "avatar-user"}`}>
-                  {msg.role === "assistant" ? <BrandMark size={28} /> : locale === "tr" ? "Siz" : "You"}
+                  {msg.role === "assistant" ? <BrandMark size={28} /> : <IconUser size={16} />}
                 </div>
                 <div className={`bubble ${msg.error ? "err" : ""}`}>
                   {msg.role === "assistant" && !msg.content && busy ? (

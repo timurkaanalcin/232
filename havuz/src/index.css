@@ -572,6 +572,8 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
   gap: 8px;
   align-items: center;
 }
+.picker-head .btn, .modal-head .btn { flex-shrink: 0; white-space: nowrap; }
+.filters { scrollbar-width: thin; }
 .filters { display: flex; gap: 6px; overflow: auto; padding: 0 16px 10px; }
 .filter {
   border: 1px solid var(--line);

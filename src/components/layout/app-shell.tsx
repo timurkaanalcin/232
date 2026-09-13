@@ -5,16 +5,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  ActivityIcon,
-  HistoryIcon,
+  CalendarIcon,
+  CarIcon,
+  ClipboardListIcon,
   LayoutDashboardIcon,
   LogOutIcon,
-  MapIcon,
   MenuIcon,
   ScrollTextIcon,
   SettingsIcon,
   ShieldAlertIcon,
   ShieldIcon,
+  ShoppingBagIcon,
   UsersIcon,
   XIcon,
 } from "lucide-react";
@@ -47,22 +48,24 @@ export interface ShellUser {
 interface NavItem {
   href: string;
   label: string;
-  icon: typeof MapIcon;
+  icon: typeof LayoutDashboardIcon;
   permission?: Permission;
 }
 
 const USER_NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
-  { href: "/history", label: "History", icon: HistoryIcon },
-  { href: "/settings", label: "Settings", icon: SettingsIcon },
+  { href: "/dashboard", label: "Hesabım", icon: LayoutDashboardIcon },
+  { href: "/settings", label: "Ayarlar", icon: SettingsIcon },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { href: "/admin", label: "Overview", icon: ActivityIcon, permission: "stats.view" },
-  { href: "/admin/map", label: "Live Map", icon: MapIcon, permission: "map.live_view" },
-  { href: "/admin/users", label: "Users", icon: UsersIcon, permission: "users.view" },
-  { href: "/admin/audit", label: "Audit Logs", icon: ScrollTextIcon, permission: "audit.view" },
-  { href: "/admin/security", label: "Security", icon: ShieldAlertIcon, permission: "audit.view" },
+  { href: "/admin", label: "Operasyon", icon: LayoutDashboardIcon, permission: "stats.view" },
+  { href: "/admin/araclar", label: "Stok", icon: CarIcon, permission: "users.view" },
+  { href: "/admin/degerlemeler", label: "Değerlemeler", icon: ClipboardListIcon, permission: "users.view" },
+  { href: "/admin/randevular", label: "Randevular", icon: CalendarIcon, permission: "users.view" },
+  { href: "/admin/siparisler", label: "Rezervasyonlar", icon: ShoppingBagIcon, permission: "users.view" },
+  { href: "/admin/users", label: "Kullanıcılar", icon: UsersIcon, permission: "users.view" },
+  { href: "/admin/audit", label: "Denetim", icon: ScrollTextIcon, permission: "audit.view" },
+  { href: "/admin/security", label: "Güvenlik", icon: ShieldAlertIcon, permission: "audit.view" },
 ];
 
 function NavLinks({ user, onNavigate }: { user: ShellUser; onNavigate?: () => void }) {

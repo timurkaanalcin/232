@@ -1,8 +1,8 @@
 {
-  "name": "livetrack",
+  "name": "pista",
   "version": "1.0.0",
   "private": true,
-  "description": "LiveTrack Enterprise - consent-first real-time location sharing platform",
+  "description": "Pista — trusted used-car marketplace with inspection reports, valuation, and admin operations",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

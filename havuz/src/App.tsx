@@ -39,7 +39,7 @@ export function App() {
   const [copied, setCopied] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const threadRef = useRef<HTMLDivElement | null>(null);
-  const hydrated = useRef(false);
+  const persistReady = useRef(false);
 
   const locale: Locale = settings.locale;
   const active = conversations.find((c) => c.id === activeId) ?? null;
@@ -59,23 +59,17 @@ export function App() {
     const rows = loadConversations();
     setConversations(rows);
     setActiveId(loadActiveId() ?? rows[0]?.id ?? null);
-    hydrated.current = true;
   }, []);
 
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!persistReady.current) {
+      persistReady.current = true;
+      return;
+    }
     saveConversations(conversations);
-  }, [conversations]);
-
-  useEffect(() => {
-    if (!hydrated.current) return;
     saveSettings(settings);
-  }, [settings]);
-
-  useEffect(() => {
-    if (!hydrated.current) return;
     saveActiveId(activeId);
-  }, [activeId]);
+  }, [conversations, settings, activeId]);
 
   const loadPool = useCallback(
     async (refresh = false) => {

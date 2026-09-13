@@ -52,22 +52,23 @@ export function SecurityCenter() {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Security center</h1>
+        <p className="hud-label mb-1">Tehdit</p>
+        <h1 className="text-xl font-semibold tracking-tight">Güvenlik merkezi</h1>
         <p className="text-sm text-muted-foreground">
-          Failed logins, rate limits and suspicious activity — updates every 15s.
+          Başarısız girişler, hız sınırları ve şüpheli hareket — 15 sn yenileme.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Failed logins today" value={stats?.failedLoginsToday} loading={statsQuery.isLoading} />
-        <StatCard label="Rate limited today" value={stats?.rateLimitedToday} loading={statsQuery.isLoading} />
-        <StatCard label="Warnings today" value={stats?.warningsToday} loading={statsQuery.isLoading} accent />
-        <StatCard label="Critical today" value={stats?.criticalToday} loading={statsQuery.isLoading} danger />
+        <StatCard label="Bugün başarısız giriş" value={stats?.failedLoginsToday} loading={statsQuery.isLoading} />
+        <StatCard label="Bugün hız sınırı" value={stats?.rateLimitedToday} loading={statsQuery.isLoading} />
+        <StatCard label="Bugün uyarı" value={stats?.warningsToday} loading={statsQuery.isLoading} accent />
+        <StatCard label="Bugün kritik" value={stats?.criticalToday} loading={statsQuery.isLoading} danger />
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3">
-          <CardTitle className="text-base">Security events</CardTitle>
+          <CardTitle className="text-base">Güvenlik olayları</CardTitle>
           <Select value={severity} onValueChange={(v) => { setSeverity(v); setPage(1); }}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Severity" />

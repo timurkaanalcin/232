@@ -57,18 +57,24 @@ export function AdminDashboard() {
     <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Command center</h1>
-          <p className="text-sm text-muted-foreground">Live operational overview · updates every 10s</p>
+          <p className="hud-label mb-1">Operasyon</p>
+          <h1 className="text-xl font-semibold tracking-tight">Komuta merkezi</h1>
+          <p className="text-sm text-muted-foreground">Canlı operasyon özeti · 10 sn yenileme</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link href="/admin/map">
-              <MapIcon /> Live map
+              <MapIcon /> Canlı harita
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/admin/sessions">
+              <RadioIcon /> Oturumlar
             </Link>
           </Button>
           <Button asChild>
             <Link href="/admin/users">
-              <UsersIcon /> Manage users
+              <UsersIcon /> Kullanıcılar
             </Link>
           </Button>
         </div>
@@ -78,21 +84,21 @@ export function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={RadioIcon}
-          label="Active sessions"
+          label="Aktif oturum"
           value={stats?.activeSessions}
           loading={statsQuery.isLoading}
           accent
         />
-        <StatCard icon={UsersIcon} label="Active users" value={stats?.activeUsers} loading={statsQuery.isLoading} />
+        <StatCard icon={UsersIcon} label="Aktif kullanıcı" value={stats?.activeUsers} loading={statsQuery.isLoading} />
         <StatCard
           icon={WifiIcon}
-          label="Realtime connections"
+          label="Gerçek zamanlı bağ."
           value={stats?.realtimeConnections}
           loading={statsQuery.isLoading}
         />
         <StatCard
           icon={ActivityIcon}
-          label="Sessions today"
+          label="Bugünkü oturum"
           value={stats?.sessionsToday}
           loading={statsQuery.isLoading}
         />
@@ -102,14 +108,14 @@ export function AdminDashboard() {
         {/* Daily metrics */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Today at a glance</CardTitle>
-            <CardDescription>Key activity since midnight (local time).</CardDescription>
+            <CardTitle className="text-base">Bugüne bakış</CardTitle>
+            <CardDescription>Gece yarısından bu yana (yerel saat).</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <MiniStat icon={UserPlusIcon} label="New users" value={stats?.newUsersToday} loading={statsQuery.isLoading} />
-            <MiniStat icon={GaugeIcon} label="Logins" value={stats?.loginsToday} loading={statsQuery.isLoading} />
-            <MiniStat icon={RadioIcon} label="Sessions" value={stats?.sessionsToday} loading={statsQuery.isLoading} />
-            <MiniStat icon={ActivityIcon} label="Points logged" value={stats?.pointsToday} loading={statsQuery.isLoading} />
+            <MiniStat icon={UserPlusIcon} label="Yeni kullanıcı" value={stats?.newUsersToday} loading={statsQuery.isLoading} />
+            <MiniStat icon={GaugeIcon} label="Giriş" value={stats?.loginsToday} loading={statsQuery.isLoading} />
+            <MiniStat icon={RadioIcon} label="Oturum" value={stats?.sessionsToday} loading={statsQuery.isLoading} />
+            <MiniStat icon={ActivityIcon} label="Kayıtlı nokta" value={stats?.pointsToday} loading={statsQuery.isLoading} />
           </CardContent>
         </Card>
 
@@ -117,7 +123,7 @@ export function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <ServerIcon className="size-4" /> System health
+              <ServerIcon className="size-4" /> Sistem sağlığı
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3">
@@ -125,7 +131,7 @@ export function AdminDashboard() {
               <Skeleton className="h-20" />
             ) : (
               <>
-                <HealthRow label="Overall" ok={healthQuery.data?.status === "healthy"} />
+                <HealthRow label="Genel" ok={healthQuery.data?.status === "healthy"} />
                 {healthQuery.data &&
                   Object.entries(healthQuery.data.checks).map(([key, value]) => (
                     <HealthRow key={key} label={key} ok={value === "ok"} />
@@ -139,13 +145,13 @@ export function AdminDashboard() {
       {/* Analytics widgets */}
       <div className="grid gap-4 lg:grid-cols-3">
         <BreakdownCard
-          title="Browsers"
+          title="Tarayıcılar"
           icon={GlobeIcon}
           items={analytics?.browserBreakdown}
           loading={analyticsQuery.isLoading}
         />
         <BreakdownCard
-          title="Devices (OS)"
+          title="Cihaz (OS)"
           icon={LaptopIcon}
           items={analytics?.deviceBreakdown}
           loading={analyticsQuery.isLoading}
@@ -153,7 +159,7 @@ export function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <TimerIcon className="size-4" /> Session metrics
+              <TimerIcon className="size-4" /> Oturum metrikleri
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 text-sm">
@@ -162,7 +168,7 @@ export function AdminDashboard() {
             ) : (
               <>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Avg. duration today</span>
+                  <span className="text-muted-foreground">Ort. süre (bugün)</span>
                   <span className="font-medium tabular-nums">
                     {analytics?.avgSessionDurationMs
                       ? formatDuration(0, analytics.avgSessionDurationMs)
@@ -170,7 +176,7 @@ export function AdminDashboard() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Active now</span>
+                  <span className="text-muted-foreground">Şu an aktif</span>
                   <span className="font-medium tabular-nums">{analytics?.activeSessionCount ?? 0}</span>
                 </div>
               </>
@@ -182,8 +188,8 @@ export function AdminDashboard() {
       {analytics && analytics.geoRegions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Geographic distribution (active)</CardTitle>
-            <CardDescription>Grouped by approximate coordinates of live sessions.</CardDescription>
+            <CardTitle className="text-base">Coğrafi dağılım (aktif)</CardTitle>
+            <CardDescription>Canlı oturumların yaklaşık koordinatlarına göre gruplanır.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             {analytics.geoRegions.map((region) => (
@@ -202,9 +208,9 @@ export function AdminDashboard() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Recent activity</CardTitle>
+            <CardTitle className="text-base">Son hareketler</CardTitle>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/admin/audit">View audit log</Link>
+              <Link href="/admin/audit">Audit kaydı</Link>
             </Button>
           </div>
         </CardHeader>
@@ -227,7 +233,7 @@ export function AdminDashboard() {
               );
             })
           ) : (
-            <p className="py-6 text-center text-sm text-muted-foreground">No activity recorded yet.</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">Henüz hareket kaydı yok.</p>
           )}
         </CardContent>
       </Card>
@@ -320,7 +326,7 @@ function BreakdownCard({
             </div>
           ))
         ) : (
-          <p className="text-sm text-muted-foreground">No data yet.</p>
+          <p className="text-sm text-muted-foreground">Henüz veri yok.</p>
         )}
       </CardContent>
     </Card>
@@ -333,7 +339,7 @@ function HealthRow({ label, ok }: { label: string; ok: boolean }) {
       <span className="capitalize">{label}</span>
       <span className="flex items-center gap-1.5">
         <span className={`size-2 rounded-full ${ok ? "bg-emerald-500" : "bg-destructive"}`} />
-        <span className={ok ? "text-emerald-600" : "text-destructive"}>{ok ? "Operational" : "Degraded"}</span>
+        <span className={ok ? "text-emerald-600" : "text-destructive"}>{ok ? "Çevrimiçi" : "Bozuk"}</span>
       </span>
     </div>
   );

@@ -31,8 +31,8 @@ export function ForgotPasswordForm() {
       <Alert variant="success">
         <MailCheckIcon />
         <AlertDescription>
-          If an account exists for <strong>{email}</strong>, a password reset link is on its way. The link
-          expires in 30 minutes.
+          <strong>{email}</strong> için bir hesap varsa, a password reset link is on its way. Bağlantı 30
+          dakika içinde sona erer.
         </AlertDescription>
       </Alert>
     );

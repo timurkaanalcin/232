@@ -1,15 +1,15 @@
 import type { Permission, RoleId } from "@/types";
 
-export const APP_NAME = "LiveTrack";
+export const APP_NAME = "CanlıSite";
 
 export const ADMIN_ROLES: RoleId[] = ["super_admin", "admin", "operator", "viewer"];
 
 export const ROLE_LABELS: Record<RoleId, string> = {
-  super_admin: "Super Admin",
+  super_admin: "Süper admin",
   admin: "Admin",
-  operator: "Operator",
-  viewer: "Viewer",
-  user: "User",
+  operator: "Operatör",
+  viewer: "İzleyici",
+  user: "Kullanıcı",
 };
 
 export const AUDIT_ACTIONS = {
@@ -29,10 +29,20 @@ export const AUDIT_ACTIONS = {
   ADMIN_USER_CREATED: "admin.user_created",
   ADMIN_USER_UPDATED: "admin.user_updated",
   ADMIN_ROLE_ASSIGNED: "admin.role_assigned",
+  ADMIN_RISK_EVENT_CREATED: "admin.risk_event_created",
+  ADMIN_RISK_EVENT_ACKNOWLEDGED: "admin.risk_event_acknowledged",
+  ADMIN_RISK_EVENT_RESOLVED: "admin.risk_event_resolved",
+  ADMIN_WALLET_CREATED: "admin.wallet_created",
+  ADMIN_WALLET_STATUS_CHANGED: "admin.wallet_status_changed",
+  ADMIN_WALLET_TRANSFER_CREATED: "admin.wallet_transfer_created",
+  ADMIN_WALLET_TRANSFER_REVERSED: "admin.wallet_transfer_reversed",
   DEVICE_REVOKED: "device.session_revoked",
+  DEVICES_REVOKED_OTHERS: "device.sessions_revoked_others",
   PROFILE_UPDATED: "profile.updated",
   DATA_EXPORTED: "privacy.data_exported",
   ACCOUNT_DELETED: "privacy.account_deleted",
+  PREFS_UPDATED: "privacy.preferences_updated",
+  LOCATION_HISTORY_DELETED: "privacy.location_history_deleted",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
@@ -47,6 +57,26 @@ export const NOTIFICATION_TYPES = {
   SECURITY_ALERT: "security.alert",
   DEVICE_REVOKED: "device.revoked",
 } as const;
+
+export type NotificationPrefKey = "notifySession" | "notifySecurity" | "notifyConsent";
+
+export function notificationPrefKeyForType(type: string): NotificationPrefKey | null {
+  switch (type) {
+    case NOTIFICATION_TYPES.SESSION_STARTED:
+    case NOTIFICATION_TYPES.SESSION_STOPPED:
+      return "notifySession";
+    case NOTIFICATION_TYPES.CONSENT_GRANTED:
+    case NOTIFICATION_TYPES.CONSENT_REVOKED:
+      return "notifyConsent";
+    case NOTIFICATION_TYPES.LOGIN:
+    case NOTIFICATION_TYPES.LOGOUT:
+    case NOTIFICATION_TYPES.SECURITY_ALERT:
+    case NOTIFICATION_TYPES.DEVICE_REVOKED:
+      return "notifySecurity";
+    default:
+      return null;
+  }
+}
 
 export const SECURITY_EVENT_TYPES = {
   LOGIN_FAILED: "auth.login_failed",
@@ -99,6 +129,10 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "users.manage",
     "roles.assign",
     "audit.view",
+    "risk.view",
+    "risk.manage",
+    "wallets.view",
+    "wallets.manage",
   ],
   admin: [
     "admin.access",
@@ -110,8 +144,20 @@ export const ROLE_PERMISSIONS: Record<RoleId, Permission[]> = {
     "users.create",
     "users.manage",
     "audit.view",
+    "risk.view",
+    "risk.manage",
+    "wallets.view",
+    "wallets.manage",
   ],
-  operator: ["admin.access", "stats.view", "map.live_view", "sessions.view", "sessions.manage"],
-  viewer: ["admin.access", "stats.view", "map.live_view", "sessions.view"],
+  operator: [
+    "admin.access",
+    "stats.view",
+    "map.live_view",
+    "sessions.view",
+    "sessions.manage",
+    "risk.view",
+    "wallets.view",
+  ],
+  viewer: ["admin.access", "stats.view", "map.live_view", "sessions.view", "risk.view", "wallets.view"],
   user: [],
 };

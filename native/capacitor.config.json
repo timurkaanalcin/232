@@ -1,0 +1,14 @@
+{
+  "appId": "com.canlisite.app",
+  "appName": "CanlıSite",
+  "webDir": "www",
+  "server": {
+    "url": "https://borsahatti.timurkaanalcin.workers.dev",
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0b1511"
+  }
+}

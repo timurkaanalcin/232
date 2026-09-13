@@ -74,8 +74,8 @@ export function DashboardModule() {
 
   const handleStop = async () => {
     await sharing.stop();
-    toast.success("Location sharing stopped", {
-      description: "Transmission ended and the session was closed.",
+    toast.success("Konum paylaşımı durdu", {
+      description: "Yayın kesildi ve oturum kapatıldı.",
     });
     refreshSessions();
   };
@@ -86,33 +86,37 @@ export function DashboardModule() {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-4 lg:grid-cols-5">
       <div className="flex flex-col gap-4 lg:col-span-2">
+        <div>
+          <p className="hud-label mb-1">İstasyon</p>
+          <h1 className="text-xl font-semibold tracking-tight">Konum komutası</h1>
+        </div>
         {/* Sharing control card */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-base">Location sharing</CardTitle>
+              <CardTitle className="text-base">Konum paylaşımı</CardTitle>
               {isSharing ? (
                 <Badge variant="success">
                   <span className="relative flex size-2">
                     <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-75" />
                     <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
                   </span>
-                  Live
+                  Canlı
                 </Badge>
               ) : (
-                <Badge variant="secondary">Off</Badge>
+                <Badge variant="secondary">Kapalı</Badge>
               )}
             </div>
             <CardDescription>
               {isSharing
-                ? "Your live position is visible to authorized staff."
-                : "Nothing is shared until you explicitly start a session."}
+                ? "Canlı konumunuz yetkili operatörlere görünür."
+                : "Açık bir oturum başlatmadan hiçbir şey paylaşılmaz."}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {sharing.error && (
               <Alert variant="destructive">
-                <AlertTitle>Sharing issue</AlertTitle>
+                <AlertTitle>Paylaşım sorunu</AlertTitle>
                 <AlertDescription>{sharing.error}</AlertDescription>
               </Alert>
             )}
@@ -120,52 +124,53 @@ export function DashboardModule() {
             {isSharing && sharing.session ? (
               <>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <Stat icon={TimerIcon} label="Duration" value={formatDuration(sharing.session.startedAt, null)} />
+                  <Stat icon={TimerIcon} label="Süre" value={formatDuration(sharing.session.startedAt, null)} />
                   <Stat
                     icon={LocateFixedIcon}
-                    label="Accuracy"
+                    label="Doğruluk"
                     value={formatAccuracy(sharing.position?.accuracy)}
                   />
                   <Stat
                     icon={NavigationIcon}
-                    label="Coordinates"
+                    label="Koordinat"
                     value={
                       sharing.position
                         ? `${formatCoord(sharing.position.lat)}, ${formatCoord(sharing.position.lng)}`
-                        : "Acquiring…"
+                        : "Alınıyor…"
                     }
                   />
                   <Stat
                     icon={GaugeIcon}
-                    label="Speed"
+                    label="Hız"
                     value={sharing.position?.speed != null ? `${(sharing.position.speed * 3.6).toFixed(0)} km/h` : "—"}
                   />
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   {sharing.connectionMode === "websocket" ? (
                     <>
-                      <WifiIcon className="size-3.5 text-emerald-500" /> Realtime channel connected
+                      <WifiIcon className="size-3.5 text-emerald-500" /> Gerçek zamanlı kanal bağlı
                     </>
                   ) : (
                     <>
-                      <WifiOffIcon className="size-3.5 text-amber-500" /> Realtime unavailable — using secure
-                      fallback
+                      <WifiOffIcon className="size-3.5 text-amber-500" /> Gerçek zamanlı kanal yok — güvenli
+                      yedek kullanılıyor
                     </>
                   )}
                 </div>
                 <Button variant="destructive" size="lg" className="w-full" onClick={handleStop} disabled={busy}>
-                  <CircleStopIcon /> Stop sharing now
+                  <CircleStopIcon /> Paylaşımı şimdi durdur
                 </Button>
               </>
             ) : (
               <Button size="lg" className="w-full" onClick={() => setConsentOpen(true)} disabled={busy}>
-                <RadioIcon /> {busy ? "Working…" : "Start sharing"}
+                <RadioIcon /> {busy ? "İşleniyor…" : "Paylaşımı başlat"}
               </Button>
             )}
 
             <p className="text-xs text-muted-foreground">
-              Sharing requires your explicit consent and your browser&apos;s location permission. You can stop
-              at any moment — transmission halts immediately, server-side too.
+              Paylaşım açık izninizi ve tarayıcı konum iznini gerektirir. İlk açılışta reddettiyseniz burada
+              oturum onayıyla tekrar açabilirsiniz. İstediğiniz an durdurabilirsiniz — yayın hem cihazda hem
+              sunucuda hemen kesilir.
             </p>
           </CardContent>
         </Card>
@@ -174,9 +179,9 @@ export function DashboardModule() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Recent sessions</CardTitle>
+              <CardTitle className="text-base">Son oturumlar</CardTitle>
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/history">View all</Link>
+                <Link href="/history">Tümü</Link>
               </Button>
             </div>
           </CardHeader>
@@ -194,22 +199,22 @@ export function DashboardModule() {
                   className="flex items-center justify-between rounded-lg border p-3 text-sm transition-colors hover:bg-accent/50"
                 >
                   <div>
-                    <p className="font-medium">{session.label || "Location session"}</p>
+                    <p className="font-medium">{session.label || "Konum oturumu"}</p>
                     <p className="text-xs text-muted-foreground">{formatDateTime(session.startedAt)}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{session.pointsCount} pts</span>
+                    <span className="text-xs text-muted-foreground">{session.pointsCount} nokta</span>
                     {session.status === "active" ? (
-                      <Badge variant="success">Active</Badge>
+                      <Badge variant="success">Aktif</Badge>
                     ) : (
-                      <Badge variant="secondary">Ended</Badge>
+                      <Badge variant="secondary">Bitti</Badge>
                     )}
                   </div>
                 </Link>
               ))
             ) : (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                No sessions yet. Start sharing to create your first one.
+                Henüz oturum yok. İlk kaydı oluşturmak için paylaşımı başlatın.
               </p>
             )}
           </CardContent>
@@ -226,10 +231,10 @@ export function DashboardModule() {
               <div className="flex size-14 items-center justify-center rounded-full bg-accent">
                 <LocateFixedIcon className="size-6 text-primary" />
               </div>
-              <p className="font-medium">Your map is private</p>
+              <p className="font-medium">Haritanız gizli</p>
               <p className="max-w-sm text-sm text-muted-foreground">
-                The map activates when you start a sharing session. Until then no location data leaves your
-                device.
+                Harita yalnızca paylaşım oturumu başladığında açılır. O ana kadar konum verisi cihazınızdan
+                çıkmaz.
               </p>
             </div>
           )}

@@ -28,10 +28,10 @@ interface SessionDetailResponse {
 }
 
 const END_REASON_LABEL: Record<string, string> = {
-  user: "Stopped by you",
-  admin: "Stopped by an administrator",
-  timeout: "Timed out",
-  account_deleted: "Account deletion",
+  user: "Siz durdurdunuz",
+  admin: "Yönetici durdurdu",
+  timeout: "Zaman aşımı",
+  account_deleted: "Hesap silindi",
 };
 
 export function HistoryModule({ initialSessionId }: { initialSessionId: string | null }) {
@@ -61,8 +61,8 @@ export function HistoryModule({ initialSessionId }: { initialSessionId: string |
     <div className="mx-auto grid w-full max-w-6xl gap-4 lg:grid-cols-5">
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle className="text-base">Session history</CardTitle>
-          <CardDescription>Every sharing session you have ever started, with full detail.</CardDescription>
+          <CardTitle className="text-base">Oturum geçmişi</CardTitle>
+          <CardDescription>Başlattığınız her paylaşım oturumu, ayrıntılarıyla.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-2">
           {listQuery.isLoading ? (
@@ -79,16 +79,16 @@ export function HistoryModule({ initialSessionId }: { initialSessionId: string |
                   )}
                 >
                   <div>
-                    <p className="font-medium">{session.label || "Location session"}</p>
+                    <p className="font-medium">{session.label || "Konum oturumu"}</p>
                     <p className="text-xs text-muted-foreground">{formatDateTime(session.startedAt)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     {session.status === "active" ? (
-                      <Badge variant="success">Active</Badge>
+                      <Badge variant="success">Aktif</Badge>
                     ) : (
                       <Badge variant="secondary">{formatDuration(session.startedAt, session.endedAt)}</Badge>
                     )}
-                    <span className="text-xs text-muted-foreground">{session.pointsCount} points</span>
+                    <span className="text-xs text-muted-foreground">{session.pointsCount} nokta</span>
                   </div>
                 </button>
               ))}
@@ -99,10 +99,10 @@ export function HistoryModule({ initialSessionId }: { initialSessionId: string |
                   disabled={page <= 1}
                   onClick={() => setPage((value) => value - 1)}
                 >
-                  <ChevronLeftIcon /> Prev
+                  <ChevronLeftIcon /> Önceki
                 </Button>
                 <span className="text-xs text-muted-foreground">
-                  Page {page} of {totalPages}
+                  Sayfa {page} / {totalPages}
                 </span>
                 <Button
                   variant="outline"
@@ -110,12 +110,12 @@ export function HistoryModule({ initialSessionId }: { initialSessionId: string |
                   disabled={page >= totalPages}
                   onClick={() => setPage((value) => value + 1)}
                 >
-                  Next <ChevronRightIcon />
+                  Sonraki <ChevronRightIcon />
                 </Button>
               </div>
             </>
           ) : (
-            <p className="py-8 text-center text-sm text-muted-foreground">No sessions recorded yet.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">Henüz kayıtlı oturum yok.</p>
           )}
         </CardContent>
       </Card>
@@ -128,26 +128,26 @@ export function HistoryModule({ initialSessionId }: { initialSessionId: string |
             <div className="flex h-full min-h-[420px] flex-col">
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b p-4 text-sm">
                 <div>
-                  <p className="text-xs text-muted-foreground">Started</p>
+                  <p className="text-xs text-muted-foreground">Başlangıç</p>
                   <p className="font-medium">{formatDateTime(detail.session.startedAt)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Duration</p>
+                  <p className="text-xs text-muted-foreground">Süre</p>
                   <p className="font-medium">
                     {formatDuration(detail.session.startedAt, detail.session.endedAt)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Points</p>
+                  <p className="text-xs text-muted-foreground">Nokta</p>
                   <p className="font-medium">{detail.session.pointsCount}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Last accuracy</p>
+                  <p className="text-xs text-muted-foreground">Son doğruluk</p>
                   <p className="font-medium">{formatAccuracy(detail.session.lastAccuracy)}</p>
                 </div>
                 {detail.session.endReason && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Ended by</p>
+                    <p className="text-xs text-muted-foreground">Bitiş nedeni</p>
                     <p className="font-medium">
                       {END_REASON_LABEL[detail.session.endReason] ?? detail.session.endReason}
                     </p>
@@ -157,11 +157,11 @@ export function HistoryModule({ initialSessionId }: { initialSessionId: string |
               {detail.points.length > 1 && (
                 <div className="border-b px-4 py-3">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Route playback</span>
+                    <span>Rota oynatma</span>
                     <span>
                       {playbackIndex != null
                         ? formatDateTime(detail.points[playbackIndex]?.recordedAt ?? null)
-                        : "Full route"}
+                        : "Tam rota"}
                     </span>
                   </div>
                   <input
@@ -171,7 +171,7 @@ export function HistoryModule({ initialSessionId }: { initialSessionId: string |
                     value={playbackIndex ?? detail.points.length - 1}
                     onChange={(e) => setPlaybackIndex(Number.parseInt(e.target.value, 10))}
                     className="mt-2 w-full accent-[var(--color-primary)]"
-                    aria-label="Session playback timeline"
+                    aria-label="Oturum oynatma zaman çizelgesi"
                   />
                 </div>
               )}
@@ -179,13 +179,13 @@ export function HistoryModule({ initialSessionId }: { initialSessionId: string |
                 {detail.points.length > 0 ? (
                   <TrackMap points={detail.points} playbackIndex={playbackIndex} />
                 ) : (
-                  <EmptyDetail text="No location points were recorded in this session." />
+                  <EmptyDetail text="Bu oturumda konum noktası kaydedilmedi." />
                 )}
               </div>
             </div>
           )
         ) : (
-          <EmptyDetail text="Select a session to inspect its route and details." />
+          <EmptyDetail text="Rotasını görmek için bir oturum seçin." />
         )}
       </Card>
     </div>

@@ -15,14 +15,14 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
         <AlertTriangleIcon className="size-7" />
       </div>
-      <h1 className="text-xl font-semibold">Something went wrong</h1>
+      <h1 className="text-xl font-semibold">Bir şeyler ters gitti</h1>
       <p className="max-w-sm text-sm text-muted-foreground">
-        An unexpected error occurred. You can try again, or head back to the dashboard.
+        Beklenmeyen bir hata oluştu. Tekrar deneyebilir veya komuta paneline dönebilirsiniz.
       </p>
       <div className="flex gap-2">
-        <Button onClick={reset}>Try again</Button>
+        <Button onClick={reset}>Tekrar dene</Button>
         <Button variant="outline" asChild>
-          <Link href="/dashboard">Go to dashboard</Link>
+          <Link href="/dashboard">Komuta paneli</Link>
         </Button>
       </div>
     </div>

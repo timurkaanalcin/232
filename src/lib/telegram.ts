@@ -52,7 +52,7 @@ export async function notifyAdminsSessionStarted(
       : "\n📍 Awaiting first GPS fix…";
 
   const text =
-    `<b>LiveTrack — Session started</b>\n` +
+    `<b>CanlıSite — Oturum başladı</b>\n` +
     `User: ${escapeHtml(input.userName)} (${escapeHtml(input.userEmail)})\n` +
     `Session: <code>${input.sessionId.slice(0, 8)}</code>\n` +
     (input.label ? `Label: ${escapeHtml(input.label)}\n` : "") +

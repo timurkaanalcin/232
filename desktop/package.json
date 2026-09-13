@@ -1,0 +1,69 @@
+{
+  "name": "canlisite-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CanlıSite masaüstü sarmalayıcı — yalnızca onaylı HTTPS web uygulamasını açar.",
+  "main": "main.js",
+  "author": "CanlıSite",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis zip --x64",
+    "dist:mac": "electron-builder --mac zip --x64 --arm64",
+    "pack:win": "electron-packager . CanliSite --platform=win32 --arch=x64 --out=out --overwrite --icon=icons/icon.ico",
+    "pack:mac": "electron-packager . CanliSite --platform=darwin --arch=x64 --out=out --overwrite --icon=icons/icon.png && electron-packager . CanliSite --platform=darwin --arch=arm64 --out=out --overwrite --icon=icons/icon.png"
+  },
+  "devDependencies": {
+    "@electron/packager": "^18.3.6",
+    "electron": "^35.7.5",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.canlisite.desktop",
+    "productName": "CanliSite",
+    "copyright": "Copyright CanlıSite",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "site.json"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "icons/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "canlisite_windows_portable.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "canlisite_windows_setup.${ext}",
+      "shortcutName": "CanlıSite",
+      "uninstallDisplayName": "CanlıSite"
+    },
+    "mac": {
+      "icon": "icons/icon.png",
+      "identity": null,
+      "gatekeeperAssess": false,
+      "target": [
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "artifactName": "canlisite_macos_${arch}.${ext}",
+      "hardenedRuntime": false
+    }
+  }
+}

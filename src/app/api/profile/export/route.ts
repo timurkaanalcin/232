@@ -20,7 +20,7 @@ export const GET = apiHandler(async () => {
 
   return jsonOk(data, {
     headers: {
-      "Content-Disposition": `attachment; filename="livetrack-export-${Date.now()}.json"`,
+      "Content-Disposition": `attachment; filename="canlisite-export-${Date.now()}.json"`,
       "Cache-Control": "no-store",
     },
   });

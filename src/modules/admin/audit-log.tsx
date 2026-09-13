@@ -36,7 +36,8 @@ export function AuditLogModule() {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Audit logs</h1>
+        <p className="hud-label mb-1">Kayıt</p>
+        <h1 className="text-xl font-semibold tracking-tight">Audit kayıtları</h1>
         <p className="text-sm text-muted-foreground">
           Append-only record of every security and location event in the system.
         </p>

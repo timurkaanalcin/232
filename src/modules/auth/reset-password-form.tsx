@@ -13,9 +13,9 @@ import { apiPost, ClientApiError } from "@/lib/client-api";
 import { cn } from "@/lib/utils";
 
 const RULES = [
-  { test: (v: string) => v.length >= 10, label: "At least 10 characters" },
-  { test: (v: string) => /[a-z]/.test(v) && /[A-Z]/.test(v), label: "Upper and lower case" },
-  { test: (v: string) => /[0-9]/.test(v), label: "At least one digit" },
+  { test: (v: string) => v.length >= 10, label: "En az 10 karakter" },
+  { test: (v: string) => /[a-z]/.test(v) && /[A-Z]/.test(v), label: "Büyük ve küçük harf" },
+  { test: (v: string) => /[0-9]/.test(v), label: "En az bir rakam" },
 ];
 
 export function ResetPasswordForm({ token }: { token: string | null }) {
@@ -30,11 +30,11 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
     return (
       <Alert variant="destructive">
         <AlertDescription>
-          This reset link is missing its token. Please request a new link from the{" "}
+          Bu sıfırlama bağlantısında jeton yok.{" "}
           <Link href="/forgot-password" className="underline">
-            forgot password
+            Şifremi unuttum
           </Link>{" "}
-          page.
+          sayfasından yeni bir bağlantı isteyin.
         </AlertDescription>
       </Alert>
     );
@@ -46,10 +46,10 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
     setLoading(true);
     try {
       await apiPost("/api/auth/password/reset", { token, password });
-      toast.success("Password updated", { description: "You can now sign in with your new password." });
+      toast.success("Şifre güncellendi", { description: "Yeni şifrenizle giriş yapabilirsiniz." });
       router.push("/login");
     } catch (resetError) {
-      setError(resetError instanceof ClientApiError ? resetError.message : "Could not reset password.");
+      setError(resetError instanceof ClientApiError ? resetError.message : "Şifre sıfırlanamadı.");
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
         </Alert>
       )}
       <div className="grid gap-2">
-        <Label htmlFor="password">New password</Label>
+        <Label htmlFor="password">Yeni şifre</Label>
         <Input
           id="password"
           type="password"
@@ -88,7 +88,7 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
       </div>
       <Button type="submit" disabled={loading || !valid} className="w-full">
         {loading && <Loader2Icon className="animate-spin" />}
-        Reset password
+        Şifreyi sıfırla
       </Button>
     </form>
   );

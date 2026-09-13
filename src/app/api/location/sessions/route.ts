@@ -5,11 +5,13 @@ import { notifyAdminsSessionStarted } from "@/lib/telegram";
 import { createNotification } from "@/services/notifications";
 import { paginationSchema, startLocationSessionSchema } from "@/lib/validators";
 import {
+  applyLocationRetention,
   getActiveSessionForUser,
   listSessionsForUser,
   startLocationSession,
   toLocationSessionDTO,
 } from "@/services/location-sessions";
+import { getPrivacyPrefs } from "@/services/privacy-prefs";
 
 /** Session history + currently active session for the signed-in user. */
 export const GET = apiHandler(async (request: Request) => {
@@ -19,6 +21,11 @@ export const GET = apiHandler(async (request: Request) => {
     page: url.searchParams.get("page") ?? undefined,
     pageSize: url.searchParams.get("pageSize") ?? undefined,
   });
+
+  const prefs = await getPrivacyPrefs(db, user.id);
+  if (prefs.locationRetentionDays > 0) {
+    await applyLocationRetention(db, user.id, prefs.locationRetentionDays);
+  }
 
   const [history, active] = await Promise.all([
     listSessionsForUser(db, user.id, page, pageSize),

@@ -28,7 +28,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
     const result = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (result?.error) {
-      setError("Invalid email or password.");
+      setError("E-posta veya şifre hatalı.");
       return;
     }
     router.push(callbackUrl);
@@ -43,7 +43,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           <div className="relative">
             <Separator />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">
-              or
+              veya
             </span>
           </div>
         </>
@@ -68,9 +68,9 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         </div>
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Şifre</Label>
             <Link href="/forgot-password" className="text-xs text-primary hover:underline">
-              Forgot password?
+              Şifremi unuttum
             </Link>
           </div>
           <Input
@@ -84,7 +84,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         </div>
         <Button type="submit" disabled={loading} className="w-full">
           {loading && <Loader2Icon className="animate-spin" />}
-          Sign in
+          Giriş yap
         </Button>
       </form>
     </div>

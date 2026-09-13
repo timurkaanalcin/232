@@ -82,7 +82,7 @@ export function LiveMapModule() {
       </div>
 
       {/* Alt bilgi — sadece konum / adres */}
-      <div className="absolute inset-x-0 bottom-0 z-[1000] border-t bg-background/95 p-4 shadow-lg backdrop-blur">
+      <div className="absolute inset-x-0 bottom-0 z-[1000] border-t border-primary/20 bg-background/90 p-4 shadow-[0_-12px_40px_rgb(0_0_0/0.35)] backdrop-blur">
         {snapshotLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-5 w-3/4" />
@@ -109,7 +109,7 @@ export function LiveMapModule() {
                     onClick={() => setSelectedId(s.session.id)}
                     className={`shrink-0 rounded-full border px-3 py-1 text-xs transition-colors ${
                       active.session.id === s.session.id
-                        ? "border-amber-500 bg-amber-500/10 text-amber-700"
+                        ? "border-primary bg-primary/15 text-primary"
                         : "bg-muted text-muted-foreground hover:bg-accent"
                     }`}
                   >

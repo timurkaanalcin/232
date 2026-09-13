@@ -161,6 +161,28 @@ export interface PersistPositionInput {
   recordedAt: number;
 }
 
+export async function applyLocationRetention(
+  db: D1Database,
+  userId: string,
+  retentionDays: number,
+): Promise<number> {
+  if (retentionDays <= 0) return 0;
+  const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+  const result = await db
+    .prepare(`DELETE FROM location_sessions WHERE user_id = ? AND status = 'ended' AND started_at < ?`)
+    .bind(userId, cutoff)
+    .run();
+  return result.meta.changes ?? 0;
+}
+
+export async function deleteEndedLocationHistory(db: D1Database, userId: string): Promise<number> {
+  const result = await db
+    .prepare(`DELETE FROM location_sessions WHERE user_id = ? AND status = 'ended'`)
+    .bind(userId)
+    .run();
+  return result.meta.changes ?? 0;
+}
+
 /** Atomically inserts a location point and refreshes the session summary. */
 export async function persistPosition(db: D1Database, input: PersistPositionInput): Promise<void> {
   const now = Date.now();

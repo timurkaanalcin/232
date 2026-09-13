@@ -1,2 +1,6 @@
 # Local Netlify folder
 .netlify
+
+# Local GGUF + llama.cpp binaries
+local/models/*.gguf
+local/llama/

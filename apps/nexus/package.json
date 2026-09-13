@@ -6,6 +6,7 @@
   "description": "Nexus — live AI model pool chat",
   "scripts": {
     "dev": "vite",
+    "llama": "bash scripts/start-llama.sh",
     "build": "tsc -p tsconfig.app.json --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",

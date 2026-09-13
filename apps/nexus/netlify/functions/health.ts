@@ -1,11 +1,13 @@
 import type { Config } from "@netlify/functions";
-import { gatewayReady } from "./_shared/env";
+import { engineReady } from "../../src/lib/local-engine";
 
 export default async () =>
   Response.json({
     ok: true,
     service: "nexus",
-    gatewayReady: gatewayReady(),
+    engine: "gguf-local",
+    gatewayReady: await engineReady(),
+    cloud: false,
   });
 
 export const config: Config = {

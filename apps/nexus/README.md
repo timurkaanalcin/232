@@ -12,7 +12,13 @@ npm run dev
 
 Open http://localhost:5173
 
-Chat streams through Netlify Functions. Real provider replies need one production deploy on Netlify with AI Features enabled (the gateway injects keys after that). Until then, the UI stays fully usable and returns a local preview stream.
+Chat is **local GGUF only** — no cloud AI. Every featured slot (Claude / GPT / Gemini / Grok / Kimi / GLM / Composer / Muse) talks to a local Dolphin 3 uncensored Llama 3.2 3B GGUF via llama.cpp. These are not vendor weights; those are not published as GGUF.
+
+```bash
+bash scripts/setup-gguf.sh   # once: llama.cpp + ~2GB GGUF
+npm run llama                # local engine on :8088
+npm run dev                  # UI on :5173
+```
 
 ## Deploy
 

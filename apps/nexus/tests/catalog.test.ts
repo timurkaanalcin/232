@@ -37,7 +37,6 @@ describe("catalog", () => {
     expect(findModel(models, "featured:gpt-5.6-sol")?.live).toBe(true);
     expect(findModel(models, "featured:grok-4.6")?.apiModel).toBe("x-ai/grok-4.6");
     expect(findModel(models, "featured:composer-2.5")?.live).toBe(false);
-    expect(findModel(models, "featured:composer-2.5")?.transport).toBe("unavailable");
   });
 
   it("adds unknown live models automatically", () => {

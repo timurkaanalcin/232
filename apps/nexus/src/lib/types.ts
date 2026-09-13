@@ -62,6 +62,11 @@ export type PoolModel = {
 
 export type ChatRole = "system" | "user" | "assistant";
 
+export type IncomingMessage = {
+  role: ChatRole;
+  content: string;
+};
+
 export type ChatMessage = {
   id: string;
   role: Exclude<ChatRole, "system">;

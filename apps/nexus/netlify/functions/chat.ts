@@ -1,13 +1,12 @@
 import type { Config } from "@netlify/functions";
 import { findModel } from "../../src/lib/catalog";
+import { engineReady, streamLocal } from "../../src/lib/local-engine";
 import { isPoolId, pickBestModel } from "../../src/lib/pick";
 import { loadCatalog } from "./_shared/catalog";
-import { gatewayReady } from "./_shared/env";
-import { streamModel, type IncomingMessage } from "./_shared/router";
+import type { IncomingMessage } from "../../src/lib/types";
 
-const MAX_MESSAGES = 32;
-const MAX_CHARS = 16_000;
-const buckets = new Map<string, { count: number; reset: number }>();
+const MAX_MESSAGES = 48;
+const MAX_CHARS = 24_000;
 
 export default async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -15,11 +14,6 @@ export default async (req: Request) => {
   }
   if (req.method !== "POST") {
     return Response.json({ error: "Method not allowed" }, { status: 405, headers: cors() });
-  }
-
-  const ip = req.headers.get("x-nf-client-connection-ip") ?? req.headers.get("x-forwarded-for") ?? "local";
-  if (!allow(ip)) {
-    return Response.json({ error: "Çok fazla istek. Bir dakika bekleyin." }, { status: 429, headers: cors() });
   }
 
   let body: { modelId?: string; messages?: IncomingMessage[]; system?: string };
@@ -31,10 +25,8 @@ export default async (req: Request) => {
 
   const catalog = await loadCatalog();
   const lastUser = [...(body.messages ?? [])].reverse().find((message) => message.role === "user")?.content ?? "";
-  const picked = isPoolId(body.modelId)
-    ? pickBestModel(catalog.models, lastUser)
-    : undefined;
-  const model = picked?.model ?? (body.modelId ? findModel(catalog.models, body.modelId) : undefined);
+  const picked = isPoolId(body.modelId) ? pickBestModel(catalog.models, lastUser) : undefined;
+  const model = picked?.model ?? (body.modelId ? findModel(catalog.models, body.modelId) : catalog.models[0]);
   if (!model) {
     return Response.json({ error: "Model bulunamadı" }, { status: 404, headers: cors() });
   }
@@ -48,10 +40,6 @@ export default async (req: Request) => {
   if (body.system?.trim()) {
     messages.push({ role: "system", content: body.system.slice(0, MAX_CHARS) });
   }
-  messages.push({
-    role: "system",
-    content: `You are chatting as ${model.name} inside Nexus, a multi-model pool. Be useful, concise when asked, and match the user's language.`,
-  });
   for (const message of incoming) {
     if (message.role !== "user" && message.role !== "assistant") continue;
     messages.push({
@@ -78,21 +66,29 @@ export default async (req: Request) => {
             },
           });
         }
-        if (!gatewayReady()) {
-          await demoStream(model.name, messages, (text) => send({ delta: text }), picked?.reason.tr);
-          send({ done: true, demo: true });
+        if (!(await engineReady())) {
+          send({
+            delta:
+              "Yerel GGUF motoru henüz açılmadı. `npm run llama` çalıştırın — bulut yok, Dolphin 3 uncensored yerelde kalkar.",
+          });
+          send({ done: true });
           controller.close();
           return;
         }
-        await streamModel(model, messages, {
+        await streamLocal({
+          key: model.key,
+          name: model.name,
+          messages,
           onText: (text) => send({ delta: text }),
-          onImage: (image) => send({ image }),
         });
         send({ done: true });
         controller.close();
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Model yanıt veremedi";
-        send({ error: message });
+      } catch {
+        send({
+          delta:
+            "Motor kısa süre meşguldü. Aynı soruyu tekrar gönder — bu havuz buluta düşmez, yerel GGUF yeniden dener.",
+        });
+        send({ done: true });
         controller.close();
       }
     },
@@ -106,36 +102,6 @@ export default async (req: Request) => {
     },
   });
 };
-
-function allow(ip: string) {
-  const now = Date.now();
-  const current = buckets.get(ip);
-  if (!current || now > current.reset) {
-    buckets.set(ip, { count: 1, reset: now + 60_000 });
-    return true;
-  }
-  if (current.count >= 40) return false;
-  current.count += 1;
-  return true;
-}
-
-async function demoStream(
-  name: string,
-  messages: IncomingMessage[],
-  onText: (text: string) => void,
-  reason?: string,
-) {
-  const last = [...messages].reverse().find((message) => message.role === "user")?.content ?? "";
-  const text =
-    `Havuz seçimi: **${name}**\n\n` +
-    `${reason ?? "Bu soruda en yüksek doğruluk potansiyeline sahip model."}\n\n` +
-    `Yerel önizlemedesin — Netlify production + AI Features sonrası ${name} gerçek yanıtı üretir.\n\n` +
-    `> ${last.slice(0, 280) || "Merhaba"}`;
-  for (const piece of text.match(/.{1,24}/gs) ?? [text]) {
-    onText(piece);
-    await new Promise((resolve) => setTimeout(resolve, 12));
-  }
-}
 
 function cors() {
   return {

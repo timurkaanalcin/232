@@ -74,11 +74,11 @@ UI tam küratör listeyi gösterir. Çağrı yalnızca gateway’in gerçekten s
 
 ## Masaüstü ve Android
 
-Kurulum dosyaları GitHub Actions `Havuz clients` işinden üretilir (imzasız):
+Kurulum dosyaları GitHub Actions `Havuz clients` işinden üretilir (imzasız). Başarılı koşu: [34786783654](https://github.com/timurkaanalcin/232/actions/runs/34786783654)
 
-- Windows: Electron NSIS `.exe`
-- macOS: Electron `.dmg` (Gatekeeper: sağ tık → Aç)
-- Android: Capacitor debug `.apk` (bilinmeyen kaynaklardan yükleme)
+- Windows: artifact `havuz-windows` → `Havuz-Setup-1.0.0.exe` (SmartScreen: Ek bilgi → Yine de çalıştır)
+- macOS: artifact `havuz-macos` → `Havuz-1.0.0.dmg` (Gatekeeper: sağ tık → Aç)
+- Android: artifact `havuz-android` → debug `.apk` (bilinmeyen kaynaklardan yükleme)
 
 Paketli istemciler gömülü arayüzü açar. Gerçek model yanıtları için Ayarlar → **Sunucu adresi** alanına Netlify production URL’sini yazın (`VITE_HAVUZ_API_BASE` veya `HAVUZ_SITE_URL` ile de verilebilir). İlk production deploy + AI Features şarttır. İmzalı store paketleri için sır yok; CI imzasız üretir.
 

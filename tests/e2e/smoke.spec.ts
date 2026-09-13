@@ -107,7 +107,7 @@ test.describe("public surface", () => {
     await page.goto("/forgot-password");
     await page.getByLabel("Email").fill("nobody@example.com");
     await page.getByRole("button", { name: /send reset link/i }).click();
-    await expect(page.getByText(/a password reset link is on its way/i })).toBeVisible();
+    await expect(page.getByText(/a password reset link is on its way/i)).toBeVisible();
   });
 
   test("privacy notice is public and consent-first", async ({ page }) => {

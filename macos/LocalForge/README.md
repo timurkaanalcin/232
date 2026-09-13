@@ -1,51 +1,38 @@
-# LocalForge
+# LocalForge 1.3.0
 
-Independent macOS folder workspace with optional **Grok** assist via the official **xAI API**.
+Independent macOS folder workspace. Chat with **Grok** (xAI) using **your** key.
 
-This is **not Cursor**: no Cursor login, no Cursor models gateway, no Cursor agent protocol, and no cloned Cursor UI. Branding is original (warm paper / copper atelier).
+This is **not Cursor**. No Cursor APIs, login, or UI clone.
 
-This Linux/cloud environment **cannot** compile a working Mac `.app` or `.pkg`. Do not expect a prebuilt installer in git. Build on a Mac.
+This Linux/cloud environment **cannot** compile a Mac `.app` / `.pkg`. Build on a Mac.
 
 ---
 
-## English
+## What you do (only this)
 
-### What it is
+1. **Create or sign in** at [https://console.x.ai](https://console.x.ai) (in the app: **Üye ol / anahtar al**).
+2. **Paste the API key once** into LocalForge (saved in Keychain).
 
-Open a folder, browse and filter files, edit UTF-8 text, run a local shell command, and optionally chat with Grok. Grok can attach the current file and/or the editor selection as context.
+Then chat. Open file and editor selection are attached automatically — no extra toggles.
 
-### What it is not
+If `XAI_API_KEY` is already in the environment or `~/.localforge.env` exists, onboarding is skipped and chat opens.
 
-- Not Cursor (no Cursor name, logo, Agent sidebar, Composer, or Cursor model picker)
-- Not a Cursor pirate / unofficial license
-- Chat goes only to `https://api.x.ai/v1/chat/completions` with **your** key
+Never commit the key. Ignore any key pasted in chat history.
 
-### Requirements
+---
 
-- macOS 14+
-- Xcode Command Line Tools: `xcode-select --install`
-- An xAI API key from [https://console.x.ai](https://console.x.ai)
+## Yapmanız gerekenler (yalnızca bunlar)
 
-### Set `XAI_API_KEY` (never commit it)
+1. [https://console.x.ai](https://console.x.ai) üzerinde **üye olun / giriş yapın** (uygulamada **Üye ol / anahtar al**).
+2. API anahtarını **bir kez yapıştırın** (Keychain).
 
-Pick one:
+Sonra Grok ile sohbet. Açık dosya ve seçim otomatik eklenir.
 
-1. **In the app (Keychain):** Grok menu → **xAI API Key…**, paste the key, **Save to Keychain**.
-2. **Environment:** `export XAI_API_KEY="xai-..."` then launch LocalForge from that shell.
-3. **Local file (outside git):** `~/.localforge.env` or `~/Library/Application Support/LocalForge/.env` with:
+`XAI_API_KEY` veya `~/.localforge.env` zaten varsa kurulum atlanır.
 
-```
-XAI_API_KEY=xai-...
-```
+---
 
-### Chat with Grok
-
-1. Show the Grok panel (⌘L) if it is hidden.
-2. Optionally tick **Attach current file** and/or **Attach selection**.
-3. Type a question and press **Send** (or ⌘↩).
-4. Default model is `grok-4.6` (documented on xAI Chat Completions). Change it in Settings if your account uses another public id (`grok-3`, `grok-2`, …).
-
-### Build the `.pkg` (Mac only)
+## Build the `.pkg` (Mac only)
 
 ```bash
 cd macos/LocalForge
@@ -53,68 +40,18 @@ chmod +x scripts/build-pkg.sh
 ./scripts/build-pkg.sh
 ```
 
-Output:
-
-- `dist/LocalForge.app`
-- `dist/LocalForge-1.2.0.pkg`
-
-Install: double-click the `.pkg`, or:
+Output: `dist/LocalForge.app` and `dist/LocalForge-1.3.0.pkg`.
 
 ```bash
-sudo installer -pkg dist/LocalForge-1.2.0.pkg -target /
+sudo installer -pkg dist/LocalForge-1.3.0.pkg -target /
 ```
 
-The script **exits with an error on Linux**. The package is unsigned; macOS Gatekeeper may require allowing it under System Settings → Privacy & Security.
-
-### Features
-
-- Open a project folder (⌘O)
-- File tree with search/filter (⌘F)
-- UTF-8 editor, save (⌘S), unsaved-change warning (including quit)
-- New file (⌘N), refresh tree (⇧⌘R), reveal in Finder (⌥⌘R)
-- Command console in the project folder (⌘R run, ⌘. stop, ⌘J show/hide)
-- Grok assist panel (⌘L) via official xAI API
-- Status bar: path, dirty state, line/char counts, encoding, last exit code
+The script **exits with an error on Linux**. The package is unsigned; Gatekeeper may ask you to allow it under System Settings → Privacy & Security.
 
 ---
 
-## Türkçe
+## Optional (not required to chat)
 
-### Nedir
-
-Yerel klasör çalışma alanı: dosya ağacı, UTF-8 düzenleme, kabuk komutu ve isteğe bağlı **Grok** yardımı. Grok, açık dosyayı veya seçili metni bağlama olarak gönderebilir.
-
-### Ne değildir
-
-- **Cursor değildir** (Cursor girişi, modeller ağ geçidi, ajan protokolü yok)
-- Cursor kopyası / lisans ihlali değildir
-- Sohbet yalnızca resmi xAI uç noktasına, sizin anahtarınızla gider
-
-### Gereksinimler
-
-- macOS 14+
-- Xcode Command Line Tools: `xcode-select --install`
-- [https://console.x.ai](https://console.x.ai) adresinden xAI API anahtarı
-
-### `XAI_API_KEY` ayarı (repoya koymayın)
-
-1. **Uygulama (Keychain):** Grok menüsü → **xAI API Key…** → yapıştırın → **Save to Keychain**.
-2. **Ortam değişkeni:** `export XAI_API_KEY="xai-..."`
-3. **Yerel dosya:** `~/.localforge.env` veya `~/Library/Application Support/LocalForge/.env` içinde `XAI_API_KEY=...`
-
-### Grok ile sohbet
-
-1. Grok panelini açın (⌘L).
-2. İsterseniz açık dosyayı ve/veya seçimi ekleyin.
-3. Soruyu yazıp **Send** / ⌘↩.
-4. Varsayılan model `grok-4.6`. Hesabınız başka bir genel kimlik kullanıyorsa Ayarlar’dan değiştirin.
-
-### `.pkg` derleme (yalnızca Mac)
-
-```bash
-cd macos/LocalForge
-chmod +x scripts/build-pkg.sh
-./scripts/build-pkg.sh
-```
-
-Çıktı: `dist/LocalForge.app` ve `dist/LocalForge-1.2.0.pkg`. Betik **Linux’ta hata verip çıkar**.
+- Open a folder (⌘O), edit UTF-8 files, run a local command.
+- Other Grok model ids appear in the panel if your xAI account lists them.
+- Alternative key locations: `export XAI_API_KEY=...` or `~/.localforge.env` with `XAI_API_KEY=...`.

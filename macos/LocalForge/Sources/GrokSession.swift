@@ -1,19 +1,28 @@
+import AppKit
 import Foundation
 import SwiftUI
 
 @MainActor
 final class GrokSession: ObservableObject {
+    static let consoleURL = URL(string: "https://console.x.ai")!
+
     @Published var messages: [GrokClient.ChatMessage] = []
     @Published var draft: String = ""
     @Published var isSending = false
     @Published var lastError: String?
     @Published var showPanel: Bool
+    /// Always attach the open file when one exists — no extra toggle required to chat.
     @Published var includeFile: Bool
+    /// Always attach a non-empty editor selection — no extra toggle required to chat.
     @Published var includeSelection: Bool
     @Published var model: String
+    @Published var availableModels: [String]
     @Published var keyField: String = ""
     @Published var showSettings = false
+    @Published var showOnboarding = false
     @Published var keyStatus: String
+    @Published var hasKey: Bool
+    @Published var composerFocusToken: Int = 0
 
     private let defaults = UserDefaults.standard
     private let modelKey = "localforge.grok.model"
@@ -24,13 +33,30 @@ final class GrokSession: ObservableObject {
     init() {
         let storedModel = UserDefaults.standard.string(forKey: "localforge.grok.model")?.trimmingCharacters(in: .whitespacesAndNewlines)
         model = (storedModel?.isEmpty == false) ? storedModel! : GrokClient.defaultModel
+        availableModels = [GrokClient.defaultModel]
         showPanel = UserDefaults.standard.object(forKey: "localforge.grok.showPanel") as? Bool ?? true
         includeFile = UserDefaults.standard.object(forKey: "localforge.grok.includeFile") as? Bool ?? true
         includeSelection = UserDefaults.standard.object(forKey: "localforge.grok.includeSelection") as? Bool ?? true
+        hasKey = GrokSecrets.hasStoredKey()
         keyStatus = GrokSecrets.keySourceDescription()
     }
 
+    func bootstrapFirstLaunch() {
+        refreshKeyStatus()
+        showPanel = true
+        persistPreferences()
+        if hasKey {
+            showOnboarding = false
+            requestComposerFocus()
+            Task { await refreshModels() }
+        } else {
+            showOnboarding = true
+            showSettings = false
+        }
+    }
+
     func refreshKeyStatus() {
+        hasKey = GrokSecrets.hasStoredKey()
         keyStatus = GrokSecrets.keySourceDescription()
     }
 
@@ -41,16 +67,44 @@ final class GrokSession: ObservableObject {
         defaults.set(includeSelection, forKey: selectionKey)
     }
 
+    func requestComposerFocus() {
+        composerFocusToken += 1
+        NotificationCenter.default.post(name: .localForgeFocusGrokComposer, object: nil)
+    }
+
+    func openXAIConsole() {
+        NSWorkspace.shared.open(Self.consoleURL)
+    }
+
     func saveAPIKeyFromField() throws {
-        try GrokSecrets.saveToKeychain(keyField)
+        let trimmed = keyField.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            lastError = "Paste your xAI API key first."
+            return
+        }
+        try GrokSecrets.saveToKeychain(trimmed)
         keyField = ""
+        lastError = nil
         refreshKeyStatus()
+    }
+
+    func finishOnboarding() throws {
+        try saveAPIKeyFromField()
+        guard hasKey else { return }
+        showOnboarding = false
+        showPanel = true
+        persistPreferences()
+        requestComposerFocus()
+        Task { await refreshModels() }
     }
 
     func clearAPIKey() {
         GrokSecrets.deleteFromKeychain()
         keyField = ""
         refreshKeyStatus()
+        if !hasKey {
+            showOnboarding = true
+        }
     }
 
     func clearChat() {
@@ -58,13 +112,33 @@ final class GrokSession: ObservableObject {
         lastError = nil
     }
 
+    func refreshModels() async {
+        guard let apiKey = GrokSecrets.resolvedAPIKey(), !apiKey.isEmpty else { return }
+        do {
+            let ids = try await GrokClient.listModels(apiKey: apiKey)
+            let grokIds = ids
+                .filter { $0.localizedCaseInsensitiveContains("grok") }
+                .sorted()
+            guard !grokIds.isEmpty else { return }
+            availableModels = grokIds
+            if !grokIds.contains(model) {
+                model = grokIds.contains(GrokClient.defaultModel)
+                    ? GrokClient.defaultModel
+                    : grokIds[0]
+                persistPreferences()
+            }
+        } catch {
+            // Chat still works with the default / last-used model id.
+        }
+    }
+
     func send(filePath: String?, fileText: String?, selection: String?) {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         guard !isSending else { return }
         guard let apiKey = GrokSecrets.resolvedAPIKey(), !apiKey.isEmpty else {
-            lastError = "Set XAI_API_KEY in Settings (Keychain), environment, or ~/.localforge.env."
-            showSettings = true
+            lastError = "xAI anahtarı yok. Üye olun, yapıştırın, sohbete başlayın."
+            showOnboarding = true
             return
         }
 
@@ -103,6 +177,7 @@ final class GrokSession: ObservableObject {
                 ))
             }
             isSending = false
+            requestComposerFocus()
         }
     }
 

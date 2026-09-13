@@ -78,6 +78,12 @@ struct LocalForgeApp: App {
                 .disabled(!workspace.isRunning)
             }
             CommandMenu("Grok") {
+                Button("Üye ol / anahtar al") {
+                    grok.openXAIConsole()
+                    if !grok.hasKey {
+                        grok.showOnboarding = true
+                    }
+                }
                 Button("xAI API Key…") {
                     grok.refreshKeyStatus()
                     grok.showSettings = true
@@ -87,8 +93,8 @@ struct LocalForgeApp: App {
                     grok.clearChat()
                 }
                 Divider()
-                Toggle("Attach Current File", isOn: $grok.includeFile)
-                Toggle("Attach Selection", isOn: $grok.includeSelection)
+                Toggle("Attach Current File Automatically", isOn: $grok.includeFile)
+                Toggle("Attach Selection Automatically", isOn: $grok.includeSelection)
             }
         }
     }

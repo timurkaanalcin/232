@@ -29,6 +29,14 @@ struct RootView: View {
         .onChange(of: grok.includeFile) { _, _ in grok.persistPreferences() }
         .onChange(of: grok.includeSelection) { _, _ in grok.persistPreferences() }
         .onChange(of: grok.showPanel) { _, _ in grok.persistPreferences() }
+        .onAppear {
+            grok.bootstrapFirstLaunch()
+        }
+        .sheet(isPresented: $grok.showOnboarding) {
+            GrokOnboardingSheet()
+                .environmentObject(grok)
+                .interactiveDismissDisabled(!grok.hasKey)
+        }
         .sheet(isPresented: $grok.showSettings) {
             GrokSettingsSheet()
                 .environmentObject(grok)
@@ -136,6 +144,7 @@ struct RootView: View {
 
 struct WelcomeView: View {
     @EnvironmentObject private var workspace: WorkspaceModel
+    @EnvironmentObject private var grok: GrokSession
 
     var body: some View {
         VStack(spacing: 18) {
@@ -146,16 +155,20 @@ struct WelcomeView: View {
             Text("LocalForge")
                 .font(.system(size: 32, weight: .semibold, design: .serif))
                 .foregroundStyle(ForgeTheme.ink)
-            Text("An independent folder workspace with a Grok assist panel.\nTalks only to xAI with your own key — not Cursor.")
+            Text("Sign in at xAI, paste the key once, chat with Grok.\nFolder tools are optional — the chat panel is already open.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(ForgeTheme.muted)
                 .frame(maxWidth: 460)
-            Button("Open Folder…") {
-                workspace.pickFolder()
+            Button("Üye ol / anahtar al") {
+                grok.openXAIConsole()
+                grok.showOnboarding = true
             }
             .buttonStyle(.borderedProminent)
             .tint(ForgeTheme.copper)
-            .keyboardShortcut(.defaultAction)
+            Button("Open Folder…") {
+                workspace.pickFolder()
+            }
+            .buttonStyle(.bordered)
             VStack(alignment: .leading, spacing: 6) {
                 shortcutRow("⌘O", "Open folder")
                 shortcutRow("⌘S", "Save file")

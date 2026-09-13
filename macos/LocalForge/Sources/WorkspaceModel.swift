@@ -4,6 +4,7 @@ import Foundation
 
 extension Notification.Name {
     static let localForgeFocusFilter = Notification.Name("com.timurkaanalcin.localforge.focusFilter")
+    static let localForgeFocusGrokComposer = Notification.Name("com.timurkaanalcin.localforge.focusGrokComposer")
 }
 
 struct FileNode: Identifiable, Hashable {
@@ -20,14 +21,14 @@ final class WorkspaceModel: ObservableObject {
     @Published var currentFile: URL?
     @Published var editorText: String = ""
     @Published var isDirty: Bool = false
-    @Published var status: String = "Open a folder to begin."
+    @Published var status: String = "Sign in at console.x.ai, paste your key, then chat."
     @Published var lastError: String?
     @Published var command: String = "ls -la"
     @Published var commandOutput: String = ""
     @Published var isRunning = false
     @Published var lastExitCode: Int32?
     @Published var fileFilter: String = ""
-    @Published var showRunner: Bool = true
+    @Published var showRunner: Bool = false
     @Published var lineCount: Int = 0
     @Published var characterCount: Int = 0
     @Published var selectedText: String = ""

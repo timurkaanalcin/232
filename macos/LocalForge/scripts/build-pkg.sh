@@ -8,7 +8,7 @@ DIST="$ROOT/dist"
 APP="$DIST/LocalForge.app"
 MACOS="$APP/Contents/MacOS"
 RES="$APP/Contents/Resources"
-VERSION="1.2.0"
+VERSION="1.3.0"
 PKG="$DIST/LocalForge-${VERSION}.pkg"
 IDENT="com.timurkaanalcin.localforge"
 

@@ -1,5 +1,11 @@
 # dependencies
 /node_modules
+apps/nexus/node_modules
+apps/nexus/dist
+
+# netlify
+/.netlify
+apps/nexus/.netlify
 
 # next.js
 /.next/

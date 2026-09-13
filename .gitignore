@@ -36,3 +36,15 @@ yarn-error.log*
 /coverage
 /playwright-report/
 /test-results/
+
+# native / desktop packaging (keep source + android gradle wrapper)
+desktop/node_modules/
+desktop/dist/
+desktop/out/
+native/node_modules/
+native/android/.gradle/
+native/android/build/
+native/android/app/build/
+native/android/app/.cxx/
+native/android/local.properties
+native/android/captures/

@@ -166,7 +166,8 @@ export default async (req: Request, context: Context) => {
   const systemPrompt = body.systemPrompt?.slice(0, 8000);
   const secrets = gatewaySecrets();
   const gatewayReady = isGatewayReady();
-  const isDev = context.deploy?.context === "dev";
+  const deployContext = context.deploy?.context;
+  const isProd = deployContext === "production";
   const encode = encoder();
 
   const stream = new ReadableStream<Uint8Array>({
@@ -177,7 +178,7 @@ export default async (req: Request, context: Context) => {
 
       try {
         if (!gatewayReady) {
-          if (isDev) {
+          if (!isProd) {
             await streamDemo(controller, encode, model.displayName, lastUser);
             controller.close();
             return;

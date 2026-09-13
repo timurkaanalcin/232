@@ -72,6 +72,23 @@ Gizli anahtar uydurmayın ve commit etmeyin.
 
 UI tam küratör listeyi gösterir. Çağrı yalnızca gateway’in gerçekten sunduğu ID’ye pinlenir (`resolvedGatewayId`). Canlı listede yoksa model “Gateway’de yok” rozeti alır.
 
+## Masaüstü ve Android
+
+Kurulum dosyaları GitHub Actions `Havuz clients` işinden üretilir (imzasız):
+
+- Windows: Electron NSIS `.exe`
+- macOS: Electron `.dmg` (Gatekeeper: sağ tık → Aç)
+- Android: Capacitor debug `.apk` (bilinmeyen kaynaklardan yükleme)
+
+Paketli istemciler gömülü arayüzü açar. Gerçek model yanıtları için Ayarlar → **Sunucu adresi** alanına Netlify production URL’sini yazın (`VITE_HAVUZ_API_BASE` veya `HAVUZ_SITE_URL` ile de verilebilir). İlk production deploy + AI Features şarttır. İmzalı store paketleri için sır yok; CI imzasız üretir.
+
+```bash
+cd havuz
+npm run electron:dist   # bulunduğunuz OS için
+```
+
+Android APK CI’da `npx cap add android && ./gradlew assembleDebug` ile üretilir.
+
 ## Komutlar
 
 ```bash

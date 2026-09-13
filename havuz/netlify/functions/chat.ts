@@ -7,7 +7,7 @@ import { CURATED_MODELS, isGeminiImageModel } from "../../src/lib/catalog";
 import { gatewaySecrets, isGatewayReady } from "./_shared/env";
 import { loadPool } from "./_shared/live-models";
 import { clientIp, limitChat } from "./_shared/rate-limit";
-import { jsonError, sseChunk, sseHeaders } from "./_shared/sse";
+import { corsOptions, jsonError, sseChunk, sseHeaders } from "./_shared/sse";
 
 interface IncomingMessage {
   role: "user" | "assistant" | "system";
@@ -132,7 +132,7 @@ async function generateGeminiImage(opts: {
 }
 
 export default async (req: Request, context: Context) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 204 });
+  if (req.method === "OPTIONS") return corsOptions();
   if (req.method !== "POST") return jsonError("Method not allowed", 405);
 
   const limited = limitChat(clientIp(req));

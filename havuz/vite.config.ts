@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import netlify from "@netlify/vite-plugin";
 
 export default defineConfig({
+  base: "./",
   plugins: [react(), netlify({ edgeFunctions: { enabled: false } })],
   server: {
     port: 5173,

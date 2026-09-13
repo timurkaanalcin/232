@@ -71,4 +71,6 @@ export interface AppSettings {
   systemPrompt: string;
   temperature: number;
   defaultModelId: string;
+  /** Netlify site origin for packaged clients, e.g. https://havuz.netlify.app */
+  apiBase: string;
 }

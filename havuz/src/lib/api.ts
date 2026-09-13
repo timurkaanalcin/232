@@ -1,9 +1,10 @@
+import { apiUrl } from "./api-base";
 import type { ModelsResponse } from "./types";
 
 export async function fetchModels(refresh = false): Promise<ModelsResponse> {
-  const res = await fetch(`/api/models${refresh ? "?refresh=1" : ""}`);
+  const res = await fetch(apiUrl(`/api/models${refresh ? "?refresh=1" : ""}`));
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(body.error || `Models HTTP ${res.status}`);
   }
   return res.json();
@@ -25,7 +26,7 @@ export async function streamChat(
   },
   handlers: StreamHandlers,
 ): Promise<void> {
-  const res = await fetch("/api/chat", {
+  const res = await fetch(apiUrl("/api/chat"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -33,7 +34,7 @@ export async function streamChat(
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
     handlers.onError(body.error || `HTTP ${res.status}`, res.status === 429 ? "RATE_LIMIT" : undefined);
     return;
   }

@@ -1,0 +1,81 @@
+name: Havuz clients
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "havuz/**"
+      - ".github/workflows/havuz-clients.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: havuz/package-lock.json
+      - name: Build web + Windows installer
+        working-directory: havuz
+        run: |
+          npm ci
+          npm run build
+          npx electron-builder --win nsis --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: havuz-windows
+          path: havuz/release/Havuz-Setup-*.exe
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: havuz/package-lock.json
+      - name: Build web + macOS disk image
+        working-directory: havuz
+        run: |
+          npm ci
+          npm run build
+          npx electron-builder --mac dmg --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: havuz-macos
+          path: havuz/release/Havuz-*.dmg
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: havuz/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v3
+      - name: Build debug APK
+        working-directory: havuz
+        run: |
+          npm ci
+          npm run build
+          npx cap add android
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: havuz-android
+          path: havuz/android/app/build/outputs/apk/debug/app-debug.apk

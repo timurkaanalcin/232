@@ -1,11 +1,11 @@
 import type { Config, Context } from "@netlify/functions";
 import { loadPool } from "./_shared/live-models";
 import { clientIp, limitModels } from "./_shared/rate-limit";
-import { jsonError } from "./_shared/sse";
+import { CORS_HEADERS, corsOptions, jsonError } from "./_shared/sse";
 
 export default async (req: Request, _context: Context) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204 });
+    return corsOptions();
   }
   if (req.method !== "GET") {
     return jsonError("Method not allowed", 405);
@@ -24,6 +24,7 @@ export default async (req: Request, _context: Context) => {
   return Response.json(pool, {
     headers: {
       "Cache-Control": "private, max-age=15",
+      ...CORS_HEADERS,
     },
   });
 };

@@ -1,6 +1,6 @@
 import type { Config, Context } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
-import { jsonError } from "./_shared/sse";
+import { CORS_HEADERS, jsonError } from "./_shared/sse";
 
 export default async (req: Request, context: Context) => {
   if (req.method !== "GET") return jsonError("Method not allowed", 405);
@@ -18,6 +18,7 @@ export default async (req: Request, context: Context) => {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=31536000, immutable",
+        ...CORS_HEADERS,
       },
     });
   } catch {

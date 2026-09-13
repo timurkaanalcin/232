@@ -48,6 +48,19 @@ export function SettingsModal({
           />
         </div>
         <div className="field">
+          <label htmlFor="api">{t(locale, "siteUrl")}</label>
+          <input
+            id="api"
+            className="search"
+            style={{ margin: 0, width: "100%" }}
+            type="url"
+            placeholder="https://….netlify.app"
+            value={settings.apiBase}
+            onChange={(e) => onChange({ ...settings, apiBase: e.target.value })}
+          />
+          <span style={{ color: "var(--muted)", fontSize: 12 }}>{t(locale, "siteUrlHint")}</span>
+        </div>
+        <div className="field">
           <label htmlFor="def">{t(locale, "defaultModel")}</label>
           <select
             id="def"

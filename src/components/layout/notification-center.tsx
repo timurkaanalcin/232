@@ -80,6 +80,12 @@ export function NotificationCenter() {
             <p className="px-3 py-6 text-center text-sm text-muted-foreground">No notifications yet.</p>
           )}
         </div>
+        <DropdownMenuSeparator />
+        <div className="px-2 py-1.5">
+          <Button variant="ghost" size="sm" className="h-7 w-full text-xs" asChild>
+            <a href="/settings">Bildirim tercihleri</a>
+          </Button>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

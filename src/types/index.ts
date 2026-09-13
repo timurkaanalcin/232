@@ -210,6 +210,15 @@ export interface DeviceSessionDTO {
   current: boolean;
 }
 
+export interface PrivacyPreferencesDTO {
+  notifySession: boolean;
+  notifySecurity: boolean;
+  notifyConsent: boolean;
+  marketingOptIn: boolean;
+  locationRetentionDays: 0 | 30 | 90 | 365;
+  updatedAt: number | null;
+}
+
 export interface LocationSessionDTO {
   id: string;
   userId: string;

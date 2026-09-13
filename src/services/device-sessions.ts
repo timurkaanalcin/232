@@ -64,16 +64,17 @@ export async function revokeAllDeviceSessions(
   db: D1Database,
   userId: string,
   exceptSessionId?: string,
-): Promise<void> {
+): Promise<number> {
   if (exceptSessionId) {
-    await db
+    const result = await db
       .prepare(`UPDATE sessions SET revoked_at = ? WHERE user_id = ? AND id != ? AND revoked_at IS NULL`)
       .bind(Date.now(), userId, exceptSessionId)
       .run();
-  } else {
-    await db
-      .prepare(`UPDATE sessions SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL`)
-      .bind(Date.now(), userId)
-      .run();
+    return result.meta.changes ?? 0;
   }
+  const result = await db
+    .prepare(`UPDATE sessions SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL`)
+    .bind(Date.now(), userId)
+    .run();
+  return result.meta.changes ?? 0;
 }

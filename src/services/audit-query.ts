@@ -58,6 +58,48 @@ export async function listAuditLogs(db: D1Database, filter: AuditFilter): Promis
   };
 }
 
+const USER_CONSENT_ACTIONS = [
+  "consent.permission_granted",
+  "consent.permission_revoked",
+  "location.session_started",
+  "location.session_stopped",
+  "privacy.preferences_updated",
+  "privacy.location_history_deleted",
+  "privacy.data_exported",
+  "device.session_revoked",
+  "device.sessions_revoked_others",
+];
+
+export async function listUserConsentAudit(
+  db: D1Database,
+  userId: string,
+  page: number,
+  pageSize: number,
+): Promise<Paginated<AuditLogDTO>> {
+  const placeholders = USER_CONSENT_ACTIONS.map(() => "?").join(", ");
+  const binds: unknown[] = [userId, ...USER_CONSENT_ACTIONS];
+
+  const countRow = await db
+    .prepare(`SELECT COUNT(*) AS total FROM audit_logs WHERE actor_id = ? AND action IN (${placeholders})`)
+    .bind(...binds)
+    .first<{ total: number }>();
+
+  const rows = await db
+    .prepare(
+      `SELECT * FROM audit_logs WHERE actor_id = ? AND action IN (${placeholders})
+       ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    )
+    .bind(...binds, pageSize, (page - 1) * pageSize)
+    .all<AuditLogRow>();
+
+  return {
+    items: rows.results.map(toAuditDTO),
+    total: countRow?.total ?? 0,
+    page,
+    pageSize,
+  };
+}
+
 export async function listRecentActivity(db: D1Database, limit = 10): Promise<AuditLogDTO[]> {
   const rows = await db
     .prepare(`SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT ?`)

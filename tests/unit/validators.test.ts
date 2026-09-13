@@ -11,7 +11,10 @@ import {
   walletTransferSchema,
   registerSchema,
   startLocationSessionSchema,
+  privacyPreferencesSchema,
+  deleteLocationHistorySchema,
 } from "@/lib/validators";
+import { notificationPrefKeyForType } from "@/lib/constants";
 
 describe("passwordSchema", () => {
   it("accepts strong passwords", () => {
@@ -47,6 +50,31 @@ describe("startLocationSessionSchema", () => {
   it("requires explicit consent === true", () => {
     expect(startLocationSessionSchema.safeParse({ consent: false }).success).toBe(false);
     expect(startLocationSessionSchema.safeParse({ consent: true }).success).toBe(true);
+  });
+});
+
+describe("privacy preference validators", () => {
+  it("requires at least one preference field", () => {
+    expect(privacyPreferencesSchema.safeParse({}).success).toBe(false);
+    expect(privacyPreferencesSchema.safeParse({ marketingOptIn: true }).success).toBe(true);
+  });
+
+  it("rejects unknown retention windows", () => {
+    expect(privacyPreferencesSchema.safeParse({ locationRetentionDays: 7 }).success).toBe(false);
+    expect(privacyPreferencesSchema.safeParse({ locationRetentionDays: 90 }).success).toBe(true);
+  });
+
+  it("requires explicit confirmation to delete location history", () => {
+    expect(deleteLocationHistorySchema.safeParse({ confirm: false }).success).toBe(false);
+    expect(deleteLocationHistorySchema.safeParse({ confirm: true }).success).toBe(true);
+  });
+});
+
+describe("notificationPrefKeyForType", () => {
+  it("maps session and consent events to opt-out channels", () => {
+    expect(notificationPrefKeyForType("location.session_started")).toBe("notifySession");
+    expect(notificationPrefKeyForType("consent.revoked")).toBe("notifyConsent");
+    expect(notificationPrefKeyForType("auth.login")).toBe("notifySecurity");
   });
 });
 

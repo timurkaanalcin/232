@@ -26,6 +26,12 @@ test.describe("public surface", () => {
     await page.getByRole("button", { name: /send reset link/i }).click();
     await expect(page.getByText(/a password reset link is on its way/i)).toBeVisible();
   });
+
+  test("privacy notice is public and consent-first", async ({ page }) => {
+    await page.goto("/gizlilik");
+    await expect(page.getByRole("heading", { name: /gizlilik bildirimi/i })).toBeVisible();
+    await expect(page.getByText(/gizli izleme/i)).toBeVisible();
+  });
 });
 
 test.describe("access control", () => {

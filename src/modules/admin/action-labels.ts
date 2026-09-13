@@ -27,9 +27,12 @@ export const ACTION_LABELS: Record<string, { label: string; tone: Tone }> = {
   [AUDIT_ACTIONS.ADMIN_WALLET_TRANSFER_CREATED]: { label: "Cüzdan transferi", tone: "default" },
   [AUDIT_ACTIONS.ADMIN_WALLET_TRANSFER_REVERSED]: { label: "Transfer geri alındı", tone: "destructive" },
   [AUDIT_ACTIONS.DEVICE_REVOKED]: { label: "Cihaz oturumu kapatıldı", tone: "secondary" },
+  [AUDIT_ACTIONS.DEVICES_REVOKED_OTHERS]: { label: "Diğer cihazlar kapatıldı", tone: "secondary" },
   [AUDIT_ACTIONS.PROFILE_UPDATED]: { label: "Profil güncellendi", tone: "secondary" },
   [AUDIT_ACTIONS.DATA_EXPORTED]: { label: "Veri dışa aktarıldı", tone: "default" },
   [AUDIT_ACTIONS.ACCOUNT_DELETED]: { label: "Hesap silindi", tone: "destructive" },
+  [AUDIT_ACTIONS.PREFS_UPDATED]: { label: "Gizlilik tercihleri", tone: "secondary" },
+  [AUDIT_ACTIONS.LOCATION_HISTORY_DELETED]: { label: "Konum geçmişi silindi", tone: "destructive" },
 };
 
 /** Audit actions considered security-relevant for the security feed. */
@@ -39,6 +42,7 @@ export const SECURITY_ACTIONS = new Set<string>([
   AUDIT_ACTIONS.PASSWORD_RESET_COMPLETED,
   AUDIT_ACTIONS.PASSWORD_CHANGED,
   AUDIT_ACTIONS.DEVICE_REVOKED,
+  AUDIT_ACTIONS.DEVICES_REVOKED_OTHERS,
   AUDIT_ACTIONS.ADMIN_ROLE_ASSIGNED,
   AUDIT_ACTIONS.ACCOUNT_DELETED,
 ]);

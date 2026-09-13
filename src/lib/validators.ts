@@ -152,3 +152,18 @@ export const walletTransferSchema = z.object({
 export const reverseWalletTransferSchema = z.object({
   memo: z.string().trim().max(500).optional().default(""),
 });
+
+export const privacyPreferencesSchema = z
+  .object({
+    notifySession: z.boolean().optional(),
+    notifySecurity: z.boolean().optional(),
+    notifyConsent: z.boolean().optional(),
+    marketingOptIn: z.boolean().optional(),
+    locationRetentionDays: z.union([z.literal(0), z.literal(30), z.literal(90), z.literal(365)]).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, { message: "No preference fields to update" });
+
+export const deleteLocationHistorySchema = z.object({
+  confirm: z.literal(true, { error: "Explicit confirmation is required to delete location history" }),
+});
+

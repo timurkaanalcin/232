@@ -190,12 +190,32 @@ export async function exportUserData(db: D1Database, id: string) {
       .all(),
   ]);
 
+  let privacyPreferences: unknown = null;
+  let notificationRows: unknown[] = [];
+  try {
+    privacyPreferences = await db.prepare(`SELECT * FROM user_privacy_prefs WHERE user_id = ?`).bind(id).first();
+    notificationRows =
+      (
+        await db
+          .prepare(
+            `SELECT type, title, body, read_at, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 1000`,
+          )
+          .bind(id)
+          .all()
+      ).results ?? [];
+  } catch {
+    // prefs table may not exist on an unmigrated local db
+  }
+
   return {
     exportedAt: new Date().toISOString(),
+    product: "CanlıSite",
     user,
+    privacyPreferences,
     deviceSessions: sessions.results,
     locationSessions: locationSessions.results,
     locationPoints: locations.results,
+    notifications: notificationRows,
     auditTrail: audit.results,
   };
 }

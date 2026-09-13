@@ -37,9 +37,12 @@ export const AUDIT_ACTIONS = {
   ADMIN_WALLET_TRANSFER_CREATED: "admin.wallet_transfer_created",
   ADMIN_WALLET_TRANSFER_REVERSED: "admin.wallet_transfer_reversed",
   DEVICE_REVOKED: "device.session_revoked",
+  DEVICES_REVOKED_OTHERS: "device.sessions_revoked_others",
   PROFILE_UPDATED: "profile.updated",
   DATA_EXPORTED: "privacy.data_exported",
   ACCOUNT_DELETED: "privacy.account_deleted",
+  PREFS_UPDATED: "privacy.preferences_updated",
+  LOCATION_HISTORY_DELETED: "privacy.location_history_deleted",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
@@ -54,6 +57,26 @@ export const NOTIFICATION_TYPES = {
   SECURITY_ALERT: "security.alert",
   DEVICE_REVOKED: "device.revoked",
 } as const;
+
+export type NotificationPrefKey = "notifySession" | "notifySecurity" | "notifyConsent";
+
+export function notificationPrefKeyForType(type: string): NotificationPrefKey | null {
+  switch (type) {
+    case NOTIFICATION_TYPES.SESSION_STARTED:
+    case NOTIFICATION_TYPES.SESSION_STOPPED:
+      return "notifySession";
+    case NOTIFICATION_TYPES.CONSENT_GRANTED:
+    case NOTIFICATION_TYPES.CONSENT_REVOKED:
+      return "notifyConsent";
+    case NOTIFICATION_TYPES.LOGIN:
+    case NOTIFICATION_TYPES.LOGOUT:
+    case NOTIFICATION_TYPES.SECURITY_ALERT:
+    case NOTIFICATION_TYPES.DEVICE_REVOKED:
+      return "notifySecurity";
+    default:
+      return null;
+  }
+}
 
 export const SECURITY_EVENT_TYPES = {
   LOGIN_FAILED: "auth.login_failed",

@@ -1,3 +1,4 @@
+import { shouldSendNotification } from "@/services/privacy-prefs";
 import type { NotificationDTO, Paginated } from "@/types";
 
 interface NotificationRow {
@@ -40,6 +41,9 @@ export async function createNotification(
   },
 ): Promise<void> {
   try {
+    const allowed = await shouldSendNotification(db, input.userId, input.type);
+    if (!allowed) return;
+
     await db
       .prepare(
         `INSERT INTO notifications (user_id, type, title, body, metadata, created_at)

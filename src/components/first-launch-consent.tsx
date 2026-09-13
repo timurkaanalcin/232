@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { BellIcon, MapPinIcon, ShieldCheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -49,9 +50,9 @@ export function FirstLaunchConsentGate() {
 
   if (!needed) return null;
 
-  return (
+  const dialog = (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="first-launch-title"
@@ -138,4 +139,6 @@ export function FirstLaunchConsentGate() {
       </div>
     </div>
   );
+
+  return createPortal(dialog, document.body);
 }

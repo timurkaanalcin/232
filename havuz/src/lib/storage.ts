@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   temperature: 0.7,
   defaultModelId: "claude-4.5-sonnet",
   apiBase: "",
+  promptPresetId: "",
 };
 
 function readJson<T>(key: string, fallback: T): T {

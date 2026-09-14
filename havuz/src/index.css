@@ -300,6 +300,7 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
 }
 .chip.teal { color: var(--teal); border-color: rgba(60, 230, 200, 0.28); }
 .chip.gold { color: var(--gold); border-color: rgba(232, 197, 106, 0.35); }
@@ -605,6 +606,7 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 .model-sub { color: var(--muted); font-size: 12px; margin-top: 2px; padding-left: 15px; }
 
 .modal { width: min(520px, 100%); padding-bottom: 12px; }
+.modal-wide { width: min(640px, 100%); }
 .modal h2 { margin: 0; font-family: var(--display); font-size: 28px; }
 .field { padding: 8px 16px 12px; display: flex; flex-direction: column; gap: 6px; }
 .field label { font-size: 13px; color: var(--muted); }
@@ -637,6 +639,25 @@ input[type="range"] { accent-color: var(--teal); }
   box-shadow: var(--shadow);
 }
 .toast.bad { border-color: rgba(255, 139, 139, 0.4); }
+
+.studio-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 0 8vw 10px;
+}
+.studio-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.studio-hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+}
 
 .banner {
   margin: 0 8vw 12px;
@@ -672,6 +693,7 @@ input[type="range"] { accent-color: var(--teal); }
   .thread, .dock { padding-left: 16px; padding-right: 16px; }
   .empty h2 { font-size: 30px; }
   .banner { margin-left: 16px; margin-right: 16px; }
+  .studio-bar { padding-left: 16px; padding-right: 16px; }
   .scrim.show { display: block; }
   .model-row { grid-template-columns: 1fr; }
 }

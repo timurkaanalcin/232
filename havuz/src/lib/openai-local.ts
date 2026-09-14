@@ -1,3 +1,4 @@
+import { enrichLocalModels } from "./local-studio";
 import type { ModelsResponse, PoolModel } from "./types";
 
 export const LM_STUDIO_ORIGIN = "http://127.0.0.1:1234";
@@ -25,20 +26,22 @@ export async function fetchLocalModels(base: string): Promise<ModelsResponse> {
     throw new Error(`LM Studio /v1/models HTTP ${res.status}`);
   }
   const body = (await res.json()) as { data?: Array<{ id: string }> };
-  const models: PoolModel[] = (body.data ?? []).map((row) => ({
-    id: row.id,
-    provider: "local",
-    displayName: prettyName(row.id),
-    defaultContext: null,
-    maxContext: null,
-    gatewayIds: [row.id],
-    curated: false,
-    available: true,
-    source: "live",
-    isNew: false,
-    resolvedGatewayId: row.id,
-    liveProvider: "lmstudio",
-  }));
+  const models: PoolModel[] = enrichLocalModels(
+    (body.data ?? []).map((row) => ({
+      id: row.id,
+      provider: "local",
+      displayName: prettyName(row.id),
+      defaultContext: null,
+      maxContext: null,
+      gatewayIds: [row.id],
+      curated: false,
+      available: true,
+      source: "live",
+      isNew: false,
+      resolvedGatewayId: row.id,
+      liveProvider: "lmstudio",
+    })),
+  );
   return {
     models,
     fetchedAt: new Date().toISOString(),

@@ -6,3 +6,6 @@ dist
 release
 android
 ios
+lmstudio/results/*.json
+lmstudio/results/*.md
+lmstudio/__pycache__/

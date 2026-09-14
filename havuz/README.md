@@ -88,7 +88,13 @@ Kurulum dosyaları GitHub Actions `Havuz clients` işinden üretilir (imzasız).
 - macOS: artifact `havuz-macos` → `Havuz-1.0.0.dmg` (Gatekeeper: sağ tık → Aç)
 - Android: artifact `havuz-android` → debug `.apk` (bilinmeyen kaynaklardan yükleme)
 
-Paketli istemciler gömülü arayüzü açar. Gerçek gateway yanıtları için Ayarlar → **Sunucu adresi** alanına Netlify production URL’sini yazın. Yerel LM Studio için **LM Studio kullan** (`http://127.0.0.1:1234`; `lms server start --cors`). Ayrıntı: [lmstudio/README.md](./lmstudio/README.md).
+Paketli istemciler gömülü arayüzü açar. Gerçek gateway yanıtları için Ayarlar → **Sunucu adresi** alanına Netlify production URL’sini yazın. Yerel LM Studio için **LM Studio kullan** (`http://127.0.0.1:1234`; `lms server start --cors`). Tam paket (dalgalar, yasak modeller, LaunchAgent, karşılaştırma): [lmstudio/README.md](./lmstudio/README.md).
+
+```bash
+cd havuz/lmstudio
+chmod +x *.sh
+./install.sh    # Mac: 1. dalga + API + login sunucusu
+```
 
 ```bash
 cd havuz

@@ -613,6 +613,7 @@ export function mergePool(live: LiveEntry[]): PoolModel[] {
     "meta",
     "xai",
     "openrouter",
+    "local",
     "other",
   ];
 

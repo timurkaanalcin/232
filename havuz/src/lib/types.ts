@@ -27,7 +27,7 @@ export interface CatalogModel {
   aliases?: string[];
   curated: boolean;
   imageCapable?: boolean;
-  capabilities?: Array<"chat" | "image" | "code">;
+  capabilities?: Array<"chat" | "image" | "code" | "embed" | "stt" | "vision">;
 }
 
 export interface PoolModel extends CatalogModel {
@@ -74,4 +74,6 @@ export interface AppSettings {
   defaultModelId: string;
   /** Netlify site origin for packaged clients, e.g. https://havuz.netlify.app */
   apiBase: string;
+  /** Active prompt preset id, or empty when the system prompt is custom. */
+  promptPresetId: string;
 }

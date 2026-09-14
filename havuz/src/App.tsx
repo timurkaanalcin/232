@@ -4,11 +4,16 @@ import { IconCheck, IconCopy, IconMenu, IconSend, IconSettings, IconStop, IconUs
 import { ModelPicker } from "./components/ModelPicker";
 import { SettingsModal } from "./components/SettingsModal";
 import { Sidebar } from "./components/Sidebar";
+import { StudioBar } from "./components/StudioBar";
 import { Toasts, type Toast } from "./components/Toasts";
 import { fetchModels, streamChat } from "./lib/api";
 import { CURATED_MODELS, formatContext, mergePool, PROVIDER_COLORS, PROVIDER_LABELS } from "./lib/catalog";
 import { t, type Locale } from "./lib/i18n";
+import { isNonChatLocal } from "./lib/local-studio";
 import { Markdown } from "./lib/Markdown";
+import { isLocalOpenAI } from "./lib/openai-local";
+import { isPromptPresetId, presetPrompt } from "./lib/presets";
+import compareQuestions from "./lib/compare-questions.json";
 import {
   DEFAULT_SETTINGS,
   loadActiveId,
@@ -44,6 +49,7 @@ export function App() {
   const persistReady = useRef(false);
 
   const locale: Locale = settings.locale;
+  const localMode = isLocalOpenAI(settings.apiBase);
   const active = conversations.find((c) => c.id === activeId) ?? null;
   const currentModel =
     models.find((m) => m.id === (active?.modelId ?? settings.defaultModelId)) ??
@@ -76,25 +82,26 @@ export function App() {
   const loadPool = useCallback(
     async (refresh = false) => {
       setRefreshing(true);
+      const local = isLocalOpenAI(settings.apiBase);
       try {
         const res = await fetchModels(refresh);
-        setModels(res.models.length ? res.models : curatedFallback);
+        setModels(res.models.length ? res.models : local ? [] : curatedFallback);
         setModelsError(res.error ?? null);
         if (refresh) toast(locale === "tr" ? "Katalog yenilendi." : "Catalog refreshed.");
       } catch (error) {
-        setModels(curatedFallback);
-        setModelsError(error instanceof Error ? error.message : t(locale, "modelsError"));
-        toast(t(locale, "modelsError"), "bad");
+        setModels(local ? [] : curatedFallback);
+        setModelsError(error instanceof Error ? error.message : t(locale, local ? "localModelsError" : "modelsError"));
+        toast(t(locale, local ? "localModelsError" : "modelsError"), "bad");
       } finally {
         setRefreshing(false);
       }
     },
-    [locale, toast],
+    [locale, toast, settings.apiBase],
   );
 
   useEffect(() => {
     void loadPool(false);
-  }, [loadPool]);
+  }, [loadPool, settings.apiBase]);
 
   useEffect(() => {
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: "smooth" });
@@ -126,7 +133,7 @@ export function App() {
     const conv: Conversation = {
       id: uid(),
       title: locale === "tr" ? "Yeni sohbet" : "New chat",
-      modelId: settings.defaultModelId || currentModel?.id || CURATED_MODELS[0].id,
+      modelId: currentModel?.id || settings.defaultModelId || (localMode ? "" : CURATED_MODELS[0].id),
       createdAt: Date.now(),
       updatedAt: Date.now(),
       messages: [],
@@ -148,7 +155,19 @@ export function App() {
     const now = Date.now();
     const userMsg: ChatMessage = { id: uid(), role: "user", content, createdAt: now };
     const source = retryFrom ?? active;
-    const modelId = source?.modelId || settings.defaultModelId || currentModel?.id || CURATED_MODELS[0].id;
+    let modelId = source?.modelId || currentModel?.id || settings.defaultModelId || (localMode ? "" : CURATED_MODELS[0].id);
+    if (localMode && modelId && !models.some((m) => m.id === modelId)) {
+      modelId = models[0]?.id ?? "";
+    }
+    const selected = models.find((m) => m.id === modelId) ?? currentModel;
+    if (!modelId || (localMode && !selected)) {
+      toast(t(locale, "localModelsError"), "bad");
+      return;
+    }
+    if (isNonChatLocal(selected)) {
+      toast(t(locale, "embedBlocked"), "bad");
+      return;
+    }
     const assistantMsg: ChatMessage = {
       id: uid(),
       role: "assistant",
@@ -261,10 +280,20 @@ export function App() {
     void send(lastUser.content, trimmed);
   }
 
-  const suggestions = useMemo(
-    () => [t(locale, "suggested1"), t(locale, "suggested2"), t(locale, "suggested3")],
-    [locale],
-  );
+  const suggestions = useMemo(() => {
+    if (localMode) {
+      return compareQuestions.questions.slice(0, 3).map((q) => q.prompt);
+    }
+    return [t(locale, "suggested1"), t(locale, "suggested2"), t(locale, "suggested3")];
+  }, [locale, localMode]);
+
+  function setLocale(next: Locale) {
+    setSettings((s) => ({
+      ...s,
+      locale: next,
+      systemPrompt: isPromptPresetId(s.promptPresetId) ? presetPrompt(s.promptPresetId, next) : s.systemPrompt,
+    }));
+  }
 
   return (
     <div className="app">
@@ -330,14 +359,14 @@ export function App() {
             <button
               type="button"
               className={locale === "tr" ? "on" : ""}
-              onClick={() => setSettings((s) => ({ ...s, locale: "tr" }))}
+              onClick={() => setLocale("tr")}
             >
               TR
             </button>
             <button
               type="button"
               className={locale === "en" ? "on" : ""}
-              onClick={() => setSettings((s) => ({ ...s, locale: "en" }))}
+              onClick={() => setLocale("en")}
             >
               EN
             </button>
@@ -348,7 +377,19 @@ export function App() {
           </button>
         </header>
 
-        {modelsError && <div className="banner">{t(locale, "modelsError")}</div>}
+        {modelsError && (
+          <div className="banner">{localMode ? t(locale, "localModelsError") : t(locale, "modelsError")}</div>
+        )}
+        {localMode && !modelsError && <div className="banner">{t(locale, "localBanner")}</div>}
+
+        {localMode && (
+          <StudioBar
+            locale={locale}
+            settings={settings}
+            onChange={setSettings}
+            onCopied={(text) => toast(text)}
+          />
+        )}
 
         <div className="thread" ref={threadRef}>
           {!active || active.messages.length === 0 ? (
@@ -357,7 +398,7 @@ export function App() {
                 <BrandMark size={132} animated />
               </div>
               <h2>{t(locale, "emptyTitle")}</h2>
-              <p>{t(locale, "emptyBody")}</p>
+              <p>{localMode ? t(locale, "localEmptyBody") : t(locale, "emptyBody")}</p>
               <p className="empty-domain">{t(locale, "domain")}</p>
               <div className="suggestions">
                 {suggestions.map((s) => (
@@ -449,7 +490,7 @@ export function App() {
               </button>
             )}
           </form>
-          <div className="hint">{t(locale, "gatewayHint")}</div>
+          <div className="hint">{localMode ? t(locale, "localHint") : t(locale, "gatewayHint")}</div>
         </div>
       </main>
 

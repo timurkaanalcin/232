@@ -1,6 +1,12 @@
 import { PRODUCTION_ORIGIN } from "../lib/site";
 import { LM_STUDIO_ORIGIN } from "../lib/openai-local";
-import { PROMPT_PRESETS, presetPrompt, type PromptPresetId } from "../lib/presets";
+import { isLocalOpenAI } from "../lib/openai-local";
+import {
+  PRESET_TEMPERATURES,
+  PROMPT_PRESETS,
+  presetPrompt,
+  type PromptPresetId,
+} from "../lib/presets";
 import { t, type Locale } from "../lib/i18n";
 import type { AppSettings, PoolModel } from "../lib/types";
 import { IconClose } from "./Icons";
@@ -19,12 +25,19 @@ export function SettingsModal({
   onClose: () => void;
 }) {
   function applyPreset(id: PromptPresetId) {
-    onChange({ ...settings, systemPrompt: presetPrompt(id, locale) });
+    onChange({
+      ...settings,
+      promptPresetId: id,
+      systemPrompt: presetPrompt(id, locale),
+      temperature: PRESET_TEMPERATURES[id],
+    });
   }
+
+  const local = isLocalOpenAI(settings.apiBase);
 
   return (
     <div className="modal-backdrop" onClick={onClose} role="presentation">
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h2 id="settings-title">{t(locale, "settingsTitle")}</h2>
           <div className="top-spacer" />
@@ -36,14 +49,19 @@ export function SettingsModal({
           <label>{t(locale, "promptPresets")}</label>
           <div className="chips" style={{ marginTop: 4 }}>
             {(Object.keys(PROMPT_PRESETS) as PromptPresetId[]).map((id) => (
-              <button key={id} type="button" className="chip teal" onClick={() => applyPreset(id)}>
+              <button
+                key={id}
+                type="button"
+                className={`chip ${settings.promptPresetId === id ? "teal" : ""}`}
+                onClick={() => applyPreset(id)}
+              >
                 {PROMPT_PRESETS[id][locale]}
               </button>
             ))}
             <button
               type="button"
               className="chip"
-              onClick={() => onChange({ ...settings, systemPrompt: "" })}
+              onClick={() => onChange({ ...settings, systemPrompt: "", promptPresetId: "" })}
             >
               {t(locale, "presetClear")}
             </button>
@@ -55,7 +73,13 @@ export function SettingsModal({
             id="sys"
             value={settings.systemPrompt}
             placeholder={t(locale, "systemPromptHint")}
-            onChange={(e) => onChange({ ...settings, systemPrompt: e.target.value })}
+            onChange={(e) =>
+              onChange({
+                ...settings,
+                systemPrompt: e.target.value,
+                promptPresetId: "",
+              })
+            }
           />
         </div>
         <div className="field">
@@ -84,14 +108,25 @@ export function SettingsModal({
             onChange={(e) => onChange({ ...settings, apiBase: e.target.value })}
           />
           <span className="field-hint">{t(locale, "siteUrlHint")}</span>
-          <button
-            type="button"
-            className="btn"
-            style={{ marginTop: 8, width: "fit-content" }}
-            onClick={() => onChange({ ...settings, apiBase: LM_STUDIO_ORIGIN })}
-          >
-            {t(locale, "useLmStudio")}
-          </button>
+          <div className="chips" style={{ marginTop: 8 }}>
+            <button
+              type="button"
+              className={`chip ${local ? "teal" : ""}`}
+              onClick={() => onChange({ ...settings, apiBase: LM_STUDIO_ORIGIN })}
+            >
+              {t(locale, "useLmStudio")}
+            </button>
+            <button
+              type="button"
+              className="chip"
+              onClick={() => onChange({ ...settings, apiBase: PRODUCTION_ORIGIN })}
+            >
+              {t(locale, "useNetlify")}
+            </button>
+            <button type="button" className="chip" onClick={() => onChange({ ...settings, apiBase: "" })}>
+              {t(locale, "useSameOrigin")}
+            </button>
+          </div>
         </div>
         <div className="field">
           <label htmlFor="def">{t(locale, "defaultModel")}</label>

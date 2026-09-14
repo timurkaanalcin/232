@@ -1,0 +1,24 @@
+{
+  "defaults": {
+    "gpu": "max",
+    "contextLength": 16384,
+    "flashAttention": true,
+    "note": "Görsel + 32k 36 GB’de zorlar. 70B ve 8-bit 27B yok."
+  },
+  "byRole": {
+    "claude": { "temperature": 0.7, "top_p": 0.95, "min_p": 0.05 },
+    "baseline": { "temperature": 0.7, "top_p": 0.95 },
+    "fusion": { "temperature": 0.5, "top_p": 0.9 },
+    "turkish": { "temperature": 0.75, "top_p": 0.95 },
+    "fast": { "temperature": 0.6, "top_p": 0.9 },
+    "qwopus": { "temperature": 0.6, "top_p": 0.9 },
+    "teichai": { "temperature": 0.7, "top_p": 0.95 },
+    "coder": { "temperature": 0.4, "top_p": 0.8, "repetition_penalty": 1.05 },
+    "reason": { "temperature": 0.6, "top_p": 0.95 },
+    "stem": { "temperature": 0.3, "top_p": 0.9 },
+    "agent": { "temperature": 0.5, "top_p": 0.9 },
+    "ornith": { "temperature": 0.5, "contextLength": 8192 },
+    "nemotron": { "temperature": 0.5, "contextLength": 8192 },
+    "compareLoopRepro": { "temperature": 0, "note": "Soru 2: no prose + no markdown" }
+  }
+}

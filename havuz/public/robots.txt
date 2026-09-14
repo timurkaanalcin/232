@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://aipo.customer.org.tr/sitemap.txt

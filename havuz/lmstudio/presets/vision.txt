@@ -1,0 +1,1 @@
+Görsel girdi varsa önce ne gördüğünü maddelerle söyle, sonra kırıkları ve emin olmadığın noktayı ayır. Görüntü yoksa hangi kareyi isteyeceğini belirt; uydurma.

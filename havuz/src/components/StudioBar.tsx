@@ -8,6 +8,16 @@ import { isPromptPresetId, PRESET_TEMPERATURES, presetPrompt, type PromptPresetI
 import { t, type Locale } from "../lib/i18n";
 import type { AppSettings } from "../lib/types";
 
+const ROLE_LABEL: Record<string, { tr: string; en: string }> = {
+  claude: { tr: "Claude", en: "Claude" },
+  baseline: { tr: "Özgün 3.8", en: "Base 3.8" },
+  fusion: { tr: "Fusion", en: "Fusion" },
+  turkish: { tr: "Türkçe", en: "Turkish" },
+  fast: { tr: "Hızlı", en: "Fast" },
+  qwopus: { tr: "Qwopus v2", en: "Qwopus v2" },
+  coder: { tr: "Coder 30B", en: "Coder 30B" },
+};
+
 export function StudioBar({
   locale,
   settings,
@@ -47,23 +57,7 @@ export function StudioBar({
           title={role.verdict}
           onClick={() => applyRole(role)}
         >
-          {role.id === "claude"
-            ? "Claude"
-            : role.id === "baseline"
-              ? locale === "tr"
-                ? "Özgün 3.8"
-                : "Base 3.8"
-              : role.id === "fusion"
-                ? "Fusion"
-                : role.id === "turkish"
-                  ? locale === "tr"
-                    ? "Türkçe"
-                    : "Turkish"
-                  : role.id === "fast"
-                    ? locale === "tr"
-                      ? "Hızlı"
-                      : "Fast"
-                    : role.displayName}
+          {ROLE_LABEL[role.id]?.[locale] ?? role.displayName}
         </button>
       ))}
       <span className="studio-hint">{t(locale, "studioRolesHint")}</span>

@@ -1,7 +1,12 @@
-import { apiUrl } from "./api-base";
+import { apiUrl, getApiBase } from "./api-base";
+import { fetchLocalModels, isLocalOpenAI, streamLocalChat } from "./openai-local";
 import type { ModelsResponse } from "./types";
 
 export async function fetchModels(refresh = false): Promise<ModelsResponse> {
+  const base = getApiBase();
+  if (isLocalOpenAI(base)) {
+    return fetchLocalModels(base);
+  }
   const res = await fetch(apiUrl(`/api/models${refresh ? "?refresh=1" : ""}`));
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string };
@@ -26,6 +31,11 @@ export async function streamChat(
   },
   handlers: StreamHandlers,
 ): Promise<void> {
+  const base = getApiBase();
+  if (isLocalOpenAI(base)) {
+    await streamLocalChat(base, payload, handlers);
+    return;
+  }
   const res = await fetch(apiUrl("/api/chat"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },

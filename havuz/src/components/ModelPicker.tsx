@@ -15,6 +15,7 @@ const FILTERS: Array<ProviderId | "all"> = [
   "meta",
   "xai",
   "openrouter",
+  "local",
   "other",
 ];
 

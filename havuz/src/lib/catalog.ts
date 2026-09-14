@@ -471,6 +471,7 @@ export const PROVIDER_COLORS: Record<ProviderId, string> = {
   meta: "#66b3ff",
   xai: "#e8e8e8",
   openrouter: "#9ad4c8",
+  local: "#3ce6c8",
   other: "#8aa3a0",
 };
 
@@ -484,6 +485,7 @@ export const PROVIDER_LABELS: Record<ProviderId, { tr: string; en: string }> = {
   meta: { tr: "Meta", en: "Meta" },
   xai: { tr: "xAI", en: "xAI" },
   openrouter: { tr: "OpenRouter", en: "OpenRouter" },
+  local: { tr: "Yerel", en: "Local" },
   other: { tr: "Diğer", en: "Other" },
 };
 

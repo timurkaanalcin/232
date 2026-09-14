@@ -8,6 +8,7 @@ export type ProviderId =
   | "meta"
   | "xai"
   | "openrouter"
+  | "local"
   | "other";
 
 export type ContextTokens = number | null;

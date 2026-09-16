@@ -56,21 +56,25 @@ Sohbet geçmişi tarayıcıda `localStorage` içindedir. Blobs yalnızca üretil
 
 ## Deploy
 
-Üretim adresi: **https://aipo.customer.org.tr**
+Üretim adresi: **https://llvadai.netlify.app**
+
+İstenen özel alan `https://aipo.customer.org.tr` şu an açılamaz: DNS’te `aipo` kaydı yok ve `customer.org.tr` Netlify’de başka bir hesapta (BROKERZ / bolt.new) kilitli. CNAME eklemeden önce o kilit kalkmalı; yoksa `aipo` yanlış siteye düşer.
 
 1. Netlify’ye giriş: `npx netlify login`
 2. Site bağla veya oluştur: `npx netlify init` (base: `havuz`, publish: `dist`, command: `npm run build`)
 3. **En az bir production deploy** yapın — AI Gateway bundan sonra açılır:
    ```bash
-   cd havuz && npm run build && npx netlify deploy --prod --dir=dist
+   cd havuz && npm run build && npx netlify deploy --prod --dir=dist --functions=netlify/functions
    ```
-   veya Git ile `main` push (kök `netlify.toml` base’i `havuz` yapar).
-4. Netlify UI → Domain management → `aipo.customer.org.tr` ekleyin.
-5. Natro DNS (`customer.org.tr`, ns1/ns2.natrohost.com) kaydı:
+   veya Git ile `main` push (kök `netlify.toml` base’i `havuz` yapar). LiveTrack Next eklentisini ezmek için `NETLIFY_NEXT_PLUGIN_SKIP=true`.
+4. Özel alan (kilit kalktıktan sonra): Netlify UI → Domain management → `aipo.customer.org.tr`.
+5. Natro (`https://www.natro.com` → Giriş → Domainlerim → `customer.org.tr` → DNS Yönetimi):
    ```
-   aipo   CNAME   <site-adı>.netlify.app
+   Tür    CNAME
+   Host   aipo
+   Değer  llvadai.netlify.app
    ```
-   Netlify’nin gösterdiği hedefi kullanın. Apex `customer.org.tr` boş LiteSpeed 404; yalnızca `aipo` alt alanını işaretleyin.
+   Apex `customer.org.tr` Natro LiteSpeed’te kalsın; yalnızca `aipo` alt alanını işaretleyin.
 6. Netlify UI’da **AI Features** açık olsun.
 7. Preview: PR deploy veya `npx netlify deploy` (draft URL).
 

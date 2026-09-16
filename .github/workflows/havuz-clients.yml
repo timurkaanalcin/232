@@ -23,7 +23,7 @@ jobs:
       - name: Build web + Windows installer
         working-directory: havuz
         env:
-          VITE_HAVUZ_API_BASE: https://aipo.customer.org.tr
+          VITE_HAVUZ_API_BASE: https://llvadai.netlify.app
         run: |
           npm ci
           npm run build
@@ -45,7 +45,7 @@ jobs:
       - name: Build web + macOS disk image
         working-directory: havuz
         env:
-          VITE_HAVUZ_API_BASE: https://aipo.customer.org.tr
+          VITE_HAVUZ_API_BASE: https://llvadai.netlify.app
         run: |
           npm ci
           npm run build
@@ -75,7 +75,7 @@ jobs:
       - name: Build debug APK
         working-directory: havuz
         env:
-          VITE_HAVUZ_API_BASE: https://aipo.customer.org.tr
+          VITE_HAVUZ_API_BASE: https://llvadai.netlify.app
         run: |
           npm ci
           npm run build

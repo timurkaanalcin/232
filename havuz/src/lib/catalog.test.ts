@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CURATED_MODELS, formatContext, guessProvider, mergePool, PROVIDER_COLORS, PROVIDER_LABELS } from "./catalog";
-import { PRODUCTION_ORIGIN } from "./site";
+import { CUSTOM_DOMAIN_HOST, PRODUCTION_ORIGIN } from "./site";
 
 describe("curated catalog", () => {
   it("includes every requested display name", () => {
@@ -99,7 +99,8 @@ describe("mergePool", () => {
   });
 
   it("pins the production origin", () => {
-    expect(PRODUCTION_ORIGIN).toBe("https://aipo.customer.org.tr");
+    expect(PRODUCTION_ORIGIN).toBe("https://llvadai.netlify.app");
+    expect(CUSTOM_DOMAIN_HOST).toBe("aipo.customer.org.tr");
   });
 });
 

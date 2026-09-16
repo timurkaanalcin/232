@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 export function BrandMark({
   size = 40,
   animated = false,
@@ -7,6 +9,11 @@ export function BrandMark({
   animated?: boolean;
   className?: string;
 }) {
+  const raw = useId().replace(/:/g, "");
+  const well = `llvad-well-${raw}`;
+  const ember = `llvad-ember-${raw}`;
+  const ring = `llvad-ring-${raw}`;
+
   return (
     <svg
       className={`brand-mark ${animated ? "is-animated" : ""} ${className}`.trim()}
@@ -18,24 +25,28 @@ export function BrandMark({
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id="havuz-well" cx="50%" cy="42%" r="58%">
-          <stop offset="0%" stopColor="#12343c" />
-          <stop offset="70%" stopColor="#07141a" />
-          <stop offset="100%" stopColor="#05090c" />
+        <radialGradient id={well} cx="38%" cy="28%" r="78%">
+          <stop offset="0%" stopColor="#2a160c" />
+          <stop offset="55%" stopColor="#120c09" />
+          <stop offset="100%" stopColor="#070504" />
         </radialGradient>
-        <radialGradient id="havuz-gold" cx="35%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#fff4c8" />
-          <stop offset="45%" stopColor="#e8c56a" />
-          <stop offset="100%" stopColor="#a67d28" />
-        </radialGradient>
+        <linearGradient id={ember} x1="18" y1="14" x2="46" y2="52">
+          <stop offset="0%" stopColor="#ffd7a8" />
+          <stop offset="38%" stopColor="#ff8a3d" />
+          <stop offset="100%" stopColor="#c2410c" />
+        </linearGradient>
+        <linearGradient id={ring} x1="8" y1="6" x2="58" y2="58">
+          <stop offset="0%" stopColor="#ffc48a" />
+          <stop offset="50%" stopColor="#ff6b1a" />
+          <stop offset="100%" stopColor="#7a2e0d" />
+        </linearGradient>
       </defs>
-      <circle cx="32" cy="32" r="31" fill="url(#havuz-well)" />
-      <circle className="ripple r1" cx="32" cy="32" r="8" stroke="#3ce6c8" strokeOpacity="0.95" strokeWidth="1.15" />
-      <circle className="ripple r2" cx="32" cy="32" r="14" stroke="#3ce6c8" strokeOpacity="0.55" strokeWidth="1.1" />
-      <circle className="ripple r3" cx="32" cy="32" r="20" stroke="#3ce6c8" strokeOpacity="0.32" strokeWidth="1.05" />
-      <circle className="ripple r4" cx="32" cy="32" r="26" stroke="#3ce6c8" strokeOpacity="0.16" strokeWidth="1" />
-      <circle cx="32" cy="32" r="2.35" fill="url(#havuz-gold)" />
-      <circle cx="31.2" cy="31.1" r="0.7" fill="#fff8d8" fillOpacity="0.85" />
+      <rect x="2.5" y="2.5" width="59" height="59" rx="18" fill={`url(#${well})`} />
+      <rect x="2.5" y="2.5" width="59" height="59" rx="18" stroke={`url(#${ring})`} strokeOpacity="0.85" strokeWidth="1.4" />
+      <rect className="ember-glow" x="18.5" y="16" width="7.2" height="32" rx="3.4" fill={`url(#${ember})`} />
+      <rect className="ember-glow" x="29.6" y="16" width="7.2" height="32" rx="3.4" fill={`url(#${ember})`} />
+      <circle className="ember-core" cx="46.2" cy="20.4" r="3.1" fill="#ffb347" />
+      <circle cx="45.4" cy="19.5" r="1.05" fill="#fff4e4" fillOpacity="0.9" />
     </svg>
   );
 }

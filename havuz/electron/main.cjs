@@ -23,8 +23,8 @@ function createWindow() {
     height: 860,
     minWidth: 390,
     minHeight: 640,
-    title: "Havuz",
-    backgroundColor: "#071016",
+    title: "llvadAI",
+    backgroundColor: "#070504",
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,

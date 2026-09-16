@@ -1,6 +1,6 @@
-# Havuz
+# llvadAI
 
-Türkçe çoklu model sohbet sitesi. Anthropic, Cursor, Google, OpenAI, Moonshot, Z.ai ve Meta modelleri **tek havuzda**. Yeni çıkan modeller Netlify AI Gateway canlı kataloğundan otomatik düşer.
+Türkçe çoklu model sohbet sitesi. Anthropic, Cursor, Google, OpenAI, Moonshot, Z.ai ve Meta modelleri **tek listede**. Yeni çıkan modeller Netlify AI Gateway canlı kataloğundan otomatik düşer.
 
 UI default language is Turkish, with a TR/EN toggle.
 

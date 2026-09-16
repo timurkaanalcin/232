@@ -471,7 +471,7 @@ export const PROVIDER_COLORS: Record<ProviderId, string> = {
   meta: "#66b3ff",
   xai: "#e8e8e8",
   openrouter: "#9ad4c8",
-  local: "#3ce6c8",
+  local: "#ff6b1a",
   other: "#8aa3a0",
 };
 

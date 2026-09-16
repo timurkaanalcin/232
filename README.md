@@ -1,8 +1,8 @@
-# Havuz + LiveTrack
+# llvadAI + LiveTrack
 
-This repository now ships **Havuz**, a Turkish multi-model AI chat site on Netlify, alongside the existing LiveTrack app.
+This repository now ships **llvadAI**, a Turkish multi-model AI chat site on Netlify, alongside the existing LiveTrack app.
 
-## Havuz (Netlify)
+## llvadAI (Netlify)
 
 All models in one pool. Live Netlify AI Gateway catalog merge, streaming chat, local history.
 

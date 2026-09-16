@@ -53,7 +53,7 @@ async function streamDemo(
   lastUser: string,
 ) {
   const text =
-    `Havuz yerel önizleme: Netlify AI Gateway henüz bu ortamda etkin değil. ` +
+    `llvadAI yerel önizleme: Netlify AI Gateway henüz bu ortamda etkin değil. ` +
     `Üretim deploy’undan sonra gerçek ${modelLabel} yanıtları akar. ` +
     `İletiniz alındı: “${lastUser.slice(0, 180)}”.`;
   for (const part of text.match(/.{1,24}/g) ?? [text]) {

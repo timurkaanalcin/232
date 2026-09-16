@@ -1,12 +1,12 @@
 {
-  "name": "Havuz",
-  "short_name": "Havuz",
-  "description": "Tüm modeller. Tek havuz.",
+  "name": "llvadAI",
+  "short_name": "llvadAI",
+  "description": "Lüks zeka. Tüm modeller.",
   "start_url": "/",
   "id": "/",
   "display": "standalone",
-  "background_color": "#05090c",
-  "theme_color": "#05090c",
+  "background_color": "#070504",
+  "theme_color": "#070504",
   "lang": "tr",
   "icons": [
     { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },

@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Havuz — multi-model AI chat pool on Netlify AI Gateway",
+  "description": "llvadAI — luxury multi-model AI chat on Netlify AI Gateway",
   "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",

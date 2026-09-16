@@ -1,5 +1,5 @@
 appId: com.havuz.chat
-productName: Havuz
+productName: llvadAI
 copyright: Timur Kaan Alçin
 directories:
   output: release
@@ -17,7 +17,7 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
-  artifactName: Havuz-Setup-${version}.exe
+  artifactName: llvadAI-Setup-${version}.exe
 mac:
   target:
     - dmg
@@ -25,7 +25,7 @@ mac:
   identity: null
   hardenedRuntime: false
   gatekeeperAssess: false
-  artifactName: Havuz-${version}.dmg
+  artifactName: llvadAI-${version}.dmg
 linux:
   target:
     - AppImage

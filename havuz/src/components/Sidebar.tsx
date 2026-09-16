@@ -49,7 +49,10 @@ export function Sidebar({
       <div className="brand">
         <BrandMark size={42} />
         <div>
-          <h1>{t(locale, "brand")}</h1>
+          <h1>
+            {t(locale, "brand").replace(/AI$/, "")}
+            <span className="brand-ai">AI</span>
+          </h1>
           <p>{t(locale, "tagline")}</p>
         </div>
       </div>

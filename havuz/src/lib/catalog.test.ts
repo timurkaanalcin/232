@@ -102,3 +102,11 @@ describe("mergePool", () => {
     expect(PRODUCTION_ORIGIN).toBe("https://aipo.customer.org.tr");
   });
 });
+
+describe("brand", () => {
+  it("is named llvadAI", async () => {
+    const { t } = await import("./i18n");
+    expect(t("tr", "brand")).toBe("llvadAI");
+    expect(t("en", "brand")).toBe("llvadAI");
+  });
+});

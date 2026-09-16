@@ -13,7 +13,7 @@ Kaynak: `src/lib/compare-questions.json`. Otomatik koşu: `./compare.sh` (önce 
 6. Basit React form + erişilebilir hata iskeleti.
 7. (Görsel) Ekran görüntüsü: “bu UI’da ne kırık?” — vizyonu olan modellerde.
 8. “Bu model Claude gibi mi?” — üç madde, abartısız, “ben Claude’um” yok.
-9. CORS kapalıysa Havuz’da tek cümlelik teşhis (`lms server start --cors`).
+9. CORS kapalıysa llvadAI’de tek cümlelik teşhis (`lms server start --cors`).
 
 Kayıt: her cevap için süre, usage, döngü/boş çıktı, Türkçe doğallık (1–5).
 v1 üretici raporu: soru 2’de 3000/3000 token, 0 görünür çıktı. v2 kartı: ~87 token temiz kod.

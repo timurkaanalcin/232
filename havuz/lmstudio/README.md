@@ -1,4 +1,4 @@
-# LM Studio Havuz — M3 Max 36 GB (tam teslim)
+# LM Studio llvadAI — M3 Max 36 GB (tam teslim)
 
 Bu paket **sizin Mac’inizde** çalışır. Cloud agent `lms` göremez; indirme, yükleme ve karşılaştırma Terminal’de.
 
@@ -10,7 +10,7 @@ chmod +x *.sh
 ./install.sh          # 1. dalga + sunucu + (macOS) LaunchAgent
 ```
 
-Havuz masaüstü: Ayarlar → **LM Studio kullan** (`http://127.0.0.1:1234`).
+llvadAI masaüstü: Ayarlar → **LM Studio kullan** (`http://127.0.0.1:1234`).
 
 ## 36 GB kuralı
 
@@ -18,7 +18,7 @@ Birleşik bellek. OS + LM Studio ≈ 8–10 GB. **Aynı anda tek sohbet modeli.*
 
 M3 Max’te mümkünse **MLX 4-bit**. Fusion gibi yalnızca GGUF varsa llama.cpp. Yükleme: GPU max, bağlam **16384** (Ornith / Nemotron için **8192**). Görsel + 32k 36 GB’de zorlar.
 
-Görsel **üretim** LM Studio’da yok; Netlify Havuz (Gemini) tarafında kalır. LM Studio metin + (bazı modellerde) görsel **anlama**.
+Görsel **üretim** LM Studio’da yok; Netlify llvadAI (Gemini) tarafında kalır. LM Studio metin + (bazı modellerde) görsel **anlama**.
 
 Bu sıra kaynak incelemesine dayanır; bilgisayarınızda ölçülmüş başarı sıralaması değildir. Üç Claude/muhakeme adayını **özgün Qwen3.8-27B ile aynı sorularda** karşılaştırın.
 
@@ -50,7 +50,7 @@ Boyutlar yaklaşık Q4 / MLX 4-bit ana dosyadır.
 | [gpt-oss-20B](https://lmstudio.ai/models/gpt-oss) | ~13,5 GB | extra | Açık ağırlık, araç | 120B yasak. Claude/TR birincil değil. |
 | [Qwen3-Coder-30B-A3B](https://lmstudio.ai/models/qwen/qwen3-coder-30b) | ~18,6 GB | extra | Resmi kod ajanı | Uzun bağlamı 16k’de tutun. 480B yok. |
 | bge-m3 | ~2,3 GB | extra | Çok dilli / Türkçe RAG | Sohbet değil. |
-| Whisper large-v3-turbo | ~1,6 GB | extra | Yerel STT | Havuz sohbet UI’si ses göndermez; LM Studio modülü. |
+| Whisper large-v3-turbo | ~1,6 GB | extra | Yerel STT | llvadAI sohbet UI’si ses göndermez; LM Studio modülü. |
 
 **İndirmeyin**
 
@@ -77,7 +77,7 @@ Kaynak katalog: `src/lib/local-studio.json` (UI + script aynı dosya). Çıkarı
 
 36 GB’de iki 27B **birlikte yüklenmez**. Rol değiştirmek önce `unload --all` yapar.
 
-## Özelleştirme (Havuz)
+## Özelleştirme (llvadAI)
 
 Ayarlar:
 
@@ -104,7 +104,7 @@ Kayıt: `lmstudio/results/` (git’e girmez). tok/s, boş çıktı, Türkçe 1�
 |---|---|
 | Sohbet / muhakeme / kod | LM Studio, tek model |
 | Görsel anlama | Qwen3.8, barozp v2, Magistral, TeichAI, Ministral |
-| Görsel üretim | Netlify Havuz, Gemini |
+| Görsel üretim | Netlify llvadAI, Gemini |
 | RAG gömme | nomic (dalga 1), bge-m3 (extra) |
-| STT | Whisper extra; Havuz UI yok |
+| STT | Whisper extra; llvadAI UI yok |
 | Araçlı ajan | Fusion / Ornith / gpt-oss-20B / Qwen3-Coder |

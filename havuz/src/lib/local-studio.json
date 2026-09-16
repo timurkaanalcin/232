@@ -14,7 +14,7 @@
   "trialOrder": ["claude", "fusion", "turkish"],
   "baselineId": "baseline",
   "notes": {
-    "imageGen": "LM Studio görsel üretmez; görsel üretim Netlify Havuz (Gemini) tarafında kalır.",
+    "imageGen": "LM Studio görsel üretmez; görsel üretim Netlify llvadAI (Gemini) tarafında kalır.",
     "mlx8bit27b": "MLX 8-bit 27B ~27,5 GB; OS ile 36 GB’de sıkışır. İndirmeyin.",
     "compare": "Sıra kaynak incelemesine dayanır; bu Mac’te ölçülmüş başarı sıralaması değildir."
   },
@@ -417,7 +417,7 @@
       "sizeNote": "Konuşma → metin. Sohbetle birlikte yüklenmez.",
       "format": "gguf",
       "strength": "Yerel ses yazıya dökme.",
-      "limit": "Havuz sohbet UI’si STT göndermez; LM Studio / CLI için modül.",
+      "limit": "llvadAI sohbet UI’si STT göndermez; LM Studio / CLI için modül.",
       "verdict": "Ek STT modülü. Katalogda yoksa atlanır.",
       "card": "https://huggingface.co/openai/whisper-large-v3-turbo",
       "preset": "",

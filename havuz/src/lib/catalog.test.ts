@@ -131,4 +131,10 @@ describe("brand", () => {
     }
     expect(svg).not.toMatch(/#00e5|#14b8a6|teal/i);
   });
+
+  it("does not leave Havuz in user-facing studio notes", async () => {
+    const { LOCAL_STUDIO } = await import("./local-studio");
+    expect(LOCAL_STUDIO.notes.imageGen).toContain("llvadAI");
+    expect(LOCAL_STUDIO.notes.imageGen).not.toMatch(/Havuz/);
+  });
 });

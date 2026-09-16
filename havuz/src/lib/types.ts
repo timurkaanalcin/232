@@ -72,7 +72,7 @@ export interface AppSettings {
   systemPrompt: string;
   temperature: number;
   defaultModelId: string;
-  /** Netlify site origin for packaged clients, e.g. https://havuz.netlify.app */
+  /** Netlify site origin for packaged clients, e.g. https://aipo.customer.org.tr */
   apiBase: string;
   /** Active prompt preset id, or empty when the system prompt is custom. */
   promptPresetId: string;

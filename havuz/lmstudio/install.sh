@@ -7,7 +7,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 WAVE="${1:-1}"
 chmod +x "$DIR"/*.sh "$DIR"/catalog.py 2>/dev/null || true
 
-echo "==> Havuz LM Studio kurulum  dalga=${WAVE}"
+echo "==> llvadAI LM Studio kurulum  dalga=${WAVE}"
 echo "Bu script Mac’te çalışır. Cloud agent lms göremez."
 
 if ! command -v lms >/dev/null; then
@@ -24,7 +24,7 @@ fi
 
 echo ""
 echo "Sıradaki:"
-echo "  1) Havuz Ayarlar → LM Studio kullan"
+echo "  1) llvadAI Ayarlar → LM Studio kullan"
 echo "  2) Claude adayı:  $DIR/havuz-lms.sh claude"
 echo "  3) Referans:      $DIR/havuz-lms.sh baseline"
 echo "  4) Aynı sorular:  $DIR/compare.sh"

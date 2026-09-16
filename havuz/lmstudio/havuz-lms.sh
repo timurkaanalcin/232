@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Yerel Havuz otomasyonu: sunucu, rol yükleme, karşılaştırma.
+# Yerel llvadAI otomasyonu: sunucu, rol yükleme, karşılaştırma.
 #   ./havuz-lms.sh start|stop|status|list
 #   ./havuz-lms.sh claude|baseline|fusion|turkish|fast|...
 #   ./havuz-lms.sh load <id>
@@ -91,7 +91,7 @@ cmd="${1:-start}"
 case "$cmd" in
   start)
     lms server start --port 1234 --cors || lms server start --cors
-    echo "API: http://127.0.0.1:1234/v1  (Havuz Ayarlar → LM Studio kullan)"
+    echo "API: http://127.0.0.1:1234/v1  (llvadAI Ayarlar → LM Studio kullan)"
     echo "CORS şart. Ağda 0.0.0.0 açmayın — tarayıcı sayfaları localhost’u çağırabilir."
     ;;
   stop)

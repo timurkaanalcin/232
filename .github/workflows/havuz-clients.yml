@@ -1,4 +1,4 @@
-name: Havuz clients
+name: llvadAI clients
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
           npx electron-builder --win nsis --publish never
       - uses: actions/upload-artifact@v4
         with:
-          name: havuz-windows
+          name: llvadai-windows
           path: havuz/release/llvadAI-Setup-*.exe
 
   macos:
@@ -52,7 +52,7 @@ jobs:
           npx electron-builder --mac dmg --publish never
       - uses: actions/upload-artifact@v4
         with:
-          name: havuz-macos
+          name: llvadai-macos
           path: havuz/release/llvadAI-*.dmg
 
   android:
@@ -84,7 +84,9 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+          mkdir -p ../release
+          cp app/build/outputs/apk/debug/app-debug.apk ../release/llvadAI-1.0.0.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: havuz-android
-          path: havuz/android/app/build/outputs/apk/debug/app-debug.apk
+          name: llvadai-android
+          path: havuz/release/llvadAI-1.0.0.apk

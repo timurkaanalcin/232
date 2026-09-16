@@ -1,34 +1,32 @@
-# LocalForge 1.3.0
+# LocalForge 1.4.0
 
-Independent macOS folder workspace. Chat with **Grok** (xAI) using **your** key.
+Independent macOS folder workspace with **ForgeBot**, an original local assistant.
 
-This is **not Cursor**. No Cursor APIs, login, or UI clone.
+This is **not Cursor** and **not Grok / xAI**. No Cursor APIs, no `api.x.ai`, no API keys.
+
+Open the app and chat. Folder tools are optional.
 
 This Linux/cloud environment **cannot** compile a Mac `.app` / `.pkg`. Build on a Mac.
 
 ---
 
-## What you do (only this)
+## What you do
 
-1. **Create or sign in** at [https://console.x.ai](https://console.x.ai) (in the app: **Üye ol / anahtar al**).
-2. **Paste the API key once** into LocalForge (saved in Keychain).
+1. Install and open LocalForge.
+2. Type in the ForgeBot panel. Replies use a built-in local engine plus the open file / selection.
+3. Optional: open a folder (⌘O), edit UTF-8 files, run a local command.
 
-Then chat. Open file and editor selection are attached automatically — no extra toggles.
-
-If `XAI_API_KEY` is already in the environment or `~/.localforge.env` exists, onboarding is skipped and chat opens.
-
-Never commit the key. Ignore any key pasted in chat history.
+If [Ollama](https://ollama.com) is already running on this Mac, ForgeBot may use `http://127.0.0.1:11434` only. Chat still works with Ollama off — zero cloud.
 
 ---
 
-## Yapmanız gerekenler (yalnızca bunlar)
+## Yapmanız gerekenler
 
-1. [https://console.x.ai](https://console.x.ai) üzerinde **üye olun / giriş yapın** (uygulamada **Üye ol / anahtar al**).
-2. API anahtarını **bir kez yapıştırın** (Keychain).
+1. LocalForge’u açın.
+2. ForgeBot paneline yazın. Yanıtlar bu Mac’te, açık dosya / seçimle üretilir.
+3. İsterseniz klasör açın (⌘O), dosya düzenleyin, yerel komut çalıştırın.
 
-Sonra Grok ile sohbet. Açık dosya ve seçim otomatik eklenir.
-
-`XAI_API_KEY` veya `~/.localforge.env` zaten varsa kurulum atlanır.
+Bu Mac’te Ollama çalışıyorsa yalnızca localhost kullanılır. Ollama yoksa da sohbet çalışır. Hesap veya API anahtarı yoktur.
 
 ---
 
@@ -40,18 +38,10 @@ chmod +x scripts/build-pkg.sh
 ./scripts/build-pkg.sh
 ```
 
-Output: `dist/LocalForge.app` and `dist/LocalForge-1.3.0.pkg`.
+Output: `dist/LocalForge.app` and `dist/LocalForge-1.4.0.pkg`.
 
 ```bash
-sudo installer -pkg dist/LocalForge-1.3.0.pkg -target /
+sudo installer -pkg dist/LocalForge-1.4.0.pkg -target /
 ```
 
 The script **exits with an error on Linux**. The package is unsigned; Gatekeeper may ask you to allow it under System Settings → Privacy & Security.
-
----
-
-## Optional (not required to chat)
-
-- Open a folder (⌘O), edit UTF-8 files, run a local command.
-- Other Grok model ids appear in the panel if your xAI account lists them.
-- Alternative key locations: `export XAI_API_KEY=...` or `~/.localforge.env` with `XAI_API_KEY=...`.

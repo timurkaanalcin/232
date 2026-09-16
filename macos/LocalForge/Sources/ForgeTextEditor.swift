@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Monospaced NSTextView so the Grok panel can read the current selection.
+/// Monospaced NSTextView so ForgeBot can read the current selection.
 struct ForgeTextEditor: NSViewRepresentable {
     @Binding var text: String
     @Binding var selectedText: String

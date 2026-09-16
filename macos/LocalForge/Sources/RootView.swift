@@ -3,7 +3,7 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var workspace: WorkspaceModel
-    @EnvironmentObject private var grok: GrokSession
+    @EnvironmentObject private var bot: ForgeBotSession
     @FocusState private var filterFocused: Bool
 
     var body: some View {
@@ -13,8 +13,8 @@ struct RootView: View {
             if workspace.rootURL == nil {
                 HSplitView {
                     WelcomeView()
-                    if grok.showPanel {
-                        GrokPanel()
+                    if bot.showPanel {
+                        ForgeBotPanel()
                             .frame(minWidth: 280, idealWidth: 340, maxWidth: 480)
                     }
                 }
@@ -26,20 +26,15 @@ struct RootView: View {
         }
         .background(ForgeTheme.canvas)
         .focusable()
-        .onChange(of: grok.includeFile) { _, _ in grok.persistPreferences() }
-        .onChange(of: grok.includeSelection) { _, _ in grok.persistPreferences() }
-        .onChange(of: grok.showPanel) { _, _ in grok.persistPreferences() }
+        .onChange(of: bot.includeFile) { _, _ in bot.persistPreferences() }
+        .onChange(of: bot.includeSelection) { _, _ in bot.persistPreferences() }
+        .onChange(of: bot.showPanel) { _, _ in bot.persistPreferences() }
         .onAppear {
-            grok.bootstrapFirstLaunch()
+            bot.bootstrapFirstLaunch()
         }
-        .sheet(isPresented: $grok.showOnboarding) {
-            GrokOnboardingSheet()
-                .environmentObject(grok)
-                .interactiveDismissDisabled(!grok.hasKey)
-        }
-        .sheet(isPresented: $grok.showSettings) {
-            GrokSettingsSheet()
-                .environmentObject(grok)
+        .sheet(isPresented: $bot.showAbout) {
+            ForgeBotAboutSheet()
+                .environmentObject(bot)
         }
     }
 
@@ -89,15 +84,14 @@ struct RootView: View {
                 workspace.showRunner.toggle()
             }
             toolbarButton(
-                grok.showPanel ? "sparkles" : "sparkle",
-                title: grok.showPanel ? "Hide Grok" : "Show Grok"
+                bot.showPanel ? "leaf.fill" : "leaf",
+                title: bot.showPanel ? "Hide ForgeBot" : "Show ForgeBot"
             ) {
-                grok.showPanel.toggle()
-                grok.persistPreferences()
+                bot.showPanel.toggle()
+                bot.persistPreferences()
             }
-            toolbarButton("key", title: "xAI Key") {
-                grok.refreshKeyStatus()
-                grok.showSettings = true
+            toolbarButton("info.circle", title: "About ForgeBot") {
+                bot.showAbout = true
             }
         }
         .padding(.horizontal, 16)
@@ -125,8 +119,8 @@ struct RootView: View {
                 }
             }
             .frame(minWidth: 420)
-            if grok.showPanel {
-                GrokPanel()
+            if bot.showPanel {
+                ForgeBotPanel()
                     .frame(minWidth: 280, idealWidth: 340, maxWidth: 480)
             }
         }
@@ -144,7 +138,6 @@ struct RootView: View {
 
 struct WelcomeView: View {
     @EnvironmentObject private var workspace: WorkspaceModel
-    @EnvironmentObject private var grok: GrokSession
 
     var body: some View {
         VStack(spacing: 18) {
@@ -155,26 +148,21 @@ struct WelcomeView: View {
             Text("LocalForge")
                 .font(.system(size: 32, weight: .semibold, design: .serif))
                 .foregroundStyle(ForgeTheme.ink)
-            Text("Sign in at xAI, paste the key once, chat with Grok.\nFolder tools are optional — the chat panel is already open.")
+            Text("Open the app and chat with ForgeBot.\nLocal original assistant — no account, no cloud.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(ForgeTheme.muted)
                 .frame(maxWidth: 460)
-            Button("Üye ol / anahtar al") {
-                grok.openXAIConsole()
-                grok.showOnboarding = true
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(ForgeTheme.copper)
             Button("Open Folder…") {
                 workspace.pickFolder()
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderedProminent)
+            .tint(ForgeTheme.copper)
             VStack(alignment: .leading, spacing: 6) {
                 shortcutRow("⌘O", "Open folder")
                 shortcutRow("⌘S", "Save file")
                 shortcutRow("⌘F", "Filter files")
                 shortcutRow("⌘R", "Run command")
-                shortcutRow("⌘L", "Show Grok")
+                shortcutRow("⌘L", "Show ForgeBot")
                 shortcutRow("⌘.", "Stop command")
             }
             .padding(.top, 12)

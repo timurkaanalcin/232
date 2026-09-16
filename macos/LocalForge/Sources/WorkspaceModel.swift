@@ -4,7 +4,7 @@ import Foundation
 
 extension Notification.Name {
     static let localForgeFocusFilter = Notification.Name("com.timurkaanalcin.localforge.focusFilter")
-    static let localForgeFocusGrokComposer = Notification.Name("com.timurkaanalcin.localforge.focusGrokComposer")
+    static let localForgeFocusBotComposer = Notification.Name("com.timurkaanalcin.localforge.focusBotComposer")
 }
 
 struct FileNode: Identifiable, Hashable {
@@ -21,7 +21,7 @@ final class WorkspaceModel: ObservableObject {
     @Published var currentFile: URL?
     @Published var editorText: String = ""
     @Published var isDirty: Bool = false
-    @Published var status: String = "Sign in at console.x.ai, paste your key, then chat."
+    @Published var status: String = "Open the app and chat with ForgeBot — local, no account."
     @Published var lastError: String?
     @Published var command: String = "ls -la"
     @Published var commandOutput: String = ""

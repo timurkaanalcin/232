@@ -4,14 +4,14 @@ import AppKit
 @main
 struct LocalForgeApp: App {
     @StateObject private var workspace = WorkspaceModel()
-    @StateObject private var grok = GrokSession()
+    @StateObject private var bot = ForgeBotSession()
     @NSApplicationDelegateAdaptor(ForgeAppDelegate.self) private var appDelegate
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(workspace)
-                .environmentObject(grok)
+                .environmentObject(bot)
                 .frame(minWidth: 960, minHeight: 620)
                 .onAppear {
                     appDelegate.workspace = workspace
@@ -60,9 +60,9 @@ struct LocalForgeApp: App {
                     workspace.showRunner.toggle()
                 }
                 .keyboardShortcut("j", modifiers: [.command])
-                Button(grok.showPanel ? "Hide Grok Assist" : "Show Grok Assist") {
-                    grok.showPanel.toggle()
-                    grok.persistPreferences()
+                Button(bot.showPanel ? "Hide ForgeBot" : "Show ForgeBot") {
+                    bot.showPanel.toggle()
+                    bot.persistPreferences()
                 }
                 .keyboardShortcut("l", modifiers: [.command])
                 Divider()
@@ -77,24 +77,18 @@ struct LocalForgeApp: App {
                 .keyboardShortcut(".", modifiers: [.command])
                 .disabled(!workspace.isRunning)
             }
-            CommandMenu("Grok") {
-                Button("Üye ol / anahtar al") {
-                    grok.openXAIConsole()
-                    if !grok.hasKey {
-                        grok.showOnboarding = true
-                    }
-                }
-                Button("xAI API Key…") {
-                    grok.refreshKeyStatus()
-                    grok.showSettings = true
+            CommandMenu("ForgeBot") {
+                Button("About ForgeBot…") {
+                    bot.showAbout = true
                 }
                 .keyboardShortcut(",", modifiers: [.command, .option])
                 Button("Clear Conversation") {
-                    grok.clearChat()
+                    bot.clearChat()
                 }
                 Divider()
-                Toggle("Attach Current File Automatically", isOn: $grok.includeFile)
-                Toggle("Attach Selection Automatically", isOn: $grok.includeSelection)
+                Toggle("Attach Current File Automatically", isOn: $bot.includeFile)
+                Toggle("Attach Selection Automatically", isOn: $bot.includeSelection)
+                Toggle("Prefer Local Ollama When Running", isOn: $bot.preferOllama)
             }
         }
     }

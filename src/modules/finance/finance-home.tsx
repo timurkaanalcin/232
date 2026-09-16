@@ -46,17 +46,19 @@ export function FinanceHome() {
   }
 
   return (
-    <div className="grid gap-7">
+    <div className="grid grid-cols-1 gap-7">
       <section>
         <h1 className="text-xl font-medium tracking-tight">Piyasa eğilimleri</h1>
-        <div className="mt-3 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:thin]">
-          {overview.featured.map((quote) => (
-            <MarketTrendCard key={quote.instrumentId} quote={quote} />
-          ))}
+        <div className="mt-3 overflow-x-auto pb-1 [scrollbar-width:thin]">
+          <div className="flex w-max gap-3">
+            {overview.featured.map((quote) => (
+              <MarketTrendCard key={quote.instrumentId} quote={quote} />
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)]">
+      <section className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)]">
         <div className="min-w-0">
           <div className="mb-2 flex items-baseline justify-between">
             <h2 className="text-lg font-medium">İzleme listesi</h2>
@@ -64,7 +66,7 @@ export function FinanceHome() {
               Tümünü gör
             </Link>
           </div>
-          <div className="divide-y rounded-lg border bg-white dark:bg-card">
+          <div className="divide-y overflow-hidden rounded-lg border bg-white dark:bg-card">
             <div className="hidden grid-cols-[minmax(0,1.6fr)_96px_auto_auto] gap-x-3 px-4 py-2 text-[11px] text-muted-foreground sm:grid">
               <span>Ad</span>
               <span className="text-right">Grafik</span>

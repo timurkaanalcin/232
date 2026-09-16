@@ -58,7 +58,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
   const results = search.data?.results ?? [];
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div className="min-h-dvh overflow-x-clip bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur dark:bg-background/95">
         <div className={cn(SHELL, "flex h-14 items-center gap-3")}>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setOpen(true)} aria-label="Menü">
@@ -152,8 +152,8 @@ export function FinanceShell({ children }: { children: ReactNode }) {
             })}
           </div>
         </nav>
-        <div className="overflow-x-auto border-t bg-white [scrollbar-width:none] dark:bg-background [&::-webkit-scrollbar]:hidden">
-          <div className={cn(SHELL, "flex gap-0 py-1.5 text-xs")}>
+        <div className="w-full overflow-x-auto border-t bg-white [scrollbar-width:none] dark:bg-background [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max gap-0 px-4 py-1.5 text-xs">
             {(ticker.data?.overview.ticker ?? []).map((item, index) => (
               <Link
                 key={item.instrumentId}
@@ -195,7 +195,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
         </div>
       ) : null}
 
-      <main className={cn(SHELL, "py-5")}>{children}</main>
+      <main className={cn(SHELL, "min-w-0 py-5")}>{children}</main>
       <footer className="border-t bg-white py-6 text-xs text-muted-foreground dark:bg-background">
         <div className={cn(SHELL, "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between")}>
           <p>

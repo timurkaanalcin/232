@@ -29,8 +29,10 @@ export function QuoteRow({ quote, compact }: { quote: QuoteDTO; compact?: boolea
     <Link
       href={`/quote/${encodeURIComponent(quote.instrumentId)}`}
       className={cn(
-        "grid items-center gap-x-3 rounded-md px-2 py-1.5 hover:bg-muted/70",
-        compact ? "grid-cols-[minmax(0,1fr)_auto_auto]" : "grid-cols-[minmax(0,1.4fr)_72px_auto_auto] sm:grid-cols-[minmax(0,1.6fr)_96px_auto_auto]",
+        "grid w-full min-w-0 items-center gap-x-3 rounded-md px-2 py-1.5 hover:bg-muted/70",
+        compact
+          ? "grid-cols-[minmax(0,1fr)_auto_auto]"
+          : "grid-cols-[minmax(0,1fr)_auto_auto] sm:grid-cols-[minmax(0,1.6fr)_96px_auto_auto]",
       )}
     >
       <div className="min-w-0">

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="well" cx="38%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="#2a160c"/>
+      <stop offset="55%" stop-color="#120c09"/>
+      <stop offset="100%" stop-color="#070504"/>
+    </radialGradient>
+    <linearGradient id="ember" x1="18" y1="14" x2="46" y2="52">
+      <stop offset="0%" stop-color="#ffd7a8"/>
+      <stop offset="38%" stop-color="#ff8a3d"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="8" y1="6" x2="58" y2="58">
+      <stop offset="0%" stop-color="#ffc48a"/>
+      <stop offset="50%" stop-color="#ff6b1a"/>
+      <stop offset="100%" stop-color="#7a2e0d"/>
+    </linearGradient>
+  </defs>
+  <rect x="2.5" y="2.5" width="59" height="59" rx="18" fill="url(#well)"/>
+  <rect x="2.5" y="2.5" width="59" height="59" rx="18" fill="none" stroke="url(#ring)" stroke-opacity=".85" stroke-width="1.4"/>
+  <rect x="18.5" y="16" width="7.2" height="32" rx="3.4" fill="url(#ember)"/>
+  <rect x="29.6" y="16" width="7.2" height="32" rx="3.4" fill="url(#ember)"/>
+  <circle cx="46.2" cy="20.4" r="3.1" fill="#ffb347"/>
+  <circle cx="45.4" cy="19.5" r="1.05" fill="#fff4e4" fill-opacity=".9"/>
+</svg>

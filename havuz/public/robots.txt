@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://llvadai.netlify.app/sitemap.txt

@@ -1,0 +1,11 @@
+node_modules
+dist
+.netlify
+.DS_Store
+*.tsbuildinfo
+release
+android
+ios
+lmstudio/results/*.json
+lmstudio/results/*.md
+lmstudio/__pycache__/

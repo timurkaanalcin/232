@@ -1,0 +1,64 @@
+{
+  "temperature": 0.7,
+  "reasonTemperature": 0.6,
+  "ctx": 16384,
+  "order": ["baseline", "claude", "fusion", "turkish"],
+  "questions": [
+    {
+      "id": 1,
+      "title": "Türkçe sahne",
+      "prompt": "İstanbul’da yağmurlu bir akşamı üç cümlede, abartısız anlat.",
+      "score": "Türkçe doğallık 1–5; klişe / İngilizce kaçak"
+    },
+    {
+      "id": 2,
+      "title": "v1 döngü repro",
+      "prompt": "Write a Python function fib(n). Output must be code only: no prose, no markdown.",
+      "v1LoopRepro": true,
+      "score": "Görünür kod var mı, düşünme döngüsü var mı, markdown yok mu. v1: 3000/3000 token sıfır çıktı; v2 üretici testi: ~87 token temiz kod."
+    },
+    {
+      "id": 3,
+      "title": "TypeScript debounce",
+      "prompt": "TypeScript debounce yaz: hem leading hem trailing. Ardından 5 satırlık test fikri ver.",
+      "score": "Çalışan imza, leading/trailing doğru mü, test somut mu"
+    },
+    {
+      "id": 4,
+      "title": "Bellek muhakemesi",
+      "prompt": "36 GB birleşik bellekli bir ajan 70B Q4 yüklerse neden swap’e düşer? Kısa muhakeme, sayı ver.",
+      "score": "OS payı + ağırlık + KV; 70B Q4 ~35–40 GB ağırlık tek başına"
+    },
+    {
+      "id": 5,
+      "title": "Türkçe düzeltme",
+      "prompt": "Bu cümleyi düzelt ve nedenini söyle: “Yarın toplantıya katılacağım mı emin değilim ama gelecem.”",
+      "score": "Doğru eklenti (mı/mi), gelecem→geleceğim, abartısız açıklama"
+    },
+    {
+      "id": 6,
+      "title": "React form",
+      "prompt": "Basit bir React form + erişilebilir hata durumu iskeleti ver. Kısa tut.",
+      "score": "aria-invalid / aria-describedby, çalışan iskelet"
+    },
+    {
+      "id": 7,
+      "title": "Görsel UI (vizyonu olanlarda)",
+      "prompt": "Sana bir ekran görüntüsü vereceğim. Bu UI’da ne kırık? Görüntü yoksa hangi kontrolleri sorardın, madde madde.",
+      "vision": true,
+      "score": "Somut kontrol listesi; vizyonlu modellerde gerçek kırık"
+    },
+    {
+      "id": 8,
+      "title": "Claude üslubu",
+      "prompt": "Bir arkadaşın ‘bu model Claude gibi mi?’ diye soruyor. Abartmadan, neyi taklit edebileceğini ve neyi edemeyeceğini üç maddede söyle.",
+      "score": "Dürüst sınır; ‘ben Claude’um’ yok"
+    },
+    {
+      "id": 9,
+      "title": "Ajansal kod",
+      "prompt": "Vite + React’te Settings modalına ‘LM Studio kullan’ butonu zaten var. CORS kapalıysa kullanıcıya tek cümlelik teşhis ve komut ver.",
+      "score": "lms server start --cors; uydurma dosya yolu yok"
+    }
+  ]
+}

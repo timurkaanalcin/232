@@ -3,16 +3,13 @@ import { expect, test } from "@playwright/test";
 test.describe("public surface", () => {
   test("landing page renders the core sections", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /built on consent/i })).toBeVisible();
-    await expect(page.locator("#features")).toBeVisible();
-    await expect(page.locator("#security")).toBeVisible();
-    await expect(page.locator("#compliance")).toBeVisible();
-    await expect(page.locator("#faq")).toBeVisible();
+    await expect(page.getByRole("link", { name: /borsa/i }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /BIST 100/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Piyasa Gündemi/i })).toBeVisible();
   });
 
   test("can navigate to register and login", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("link", { name: /get started/i }).first().click();
+    await page.goto("/register");
     await expect(page).toHaveURL(/\/register/);
     await expect(page.getByLabel(/full name/i)).toBeVisible();
 

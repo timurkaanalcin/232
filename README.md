@@ -1,3 +1,21 @@
+# llvadAI + LiveTrack
+
+This repository now ships **llvadAI**, a Turkish multi-model AI chat site on Netlify, alongside the existing LiveTrack app.
+
+## llvadAI (Netlify)
+
+All models in one pool. Live Netlify AI Gateway catalog merge, streaming chat, local history.
+
+```bash
+cd havuz
+npm install
+npx netlify dev
+```
+
+Full runbook, env vars, and how new models appear: [havuz/README.md](./havuz/README.md). Root `netlify.toml` sets `base = "havuz"`.
+
+---
+
 # LiveTrack — Consent-First Real-Time Location Sharing
 
 LiveTrack is an enterprise-grade platform for sharing live location **only with explicit user consent**, with full audit trails, role-based administration, and GDPR/KVKK-compliant data handling. It runs entirely on Cloudflare's free tier.

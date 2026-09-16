@@ -53,7 +53,7 @@ export function StudioBar({
         <button
           key={role.id}
           type="button"
-          className={`chip ${settings.promptPresetId === role.preset ? "teal" : ""}`}
+          className={`chip ${settings.promptPresetId === role.preset ? "on" : ""}`}
           title={role.verdict}
           onClick={() => applyRole(role)}
         >

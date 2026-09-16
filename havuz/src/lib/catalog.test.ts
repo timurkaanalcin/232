@@ -109,4 +109,26 @@ describe("brand", () => {
     expect(t("tr", "brand")).toBe("llvadAI");
     expect(t("en", "brand")).toBe("llvadAI");
   });
+
+  it("keeps the ember mark identical in the SVG and BrandMark", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const { fileURLToPath } = await import("node:url");
+    const { dirname, join } = await import("node:path");
+    const here = dirname(fileURLToPath(import.meta.url));
+    const svg = await readFile(join(here, "../../public/favicon.svg"), "utf8");
+    const mark = await readFile(join(here, "../components/BrandMark.tsx"), "utf8");
+    const geometry = [
+      'x="18.5" y="16" width="7.2" height="32"',
+      'x="29.6" y="16" width="7.2" height="32"',
+      'cx="46.2" cy="20.4" r="3.1"',
+      "#ff6b1a",
+      "#ff8a3d",
+      "#070504",
+    ];
+    for (const token of geometry) {
+      expect(svg).toContain(token);
+      expect(mark).toContain(token);
+    }
+    expect(svg).not.toMatch(/#00e5|#14b8a6|teal/i);
+  });
 });

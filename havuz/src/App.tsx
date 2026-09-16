@@ -340,14 +340,14 @@ export function App() {
                   </span>
                 )}
                 {currentModel && (
-                  <span className="chip teal">
+                  <span className="chip on">
                     {formatContext(currentModel.defaultContext)}
                   </span>
                 )}
                 {currentModel && currentModel.maxContext && (
                   <span className="chip">{formatContext(currentModel.maxContext)}</span>
                 )}
-                {currentModel?.isNew && <span className="chip gold">{t(locale, "newBadge")}</span>}
+                {currentModel?.isNew && <span className="chip amber">{t(locale, "newBadge")}</span>}
                 {currentModel && !currentModel.available && (
                   <span className="chip rose">{t(locale, "unavailable")}</span>
                 )}

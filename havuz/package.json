@@ -10,6 +10,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "brand:assets": "node scripts/render-brand.mjs",
     "electron:dist": "npm run build && electron-builder --publish never",
     "cap:sync": "npm run build && cap sync"
   },
@@ -29,6 +30,7 @@
     "@capacitor/cli": "^8.5.2",
     "@capacitor/core": "^8.5.2",
     "@netlify/vite-plugin": "^2.7.5",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^24.5.2",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",

@@ -52,7 +52,7 @@ export function SettingsModal({
               <button
                 key={id}
                 type="button"
-                className={`chip ${settings.promptPresetId === id ? "teal" : ""}`}
+                className={`chip ${settings.promptPresetId === id ? "on" : ""}`}
                 onClick={() => applyPreset(id)}
               >
                 {PROMPT_PRESETS[id][locale]}
@@ -111,7 +111,7 @@ export function SettingsModal({
           <div className="chips" style={{ marginTop: 8 }}>
             <button
               type="button"
-              className={`chip ${local ? "teal" : ""}`}
+              className={`chip ${local ? "on" : ""}`}
               onClick={() => onChange({ ...settings, apiBase: LM_STUDIO_ORIGIN })}
             >
               {t(locale, "useLmStudio")}

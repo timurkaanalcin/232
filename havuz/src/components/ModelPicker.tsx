@@ -113,15 +113,15 @@ export function ModelPicker({
                 </div>
               </div>
               <div className="chips">
-                {model.isNew && <span className="chip gold">{t(locale, "newBadge")}</span>}
-                {model.imageCapable && <span className="chip teal">{t(locale, "imageBadge")}</span>}
+                {model.isNew && <span className="chip amber">{t(locale, "newBadge")}</span>}
+                {model.imageCapable && <span className="chip on">{t(locale, "imageBadge")}</span>}
                 <span className="chip">
                   {t(locale, "contextDefault")} {formatContext(model.defaultContext)}
                 </span>
                 <span className="chip">
                   {t(locale, "contextMax")} {formatContext(model.maxContext)}
                 </span>
-                <span className={`chip ${model.available ? "teal" : "rose"}`}>
+                <span className={`chip ${model.available ? "on" : "rose"}`}>
                   {model.available ? t(locale, "available") : t(locale, "unavailable")}
                 </span>
               </div>

@@ -46,14 +46,18 @@ export function WatchlistPage() {
   return (
     <div className="grid gap-4">
       <div>
-        <h1 className="text-2xl font-semibold">İzleme listesi</h1>
+        <h1 className="text-xl font-medium">İzleme listesi</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Giriş yaptıysanız liste hesabınıza yazılır. Aksi halde tarayıcınızda saklanır.
         </p>
       </div>
-      <div className="rounded-xl border bg-white p-3 dark:bg-card">
+      <div className="divide-y rounded-lg border bg-white dark:bg-card">
+        <div className="hidden grid-cols-[minmax(0,1fr)_auto] gap-2 px-4 py-2 text-[11px] text-muted-foreground sm:grid">
+          <span>Ad · fiyat · değişim</span>
+          <span className="pr-3">İşlem</span>
+        </div>
         {quotes.map((quote) => (
-          <div key={quote.instrumentId} className="flex items-center gap-2">
+          <div key={quote.instrumentId} className="flex items-center gap-2 px-2">
             <div className="min-w-0 flex-1">
               <QuoteRow quote={quote} />
             </div>

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("public surface", () => {
   test("landing page renders the market dashboard", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /piyasa özeti/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /piyasa eğilimleri/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /piyasalar/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /haberler/i }).first()).toBeVisible();
   });

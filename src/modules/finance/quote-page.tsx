@@ -74,39 +74,40 @@ export function QuotePage({ symbol }: { symbol: string }) {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {TYPE_LABELS[quote.type]} · {quote.exchange} · {REGION_LABELS[quote.region]}
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+          <h1 className="mt-1 text-[28px] font-normal leading-tight tracking-tight">
             {quote.nameTr || quote.name}{" "}
-            <span className="text-xl font-medium text-muted-foreground">{quote.symbol}</span>
+            <span className="text-lg text-muted-foreground">{quote.symbol}</span>
           </h1>
-          <div className="mt-2 flex flex-wrap items-end gap-3">
-            <div className="text-4xl font-semibold tabular-nums">{formatPrice(quote.price, quote.currency)}</div>
+          <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
+            <div className="text-[36px] font-normal tabular-nums leading-none">{formatPrice(quote.price, quote.currency)}</div>
             <div
               className={cn(
-                "text-lg tabular-nums",
+                "pb-1 text-lg tabular-nums",
                 tone === "up" && "text-gain",
                 tone === "down" && "text-loss",
+                tone === "flat" && "text-muted-foreground",
               )}
             >
               {formatSigned(quote.changeAbs)} ({formatPct(quote.changePct)})
             </div>
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
-            Kaynak: {quote.source === "live" ? "canlı piyasa" : "gösterge / önbellek"} ·{" "}
+            {quote.source === "live" ? "Canlı piyasa" : "Gösterge / önbellek"} ·{" "}
             {new Date(quote.updatedAt).toLocaleTimeString("tr-TR")}
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => void addWatchlist()}>
+          <Button variant="outline" size="sm" onClick={() => void addWatchlist()}>
             <StarIcon className="size-4" />
             İzle
           </Button>
-          <Button asChild variant="outline">
+          <Button asChild size="sm" variant="outline">
             <Link href={`/compare?a=${encodeURIComponent(quote.instrumentId)}`}>Karşılaştır</Link>
           </Button>
         </div>
@@ -120,35 +121,46 @@ export function QuotePage({ symbol }: { symbol: string }) {
         loading={chartQuery.isFetching}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Açılış" value={formatPrice(quote.open, quote.currency)} />
-        <Stat label="Gün içi yüksek" value={formatPrice(quote.high, quote.currency)} />
-        <Stat label="Gün içi düşük" value={formatPrice(quote.low, quote.currency)} />
-        <Stat label="Önceki kapanış" value={formatPrice(quote.prevClose, quote.currency)} />
-        <Stat label="Hacim" value={formatVolume(quote.volume)} />
-        <Stat label="Ort. hacim" value={formatVolume(quote.avgVolume)} />
-        <Stat label="Piyasa değeri" value={formatCompact(quote.marketCap, quote.currency)} />
-        <Stat label="F/K" value={formatNumber(quote.peRatio)} />
-        <Stat label="Temettü verimi" value={quote.dividendYield != null ? formatPct(quote.dividendYield) : "—"} />
-        <Stat label="52 hafta yüksek" value={formatPrice(quote.week52High, quote.currency)} />
-        <Stat label="52 hafta düşük" value={formatPrice(quote.week52Low, quote.currency)} />
-        <Stat label="Sektör" value={quote.sector || "—"} />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <section>
+          <h2 className="text-base font-medium">Hakkında</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">{quote.descriptionTr || quote.description}</p>
+          <WeekRange low={quote.week52Low} high={quote.week52High} current={quote.price} currency={quote.currency} />
+        </section>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <Stat label="Önceki kapanış" value={formatPrice(quote.prevClose, quote.currency)} />
+          <Stat label="Gün aralığı" value={`${formatPrice(quote.low, quote.currency)} – ${formatPrice(quote.high, quote.currency)}`} />
+          <Stat label="Yıl aralığı" value={`${formatPrice(quote.week52Low, quote.currency)} – ${formatPrice(quote.week52High, quote.currency)}`} />
+          <Stat label="Piyasa değeri" value={formatCompact(quote.marketCap, quote.currency)} />
+          <Stat label="Hacim" value={formatVolume(quote.volume)} />
+          <Stat label="Ort. hacim" value={formatVolume(quote.avgVolume)} />
+          <Stat label="F/K oranı" value={formatNumber(quote.peRatio)} />
+          <Stat label="Temettü verimi" value={quote.dividendYield != null ? formatPct(quote.dividendYield) : "—"} />
+          <Stat label="Açılış" value={formatPrice(quote.open, quote.currency)} />
+          <Stat label="Sektör" value={quote.sector || "—"} />
+        </dl>
       </div>
 
-      <section className="rounded-xl border bg-white p-5 dark:bg-card">
-        <h2 className="text-lg font-semibold">Hakkında</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">{quote.descriptionTr || quote.description}</p>
-      </section>
-
       <section>
-        <h2 className="mb-3 text-lg font-semibold">İlgili haberler</h2>
-        <div className="grid gap-3">
+        <h2 className="mb-3 text-base font-medium">Haberler</h2>
+        <div className="grid gap-2">
           {(newsQuery.data?.news ?? []).map((article) => (
-            <Link key={article.id} href={`/news/${article.slug}`} className="rounded-xl border bg-white p-4 dark:bg-card">
-              <div className="text-xs text-primary">{article.category}</div>
-              <div className="mt-1 font-medium">{article.title}</div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {article.author} · {formatNewsTime(article.publishedAt)}
+            <Link
+              key={article.id}
+              href={`/news/${article.slug}`}
+              className="grid grid-cols-[96px_minmax(0,1fr)] gap-3 rounded-lg border bg-white p-2 dark:bg-card"
+            >
+              {article.imageUrl ? (
+                <img src={article.imageUrl} alt="" className="h-[72px] w-full rounded object-cover" />
+              ) : (
+                <div className="rounded bg-muted" />
+              )}
+              <div className="min-w-0">
+                <div className="text-[11px] text-primary">{article.category}</div>
+                <div className="mt-0.5 text-sm font-medium leading-snug">{article.title}</div>
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  {article.author} · {formatNewsTime(article.publishedAt)}
+                </div>
               </div>
             </Link>
           ))}
@@ -163,9 +175,39 @@ export function QuotePage({ symbol }: { symbol: string }) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border bg-white p-4 dark:bg-card">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 text-sm font-medium tabular-nums">{value}</div>
+    <div className="flex items-baseline justify-between gap-3 border-b py-2">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="text-right font-medium tabular-nums">{value}</dd>
+    </div>
+  );
+}
+
+function WeekRange({
+  low,
+  high,
+  current,
+  currency,
+}: {
+  low: number | null;
+  high: number | null;
+  current: number;
+  currency: string;
+}) {
+  if (low == null || high == null || high <= low) return null;
+  const pct = Math.min(100, Math.max(0, ((current - low) / (high - low)) * 100));
+  return (
+    <div className="mt-5 max-w-md">
+      <div className="mb-1.5 flex justify-between text-xs text-muted-foreground">
+        <span>{formatPrice(low, currency)}</span>
+        <span>52 hafta aralığı</span>
+        <span>{formatPrice(high, currency)}</span>
+      </div>
+      <div className="relative h-1 rounded-full bg-muted">
+        <span
+          className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground"
+          style={{ left: `${pct}%` }}
+        />
+      </div>
     </div>
   );
 }

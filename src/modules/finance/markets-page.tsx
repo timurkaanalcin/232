@@ -18,54 +18,53 @@ export function MarketsPage({ category }: { category?: string }) {
   const quotes = query.data?.quotes ?? [];
 
   return (
-    <div className="grid gap-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Piyasalar</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Endeks, hisse, döviz, kripto ve emtia panoları.</p>
-      </div>
-      <div className="flex flex-wrap gap-2">
+    <div className="grid gap-4">
+      <h1 className="text-xl font-medium tracking-tight">Piyasalar</h1>
+      <div className="flex gap-1 overflow-x-auto border-b [scrollbar-width:none]">
         {MARKET_CATEGORIES.map((item) => (
           <Link
             key={item}
             href={item === "indexes" ? "/markets" : `/markets/${item}`}
             className={cn(
-              "rounded-full px-3 py-1.5 text-sm",
-              active === item ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted",
+              "-mb-px shrink-0 border-b-2 px-3 py-2 text-sm",
+              active === item
+                ? "border-primary font-medium text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {CATEGORY_LABELS[item]}
           </Link>
         ))}
       </div>
-      <div className="overflow-x-auto rounded-xl border bg-white dark:bg-card">
+      <div className="overflow-x-auto rounded-lg border bg-white dark:bg-card">
         <table className="w-full min-w-[720px] text-sm">
-          <thead className="border-b text-left text-xs text-muted-foreground">
+          <thead className="border-b text-left text-[11px] text-muted-foreground">
             <tr>
-              <th className="px-4 py-3 font-medium">Sembol</th>
-              <th className="px-4 py-3 font-medium">Ad</th>
-              <th className="px-4 py-3 font-medium">Grafik</th>
-              <th className="px-4 py-3 text-right font-medium">Fiyat</th>
-              <th className="px-4 py-3 text-right font-medium">Değişim</th>
-              <th className="px-4 py-3 text-right font-medium">Hacim</th>
+              <th className="px-4 py-2 font-medium">Sembol</th>
+              <th className="px-4 py-2 font-medium">Ad</th>
+              <th className="px-4 py-2 font-medium">Grafik</th>
+              <th className="px-4 py-2 text-right font-medium">Fiyat</th>
+              <th className="px-4 py-2 text-right font-medium">Değişim</th>
+              <th className="px-4 py-2 text-right font-medium">Hacim</th>
             </tr>
           </thead>
           <tbody>
             {quotes.map((quote) => (
               <tr key={quote.instrumentId} className="border-b last:border-0 hover:bg-muted/40">
-                <td className="px-4 py-3">
+                <td className="px-4 py-2.5">
                   <Link href={`/quote/${quote.instrumentId}`} className="font-semibold text-primary">
                     {quote.symbol}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">{quote.nameTr || quote.name}</td>
-                <td className="px-4 py-3">
-                  <Sparkline points={quote.sparkline} up={quote.changePct >= 0} />
+                <td className="px-4 py-2.5 text-muted-foreground">{quote.nameTr || quote.name}</td>
+                <td className="px-4 py-2.5">
+                  <Sparkline points={quote.sparkline} up={quote.changePct >= 0} filled />
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">{formatPrice(quote.price, quote.currency)}</td>
-                <td className={`px-4 py-3 text-right tabular-nums ${quote.changePct >= 0 ? "text-gain" : "text-loss"}`}>
+                <td className="px-4 py-2.5 text-right tabular-nums">{formatPrice(quote.price, quote.currency)}</td>
+                <td className={`px-4 py-2.5 text-right tabular-nums ${quote.changePct >= 0 ? "text-gain" : "text-loss"}`}>
                   {formatPct(quote.changePct)}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{formatVolume(quote.volume)}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">{formatVolume(quote.volume)}</td>
               </tr>
             ))}
           </tbody>

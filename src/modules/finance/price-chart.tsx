@@ -47,26 +47,29 @@ export function PriceChart({
   }, [candles]);
 
   const area = path ? `${path} L1000 380 L0 380 Z` : "";
+  const gridYs = [40, 120, 200, 280, 360];
 
   return (
-    <div className="rounded-xl border bg-card">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2">
-        <div className="text-sm text-muted-foreground">
+    <div className="rounded-lg border bg-white dark:bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-2">
+        <div className="px-2 py-2 text-xs text-muted-foreground">
           {hover
             ? `${new Date(hover.t).toLocaleString("tr-TR")} · ${formatPrice(hover.c, currency)}`
             : loading
               ? "Grafik yükleniyor…"
               : "Fiyat grafiği"}
         </div>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap">
           {CHART_RANGES.map((item) => (
             <button
               key={item}
               type="button"
               onClick={() => onRange(item)}
               className={cn(
-                "rounded-md px-2 py-1 text-xs font-medium",
-                range === item ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted",
+                "-mb-px border-b-2 px-2.5 py-2 text-xs font-medium",
+                range === item
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
               {RANGE_LABEL[item]}
@@ -77,7 +80,7 @@ export function PriceChart({
       <div className="relative px-2 pb-3 pt-2">
         <svg
           viewBox="0 0 1000 400"
-          className="h-64 w-full sm:h-80"
+          className="h-64 w-full sm:h-[340px]"
           onMouseLeave={() => setHover(null)}
           onMouseMove={(event) => {
             if (!candles.length) return;
@@ -87,15 +90,18 @@ export function PriceChart({
             setHover(candles[index] ?? null);
           }}
         >
+          {gridYs.map((y) => (
+            <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="currentColor" className="text-border" strokeWidth="1" />
+          ))}
           <defs>
             <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={up ? "var(--gain)" : "var(--loss)"} stopOpacity="0.22" />
+              <stop offset="0%" stopColor={up ? "var(--gain)" : "var(--loss)"} stopOpacity="0.2" />
               <stop offset="100%" stopColor={up ? "var(--gain)" : "var(--loss)"} stopOpacity="0" />
             </linearGradient>
           </defs>
           {area ? <path d={area} fill="url(#chartFill)" /> : null}
           {path ? (
-            <path d={path} fill="none" stroke={up ? "var(--gain)" : "var(--loss)"} strokeWidth="3" strokeLinejoin="round" />
+            <path d={path} fill="none" stroke={up ? "var(--gain)" : "var(--loss)"} strokeWidth="2.5" strokeLinejoin="round" />
           ) : null}
         </svg>
         {hover ? (

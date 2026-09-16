@@ -26,8 +26,8 @@ export function ComparePage() {
   const pathB = useMemo(() => normalize(b.data?.candles ?? []), [b.data]);
 
   return (
-    <div className="grid gap-5">
-      <h1 className="text-2xl font-semibold">Karşılaştır</h1>
+    <div className="grid gap-4">
+      <h1 className="text-xl font-medium">Karşılaştır</h1>
       <div className="grid gap-3 sm:grid-cols-2">
         <Input value={left} onChange={(e) => setLeft(e.target.value.toUpperCase())} aria-label="Birinci sembol" />
         <Input value={right} onChange={(e) => setRight(e.target.value.toUpperCase())} aria-label="İkinci sembol" />
@@ -36,9 +36,9 @@ export function ComparePage() {
         <CompareCard quote={a.data?.quote} />
         <CompareCard quote={b.data?.quote} />
       </div>
-      <svg viewBox="0 0 1000 360" className="h-72 w-full rounded-xl border bg-white dark:bg-card">
-        {pathA ? <path d={pathA} fill="none" stroke="var(--primary)" strokeWidth="3" /> : null}
-        {pathB ? <path d={pathB} fill="none" stroke="var(--chart-3)" strokeWidth="3" /> : null}
+      <svg viewBox="0 0 1000 360" className="h-72 w-full rounded-lg border bg-white dark:bg-card">
+        {pathA ? <path d={pathA} fill="none" stroke="var(--primary)" strokeWidth="2.5" /> : null}
+        {pathB ? <path d={pathB} fill="none" stroke="var(--chart-3)" strokeWidth="2.5" /> : null}
       </svg>
       <div className="flex gap-4 text-sm">
         <span className="text-primary">{a.data?.quote.symbol ?? left}</span>
@@ -49,10 +49,10 @@ export function ComparePage() {
 }
 
 function CompareCard({ quote }: { quote?: QuoteDTO }) {
-  if (!quote) return <div className="rounded-xl border bg-white p-4 text-sm text-muted-foreground dark:bg-card">Yükleniyor…</div>;
+  if (!quote) return <div className="rounded-lg border bg-white p-4 text-sm text-muted-foreground dark:bg-card">Yükleniyor…</div>;
   return (
-    <div className="rounded-xl border bg-white p-4 dark:bg-card">
-      <div className="font-semibold">
+    <div className="rounded-lg border bg-white p-4 dark:bg-card">
+      <div className="font-medium">
         {quote.nameTr} · {quote.symbol}
       </div>
       <div className="mt-1 text-2xl tabular-nums">{formatPrice(quote.price, quote.currency)}</div>

@@ -24,6 +24,8 @@ const NAV = [
   { href: "/compare", label: "Karşılaştır" },
 ];
 
+const SHELL = "mx-auto w-full max-w-[1120px] px-4";
+
 export function FinanceShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -58,31 +60,14 @@ export function FinanceShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur dark:bg-background/95">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
+        <div className={cn(SHELL, "flex h-14 items-center gap-3")}>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setOpen(true)} aria-label="Menü">
             <MenuIcon className="size-5" />
           </Button>
-          <Link href="/" aria-label={`${SITE_NAME} ana sayfa`}>
+          <Link href="/" aria-label={`${SITE_NAME} ana sayfa`} className="shrink-0">
             <FinanceLogo />
           </Link>
-          <nav className="ml-2 hidden items-center gap-1 md:flex">
-            {NAV.map((item) => {
-              const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-sm",
-                    active ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted",
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-          <div ref={boxRef} className="relative ml-auto hidden w-full max-w-md md:block">
+          <div ref={boxRef} className="relative mx-auto hidden w-full max-w-xl md:block">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
@@ -99,7 +84,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
               aria-label="Piyasa ara"
             />
             {focused && query.trim() && (
-              <div className="absolute mt-1 w-full overflow-hidden rounded-xl border bg-popover shadow-lg">
+              <div className="absolute mt-1 w-full overflow-hidden rounded-lg border bg-popover shadow-lg">
                 {results.map((item) => (
                   <Link
                     key={item.instrumentId}
@@ -110,11 +95,11 @@ export function FinanceShell({ children }: { children: ReactNode }) {
                       setQuery("");
                     }}
                   >
-                    <span>
+                    <span className="min-w-0 truncate">
                       <span className="font-medium">{item.symbol}</span>
                       <span className="ml-2 text-muted-foreground">{item.nameTr || item.name}</span>
                     </span>
-                    <span className="tabular-nums">{formatPrice(item.price, item.currency)}</span>
+                    <span className="ml-3 shrink-0 tabular-nums">{formatPrice(item.price, item.currency)}</span>
                   </Link>
                 ))}
                 {search.isFetching ? <div className="px-3 py-2 text-sm text-muted-foreground">Aranıyor…</div> : null}
@@ -124,7 +109,7 @@ export function FinanceShell({ children }: { children: ReactNode }) {
               </div>
             )}
           </div>
-          <div className="ml-auto flex items-center gap-2 md:ml-2">
+          <div className="ml-auto flex items-center gap-2">
             <Link href="/search" className="md:hidden" aria-label="Ara">
               <SearchIcon className="size-5" />
             </Link>
@@ -146,13 +131,40 @@ export function FinanceShell({ children }: { children: ReactNode }) {
             )}
           </div>
         </div>
-        <div className="overflow-x-auto border-t bg-white dark:bg-background">
-          <div className="mx-auto flex max-w-6xl gap-4 px-4 py-2 text-xs">
-            {(ticker.data?.overview.ticker ?? []).map((item) => (
-              <Link key={item.instrumentId} href={`/quote/${item.instrumentId}`} className="flex shrink-0 items-center gap-2">
+        <nav className="hidden border-t md:block">
+          <div className={cn(SHELL, "flex items-stretch gap-1")}>
+            {NAV.map((item) => {
+              const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "-mb-px border-b-2 px-3 py-2.5 text-sm",
+                    active
+                      ? "border-primary font-medium text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+        <div className="overflow-x-auto border-t bg-white [scrollbar-width:none] dark:bg-background [&::-webkit-scrollbar]:hidden">
+          <div className={cn(SHELL, "flex gap-0 py-1.5 text-xs")}>
+            {(ticker.data?.overview.ticker ?? []).map((item, index) => (
+              <Link
+                key={item.instrumentId}
+                href={`/quote/${item.instrumentId}`}
+                className={cn("flex shrink-0 items-center gap-2 px-3 py-1", index > 0 && "border-l")}
+              >
                 <span className="font-medium">{item.symbol}</span>
-                <span className="tabular-nums">{formatPrice(item.price, item.currency)}</span>
-                <span className={item.changePct >= 0 ? "text-gain" : "text-loss"}>{formatPct(item.changePct)}</span>
+                <span className="tabular-nums text-muted-foreground">{formatPrice(item.price, item.currency)}</span>
+                <span className={item.changePct >= 0 ? "tabular-nums text-gain" : "tabular-nums text-loss"}>
+                  {formatPct(item.changePct)}
+                </span>
               </Link>
             ))}
           </div>
@@ -183,14 +195,13 @@ export function FinanceShell({ children }: { children: ReactNode }) {
         </div>
       ) : null}
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-6">{children}</main>
-      <footer className="border-t bg-white py-8 text-sm text-muted-foreground dark:bg-background">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between">
+      <main className={cn(SHELL, "py-5")}>{children}</main>
+      <footer className="border-t bg-white py-6 text-xs text-muted-foreground dark:bg-background">
+        <div className={cn(SHELL, "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between")}>
           <p>
-            {SITE_NAME} bağımsız bir piyasa panosudur. Google Finance kopyası değildir; marka, görsel veya veri
-            tabanı içermez.
+            {SITE_NAME} bağımsız bir piyasa panosudur. Buradaki içerik yatırım tavsiyesi değildir.
           </p>
-          <p>Buradaki içerik yatırım tavsiyesi değildir.</p>
+          <p>Fiyatlar gecikmeli veya gösterge olabilir.</p>
         </div>
       </footer>
     </div>

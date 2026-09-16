@@ -19,16 +19,19 @@ export function SearchPage() {
 
   return (
     <div className="grid gap-4">
-      <h1 className="text-2xl font-semibold">Arama</h1>
+      <h1 className="text-xl font-medium">Arama</h1>
       <Input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="AAPL, BIST, USD/TRY, Bitcoin…"
         aria-label="Arama"
+        className="h-11 rounded-full bg-secondary px-4"
       />
-      <div className="rounded-xl border bg-white p-3 dark:bg-card">
+      <div className="divide-y rounded-lg border bg-white dark:bg-card">
         {(search.data?.results ?? []).map((quote) => (
-          <QuoteRow key={quote.instrumentId} quote={quote} />
+          <div key={quote.instrumentId} className="px-2">
+            <QuoteRow quote={quote} />
+          </div>
         ))}
         {query && !search.isFetching && (search.data?.results.length ?? 0) === 0 ? (
           <p className="p-3 text-sm text-muted-foreground">Eşleşen enstrüman yok.</p>

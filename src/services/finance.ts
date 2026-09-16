@@ -181,7 +181,10 @@ async function tableExists(db: D1Database, name: string): Promise<boolean> {
 export async function ensureFinanceSeeded(db: D1Database): Promise<void> {
   if (!(await tableExists(db, "instruments"))) return;
   const existing = await db.prepare(`SELECT COUNT(*) AS n FROM instruments`).first<{ n: number }>();
-  if ((existing?.n ?? 0) > 0) return;
+  if ((existing?.n ?? 0) > 0) {
+    await seedVideosIfEmpty(db);
+    return;
+  }
 
   const now = Date.now();
   const statements: D1PreparedStatement[] = [];
@@ -295,6 +298,35 @@ export async function ensureFinanceSeeded(db: D1Database): Promise<void> {
   for (let i = 0; i < statements.length; i += 40) {
     await db.batch(statements.slice(i, i + 40));
   }
+}
+
+async function seedVideosIfEmpty(db: D1Database): Promise<void> {
+  if (!(await tableExists(db, "finance_videos"))) return;
+  const existing = await db.prepare(`SELECT COUNT(*) AS n FROM finance_videos`).first<{ n: number }>();
+  if ((existing?.n ?? 0) > 0) return;
+  const now = Date.now();
+  const statements = VIDEO_CATALOG.map((video) =>
+    db
+      .prepare(
+        `INSERT OR IGNORE INTO finance_videos (
+          id, title, channel, youtube_id, duration, category, is_published, is_featured, sort_order, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        video.id,
+        video.title,
+        video.channel,
+        video.youtubeId,
+        video.duration,
+        video.category,
+        video.published ? 1 : 0,
+        video.featured ? 1 : 0,
+        video.sortOrder,
+        now,
+        now,
+      ),
+  );
+  if (statements.length) await db.batch(statements);
 }
 
 function ensureMemorySeeded() {
@@ -628,7 +660,7 @@ export async function listVideos(includeUnpublished = false): Promise<VideoDTO[]
       sortOrder: row.sort_order,
     }));
   });
-  if (fromDb) return fromDb;
+  if (fromDb && fromDb.length > 0) return fromDb;
   return includeUnpublished ? memoryVideos : memoryVideos.filter((v) => v.published);
 }
 

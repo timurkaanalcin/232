@@ -125,6 +125,7 @@ export function FinanceHome() {
         </div>
       </section>
 
+      {overview.videos.length > 0 ? (
       <section>
         <h2 className="mb-3 text-lg font-medium">Videolar</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -151,6 +152,7 @@ export function FinanceHome() {
           ))}
         </div>
       </section>
+      ) : null}
     </div>
   );
 }

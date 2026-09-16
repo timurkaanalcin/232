@@ -177,7 +177,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b py-2">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right font-medium tabular-nums">{value}</dd>
+      <dd className="whitespace-nowrap text-right font-medium tabular-nums">{value}</dd>
     </div>
   );
 }
@@ -194,13 +194,15 @@ function WeekRange({
   currency: string;
 }) {
   if (low == null || high == null || high <= low) return null;
-  const pct = Math.min(100, Math.max(0, ((current - low) / (high - low)) * 100));
+  const lo = Math.min(low, current);
+  const hi = Math.max(high, current);
+  const pct = Math.min(100, Math.max(0, ((current - lo) / (hi - lo)) * 100));
   return (
     <div className="mt-5 max-w-md">
       <div className="mb-1.5 flex justify-between text-xs text-muted-foreground">
-        <span>{formatPrice(low, currency)}</span>
+        <span>{formatPrice(lo, currency)}</span>
         <span>52 hafta aralığı</span>
-        <span>{formatPrice(high, currency)}</span>
+        <span>{formatPrice(hi, currency)}</span>
       </div>
       <div className="relative h-1 rounded-full bg-muted">
         <span

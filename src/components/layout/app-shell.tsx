@@ -59,6 +59,7 @@ const USER_NAV: NavItem[] = [
 
 const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Overview", icon: ActivityIcon, permission: "stats.view" },
+  { href: "/admin/markets", label: "Piyasalar", icon: ActivityIcon, permission: "finance.manage" },
   { href: "/admin/map", label: "Live Map", icon: MapIcon, permission: "map.live_view" },
   { href: "/admin/users", label: "Users", icon: UsersIcon, permission: "users.view" },
   { href: "/admin/audit", label: "Audit Logs", icon: ScrollTextIcon, permission: "audit.view" },

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Logo } from "@/components/layout/logo";
-import { ShieldCheckIcon } from "lucide-react";
+import { LineChartIcon } from "lucide-react";
+import { FinanceLogo } from "@/modules/finance/logo";
 
 export function AuthShell({
   title,
@@ -17,8 +17,8 @@ export function AuthShell({
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
       <div className="flex flex-col px-6 py-8 sm:px-10">
-        <Link href="/" aria-label="LiveTrack home" className="w-fit">
-          <Logo />
+        <Link href="/" aria-label="borsahatti ana sayfa" className="w-fit">
+          <FinanceLogo />
         </Link>
         <div className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm">
@@ -31,17 +31,14 @@ export function AuthShell({
       </div>
 
       {/* Brand panel */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-primary/90 via-primary to-emerald-700 lg:block">
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-primary via-[#174ea6] to-[#0b57d0] lg:block">
         <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:28px_28px]" />
-        <div className="relative flex h-full flex-col justify-end p-12 text-primary-foreground">
-          <ShieldCheckIcon className="mb-6 size-12" />
+        <div className="relative flex h-full flex-col justify-end p-12 text-white">
+          <LineChartIcon className="mb-6 size-12" />
           <blockquote className="text-2xl font-medium leading-snug">
-            Real-time location sharing built on explicit consent — with full audit trails and the right to be
-            forgotten.
+            Piyasalar, haberler ve izleme listesi — özgün borsahatti panosu. İçerik admin panelinden yönetilir.
           </blockquote>
-          <p className="mt-4 text-sm text-primary-foreground/80">
-            GDPR &amp; KVKK-compliant · End-to-end auditable · Edge-native
-          </p>
+          <p className="mt-4 text-sm text-white/80">Yatırım tavsiyesi değildir · Google Finance kopyası değildir</p>
         </div>
       </div>
     </div>

@@ -11,11 +11,11 @@ test.describe("public surface", () => {
   test("can open a quote from the markets table", async ({ page }) => {
     await page.goto("/markets");
     await expect(page.getByRole("heading", { name: /piyasalar/i })).toBeVisible();
-    const symbol = page.getByRole("link", { name: /XU100|S&P 500|NASDAQ|BIST/i }).first();
+    const symbol = page.locator("table a[href^='/quote/']").first();
     await expect(symbol).toBeVisible();
     await symbol.click();
     await expect(page).toHaveURL(/\/quote\//);
-    await expect(page.getByRole("heading")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 
   test("can navigate to register and login", async ({ page }) => {

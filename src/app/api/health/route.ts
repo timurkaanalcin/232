@@ -5,18 +5,22 @@ import { REALTIME } from "@/lib/constants";
 export const GET = async () => {
   const checks: Record<string, "ok" | "error"> = { app: "ok", database: "error", realtime: "error" };
 
-  const env = getEnv();
   try {
-    await env.DB.prepare("SELECT 1").first();
-    checks.database = "ok";
+    const env = getEnv();
+    try {
+      await env.DB.prepare("SELECT 1").first();
+      checks.database = "ok";
+    } catch {
+      // database unreachable
+    }
+    try {
+      await env.LOCATION_HUB.getByName(REALTIME.HUB_NAME).connectionCounts();
+      checks.realtime = "ok";
+    } catch {
+      // durable object unreachable
+    }
   } catch {
-    // database unreachable
-  }
-  try {
-    await env.LOCATION_HUB.getByName(REALTIME.HUB_NAME).connectionCounts();
-    checks.realtime = "ok";
-  } catch {
-    // durable object unreachable
+    // worker bindings unavailable (plain `next start` in CI)
   }
 
   const healthy = Object.values(checks).every((status) => status === "ok");

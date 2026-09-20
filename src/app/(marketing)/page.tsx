@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
-import { NewsHome } from "@/modules/marketing/news-home";
-
-import { SITE_NAME } from "@/modules/marketing/news-articles";
+import { LandingPage } from "@/modules/marketing/landing";
 import { SITE_URL } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: `${SITE_NAME} — Borsa, döviz, altın ve ekonomi haberleri`,
-  description: "Canlı piyasa verileri, BIST, döviz kurları, altın, video haberler ve finans gündemi.",
+  title: "LiveTrack — Consent-first real-time location sharing",
+  description:
+    "Enterprise-grade real-time location sharing with explicit consent, full audit trails, live maps and GDPR/KVKK-compliant data handling.",
   openGraph: {
-    title: SITE_NAME,
-    description: "Türkiye finans gündemi — borsa, döviz, altın, kripto",
+    title: "LiveTrack",
+    description: "Consent-first real-time location sharing",
     url: SITE_URL,
-    siteName: SITE_NAME,
+    siteName: "LiveTrack",
     type: "website",
   },
 };
 
-export default function LandingPage() {
-  return <NewsHome />;
+export default function MarketingPage() {
+  return <LandingPage />;
 }

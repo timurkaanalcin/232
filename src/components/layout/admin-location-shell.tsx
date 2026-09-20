@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { LogOutIcon, MapPinIcon, RefreshCwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SITE_NAME } from "@/modules/marketing/news-articles";
 import type { ReactNode } from "react";
 
 export function AdminLocationShell({
@@ -24,7 +23,7 @@ export function AdminLocationShell({
       <header className="flex h-12 shrink-0 items-center justify-between border-b px-4">
         <Link href="/admin/map" className="flex items-center gap-2 text-sm font-semibold">
           <MapPinIcon className="size-4 text-amber-600" />
-          {SITE_NAME} · Konum
+          LiveTrack · Map
         </Link>
         <div className="flex items-center gap-1">
           {onRefresh && (

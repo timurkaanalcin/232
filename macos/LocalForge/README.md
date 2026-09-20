@@ -30,18 +30,28 @@ Bu Mac’te Ollama çalışıyorsa yalnızca localhost kullanılır. Ollama yoks
 
 ---
 
-## Build the `.pkg` (Mac only)
+## Two products (build on a Mac)
+
+This zip is **source**, not a Mac installer. Linux/cloud cannot produce a real `.pkg` or runnable `.app`. Build on macOS 14+ with Xcode Command Line Tools (`xcode-select --install`).
+
+**1. Installer app (the package you double-click)**  
+`dist/LocalForge-1.4.0.pkg` after a successful build. That is the MacBook installer.
+
+**2. Installed form (the app itself)**  
+`dist/LocalForge.app` after the same build. The `.pkg` also copies it to `/Applications/LocalForge.app`.
 
 ```bash
-cd macos/LocalForge
+# From this folder (zip root, or macos/LocalForge in the git repo)
 chmod +x scripts/build-pkg.sh
 ./scripts/build-pkg.sh
-```
 
-Output: `dist/LocalForge.app` and `dist/LocalForge-1.4.0.pkg`.
+# Installer
+open dist/LocalForge-1.4.0.pkg
+# or: sudo installer -pkg dist/LocalForge-1.4.0.pkg -target /
 
-```bash
-sudo installer -pkg dist/LocalForge-1.4.0.pkg -target /
+# Installed app (no pkg): open the built bundle, or after the pkg:
+open dist/LocalForge.app
+open /Applications/LocalForge.app
 ```
 
 The script **exits with an error on Linux**. The package is unsigned; Gatekeeper may ask you to allow it under System Settings → Privacy & Security.

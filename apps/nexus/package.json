@@ -1,0 +1,35 @@
+{
+  "name": "nexus-ai-pool",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Nexus — live AI model pool chat",
+  "scripts": {
+    "dev": "vite",
+    "llama": "bash scripts/start-llama.sh",
+    "build": "tsc -p tsconfig.app.json --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "@google/genai": "^1.19.0",
+    "@netlify/functions": "^2.8.2",
+    "dompurify": "^3.2.4",
+    "lucide-react": "^0.468.0",
+    "marked": "^15.0.6",
+    "openai": "^4.77.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@netlify/vite-plugin": "^2.12.9",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
+  }
+}

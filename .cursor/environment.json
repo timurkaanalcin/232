@@ -1,0 +1,17 @@
+{
+  "name": "LiveTrack",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "preview",
+      "command": "npm run preview",
+      "description": "OpenNext build + `wrangler dev` on http://localhost:8787 with real Cloudflare bindings (D1, Durable Objects). This is the full-stack dev server; realtime location sharing works here. Rebuilds on start; edit-then-restart to pick up source changes."
+    }
+  ],
+  "ports": [
+    {
+      "name": "wrangler dev (full stack)",
+      "port": 8787
+    }
+  ]
+}

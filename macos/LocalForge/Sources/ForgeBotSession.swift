@@ -19,16 +19,16 @@ final class ForgeBotSession: ObservableObject {
     @Published var composerFocusToken: Int = 0
 
     private let defaults = UserDefaults.standard
-    private let panelKey = "llvadlocal.bot.showPanel"
-    private let fileKey = "llvadlocal.bot.includeFile"
-    private let selectionKey = "llvadlocal.bot.includeSelection"
-    private let ollamaKey = "llvadlocal.bot.preferOllama"
+    private let panelKey = "localforge.bot.showPanel"
+    private let fileKey = "localforge.bot.includeFile"
+    private let selectionKey = "localforge.bot.includeSelection"
+    private let ollamaKey = "localforge.bot.preferOllama"
 
     init() {
-        showPanel = UserDefaults.standard.object(forKey: panelKey) as? Bool ?? true
-        includeFile = UserDefaults.standard.object(forKey: fileKey) as? Bool ?? true
-        includeSelection = UserDefaults.standard.object(forKey: selectionKey) as? Bool ?? true
-        preferOllama = UserDefaults.standard.object(forKey: ollamaKey) as? Bool ?? true
+        showPanel = UserDefaults.standard.object(forKey: "localforge.bot.showPanel") as? Bool ?? true
+        includeFile = UserDefaults.standard.object(forKey: "localforge.bot.includeFile") as? Bool ?? true
+        includeSelection = UserDefaults.standard.object(forKey: "localforge.bot.includeSelection") as? Bool ?? true
+        preferOllama = UserDefaults.standard.object(forKey: "localforge.bot.preferOllama") as? Bool ?? true
     }
 
     func bootstrapFirstLaunch() {

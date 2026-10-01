@@ -1,24 +1,22 @@
 #!/usr/bin/env bash
-# Build llvadLOCAL.app and a macOS installer .pkg.
+# Build LocalForge.app and a macOS installer .pkg.
 # Must be run on macOS with Xcode Command Line Tools. Will refuse on Linux.
-# This environment cannot produce a real signed macOS pkg — do not fake one.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-APP="$DIST/llvadLOCAL.app"
+APP="$DIST/LocalForge.app"
 MACOS="$APP/Contents/MacOS"
 RES="$APP/Contents/Resources"
-VERSION="1.5.0"
-PKG="$DIST/llvadLOCAL-${VERSION}.pkg"
-IDENT="com.timurkaanalcin.llvadlocal"
+VERSION="1.4.0"
+PKG="$DIST/LocalForge-${VERSION}.pkg"
+IDENT="com.timurkaanalcin.localforge"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
-  echo "llvadLOCAL .pkg can only be built on macOS (this host is $(uname -s))." >&2
+  echo "LocalForge .pkg can only be built on macOS (this host is $(uname -s))." >&2
   echo "On a Mac with Xcode Command Line Tools:" >&2
-  echo "  cd macos/llvadLOCAL && ./scripts/build-pkg.sh" >&2
-  echo "Output: dist/llvadLOCAL.app and dist/llvadLOCAL-${VERSION}.pkg" >&2
-  echo "An earlier LocalForge-1.4.0.pkg (pre-rename) is not this product's installer." >&2
+  echo "  cd macos/LocalForge && ./scripts/build-pkg.sh" >&2
+  echo "Output: dist/LocalForge.app and dist/LocalForge-${VERSION}.pkg" >&2
   exit 1
 fi
 
@@ -51,20 +49,20 @@ swiftc -parse-as-library \
   -target "$TARGET" \
   -framework SwiftUI \
   -framework AppKit \
-  -o "$MACOS/llvadLOCAL" \
+  -o "$MACOS/LocalForge" \
   "${SOURCES[@]}"
 
 cp "$ROOT/Resources/Info.plist" "$APP/Contents/Info.plist"
-chmod +x "$MACOS/llvadLOCAL"
+chmod +x "$MACOS/LocalForge"
 
-if [[ ! -x "$MACOS/llvadLOCAL" ]]; then
-  echo "Failed to produce llvadLOCAL executable" >&2
+if [[ ! -x "$MACOS/LocalForge" ]]; then
+  echo "Failed to produce LocalForge executable" >&2
   exit 1
 fi
 
 STAGE="$DIST/payload"
 mkdir -p "$STAGE"
-cp -R "$APP" "$STAGE/llvadLOCAL.app"
+cp -R "$APP" "$STAGE/LocalForge.app"
 
 pkgbuild \
   --root "$STAGE" \

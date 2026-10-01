@@ -3,8 +3,8 @@ import Combine
 import Foundation
 
 extension Notification.Name {
-    static let localForgeFocusFilter = Notification.Name("com.timurkaanalcin.localforge.focusFilter")
-    static let localForgeFocusBotComposer = Notification.Name("com.timurkaanalcin.localforge.focusBotComposer")
+    static let localForgeFocusFilter = Notification.Name("com.timurkaanalcin.llvadlocal.focusFilter")
+    static let localForgeFocusBotComposer = Notification.Name("com.timurkaanalcin.llvadlocal.focusBotComposer")
 }
 
 struct FileNode: Identifiable, Hashable {
@@ -60,7 +60,7 @@ final class WorkspaceModel: ObservableObject {
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = true
         panel.prompt = "Open"
-        panel.message = "Choose a project folder for LocalForge."
+        panel.message = "Choose a project folder for llvadLOCAL."
         guard panel.runModal() == .OK, let url = panel.url else { return }
         openFolder(url)
     }
@@ -313,7 +313,7 @@ final class WorkspaceModel: ObservableObject {
 
     private func presentError(_ message: String) {
         let alert = NSAlert()
-        alert.messageText = "LocalForge"
+        alert.messageText = "llvadLOCAL"
         alert.informativeText = message
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")

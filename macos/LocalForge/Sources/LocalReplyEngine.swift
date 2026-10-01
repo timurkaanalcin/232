@@ -1,6 +1,6 @@
 import Foundation
 
-/// Original llvadLOCAL reply engine. Not a cloud model, not Grok, not Cursor.
+/// Original LocalForge reply engine. Not a cloud model, not Grok, not Cursor.
 enum LocalReplyEngine {
     static let maxContextChars = 24_000
 
@@ -105,13 +105,13 @@ enum LocalReplyEngine {
     private static func identity(turkish: Bool, engine: String) -> String {
         if turkish {
             return """
-            Ben ForgeBot’um — llvadLOCAL içinde yazılmış yerel, özgün bir asistan. \
+            Ben ForgeBot’um — LocalForge içinde yazılmış yerel, özgün bir asistan. \
             Grok değilim, xAI ürünü değilim, Cursor da değilim. Ağ gerekmez. \
             Şu an \(engine). Açık dosya veya seçim varsa ona bakarak yanıtlarım.
             """
         }
         return """
-        I’m ForgeBot, an original local assistant written for llvadLOCAL. \
+        I’m ForgeBot, an original local assistant written for LocalForge. \
         I am not Grok, not an xAI product, and not Cursor. No cloud account. \
         Right now: \(engine). Open a file if you want answers grounded in your text.
         """
@@ -122,13 +122,13 @@ enum LocalReplyEngine {
             ?? (turkish ? "Henüz dosya açık değil." : "No file is open yet.")
         if turkish {
             return """
-            llvadLOCAL: klasör aç (⌘O), kaydet (⌘S), komut (⌘R), ForgeBot paneli (⌘L). \
+            LocalForge: klasör aç (⌘O), kaydet (⌘S), komut (⌘R), ForgeBot paneli (⌘L). \
             \(fileBit) Bana “özet”, “kaç satır”, veya dosyada aramak istediğin bir kelime yaz. \
             İsteğe bağlı: bu Mac’te Ollama çalışıyorsa yalnızca localhost kullanılır.
             """
         }
         return """
-        llvadLOCAL: open folder (⌘O), save (⌘S), run a command (⌘R), ForgeBot panel (⌘L). \
+        LocalForge: open folder (⌘O), save (⌘S), run a command (⌘R), ForgeBot panel (⌘L). \
         \(fileBit) Ask for a summary, line counts, or a word to find in the open file. \
         Optional: if Ollama is running on this Mac, chat can use localhost only.
         """

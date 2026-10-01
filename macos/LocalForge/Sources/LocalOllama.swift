@@ -58,7 +58,7 @@ enum LocalOllama {
                 [
                     "role": "system",
                     "content": """
-                    You are ForgeBot, an original local assistant inside the llvadLOCAL macOS app. \
+                    You are ForgeBot, an original local assistant inside the LocalForge macOS app. \
                     You are not Grok, not an xAI product, and not Cursor. Stay on the user's question \
                     and any file or selection they attached. If you lack context, say so.
                     """

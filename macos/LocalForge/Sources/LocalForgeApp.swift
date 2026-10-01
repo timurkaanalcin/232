@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct LlvadLocalApp: App {
+struct LocalForgeApp: App {
     @StateObject private var workspace = WorkspaceModel()
     @StateObject private var bot = ForgeBotSession()
     @NSApplicationDelegateAdaptor(ForgeAppDelegate.self) private var appDelegate

@@ -44,7 +44,7 @@ struct RootView: View {
                 Image(systemName: "flame.fill")
                     .foregroundStyle(ForgeTheme.copper)
                     .font(.title3)
-                Text("llvadLOCAL")
+                Text("LocalForge")
                     .font(ForgeTheme.brandFont)
                     .foregroundStyle(ForgeTheme.ink)
             }
@@ -145,7 +145,7 @@ struct WelcomeView: View {
             Image(systemName: "flame.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(ForgeTheme.copper)
-            Text("llvadLOCAL")
+            Text("LocalForge")
                 .font(.system(size: 32, weight: .semibold, design: .serif))
                 .foregroundStyle(ForgeTheme.ink)
             Text("Open the app and chat with ForgeBot.\nLocal original assistant — no account, no cloud.")

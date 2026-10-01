@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
-# Build LocalForge.app and a macOS installer .pkg.
+# Build llvadARC.app and a macOS installer .pkg.
 # Must be run on macOS with Xcode Command Line Tools. Will refuse on Linux.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-APP="$DIST/LocalForge.app"
+APP="$DIST/llvadARC.app"
 MACOS="$APP/Contents/MacOS"
 RES="$APP/Contents/Resources"
-VERSION="1.4.0"
-PKG="$DIST/LocalForge-${VERSION}.pkg"
-IDENT="com.timurkaanalcin.localforge"
+VERSION="1.5.0"
+PKG="$DIST/llvadARC-${VERSION}.pkg"
+IDENT="com.timurkaanalcin.llvadarc"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
-  echo "LocalForge .pkg can only be built on macOS (this host is $(uname -s))." >&2
+  echo "llvadARC .pkg can only be built on macOS (this host is $(uname -s))." >&2
   echo "On a Mac with Xcode Command Line Tools:" >&2
-  echo "  cd macos/LocalForge && ./scripts/build-pkg.sh" >&2
-  echo "Output: dist/LocalForge.app and dist/LocalForge-${VERSION}.pkg" >&2
+  echo "  cd macos/llvadARC && ./scripts/build-pkg.sh" >&2
+  echo "Output: dist/llvadARC.app and dist/llvadARC-${VERSION}.pkg" >&2
+  echo "Do not use a pre-rename LocalForge-1.4.0.pkg after this rename." >&2
   exit 1
 fi
 
@@ -49,20 +50,20 @@ swiftc -parse-as-library \
   -target "$TARGET" \
   -framework SwiftUI \
   -framework AppKit \
-  -o "$MACOS/LocalForge" \
+  -o "$MACOS/llvadARC" \
   "${SOURCES[@]}"
 
 cp "$ROOT/Resources/Info.plist" "$APP/Contents/Info.plist"
-chmod +x "$MACOS/LocalForge"
+chmod +x "$MACOS/llvadARC"
 
-if [[ ! -x "$MACOS/LocalForge" ]]; then
-  echo "Failed to produce LocalForge executable" >&2
+if [[ ! -x "$MACOS/llvadARC" ]]; then
+  echo "Failed to produce llvadARC executable" >&2
   exit 1
 fi
 
 STAGE="$DIST/payload"
 mkdir -p "$STAGE"
-cp -R "$APP" "$STAGE/LocalForge.app"
+cp -R "$APP" "$STAGE/llvadARC.app"
 
 pkgbuild \
   --root "$STAGE" \

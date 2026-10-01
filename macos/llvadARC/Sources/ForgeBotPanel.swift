@@ -23,7 +23,7 @@ struct ForgeBotPanel: View {
         .onChange(of: bot.composerFocusToken) { _, _ in
             composerFocused = true
         }
-        .onReceive(NotificationCenter.default.publisher(for: .localForgeFocusBotComposer)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .llvadARCFocusBotComposer)) { _ in}
             composerFocused = true
         }
     }

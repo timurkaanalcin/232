@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct LocalForgeApp: App {
+struct LlvadARCApp: App {
     @StateObject private var workspace = WorkspaceModel()
     @StateObject private var bot = ForgeBotSession()
     @NSApplicationDelegateAdaptor(ForgeAppDelegate.self) private var appDelegate
@@ -43,7 +43,7 @@ struct LocalForgeApp: App {
             }
             CommandMenu("Workspace") {
                 Button("Filter Files") {
-                    NotificationCenter.default.post(name: .localForgeFocusFilter, object: nil)
+                    NotificationCenter.default.post(name: .llvadARCFocusFilter, object: nil)
                 }
                 .keyboardShortcut("f", modifiers: [.command])
                 Button("Refresh File Tree") {

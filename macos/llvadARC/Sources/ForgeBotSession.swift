@@ -19,16 +19,16 @@ final class ForgeBotSession: ObservableObject {
     @Published var composerFocusToken: Int = 0
 
     private let defaults = UserDefaults.standard
-    private let panelKey = "localforge.bot.showPanel"
-    private let fileKey = "localforge.bot.includeFile"
-    private let selectionKey = "localforge.bot.includeSelection"
-    private let ollamaKey = "localforge.bot.preferOllama"
+    private let panelKey = "llvadarc.bot.showPanel"
+    private let fileKey = "llvadarc.bot.includeFile"
+    private let selectionKey = "llvadarc.bot.includeSelection"
+    private let ollamaKey = "llvadarc.bot.preferOllama"
 
     init() {
-        showPanel = UserDefaults.standard.object(forKey: "localforge.bot.showPanel") as? Bool ?? true
-        includeFile = UserDefaults.standard.object(forKey: "localforge.bot.includeFile") as? Bool ?? true
-        includeSelection = UserDefaults.standard.object(forKey: "localforge.bot.includeSelection") as? Bool ?? true
-        preferOllama = UserDefaults.standard.object(forKey: "localforge.bot.preferOllama") as? Bool ?? true
+        showPanel = UserDefaults.standard.object(forKey: "llvadarc.bot.showPanel") as? Bool ?? true
+        includeFile = UserDefaults.standard.object(forKey: "llvadarc.bot.includeFile") as? Bool ?? true
+        includeSelection = UserDefaults.standard.object(forKey: "llvadarc.bot.includeSelection") as? Bool ?? true
+        preferOllama = UserDefaults.standard.object(forKey: "llvadarc.bot.preferOllama") as? Bool ?? true
     }
 
     func bootstrapFirstLaunch() {
@@ -47,7 +47,7 @@ final class ForgeBotSession: ObservableObject {
 
     func requestComposerFocus() {
         composerFocusToken += 1
-        NotificationCenter.default.post(name: .localForgeFocusBotComposer, object: nil)
+        NotificationCenter.default.post(name: .llvadARCFocusBotComposer, object: nil)
     }
 
     func clearChat() {

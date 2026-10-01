@@ -44,7 +44,7 @@ struct RootView: View {
                 Image(systemName: "flame.fill")
                     .foregroundStyle(ForgeTheme.copper)
                     .font(.title3)
-                Text("LocalForge")
+                Text("llvadARC")
                     .font(ForgeTheme.brandFont)
                     .foregroundStyle(ForgeTheme.ink)
             }
@@ -97,7 +97,7 @@ struct RootView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(ForgeTheme.bar)
-        .onReceive(NotificationCenter.default.publisher(for: .localForgeFocusFilter)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .llvadARCFocusFilter)) { _ in}
             filterFocused = true
         }
     }
@@ -145,7 +145,7 @@ struct WelcomeView: View {
             Image(systemName: "flame.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(ForgeTheme.copper)
-            Text("LocalForge")
+            Text("llvadARC")
                 .font(.system(size: 32, weight: .semibold, design: .serif))
                 .foregroundStyle(ForgeTheme.ink)
             Text("Open the app and chat with ForgeBot.\nLocal original assistant — no account, no cloud.")

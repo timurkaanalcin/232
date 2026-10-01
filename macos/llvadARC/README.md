@@ -1,18 +1,18 @@
-# LocalForge 1.4.0
+# llvadARC 1.5.0
 
 Independent macOS folder workspace with **ForgeBot**, an original local assistant.
 
-This is **not Cursor** and **not Grok / xAI**. No Cursor APIs, no `api.x.ai`, no API keys.
+This is **not Cursor** and **not Grok / xAI**. No Cursor APIs, no `api.x.ai`, no API keys. The UI is the original atelier (paper / oak / copper) workspace — not a Cursor clone.
 
 Open the app and chat. Folder tools are optional.
 
-This Linux/cloud environment **cannot** compile a Mac `.app` / `.pkg`. Build on a Mac.
+This Linux/cloud environment **cannot** compile a Mac `.app` / `.pkg`. Build on a Mac. Do not use a pre-rename `LocalForge-1.4.0.pkg` as the 1.5.0 installer.
 
 ---
 
 ## What you do
 
-1. Install and open LocalForge.
+1. Install and open llvadARC.
 2. Type in the ForgeBot panel. Replies use a built-in local engine plus the open file / selection.
 3. Optional: open a folder (⌘O), edit UTF-8 files, run a local command.
 
@@ -22,7 +22,7 @@ If [Ollama](https://ollama.com) is already running on this Mac, ForgeBot may use
 
 ## Yapmanız gerekenler
 
-1. LocalForge’u açın.
+1. llvadARC’u açın.
 2. ForgeBot paneline yazın. Yanıtlar bu Mac’te, açık dosya / seçimle üretilir.
 3. İsterseniz klasör açın (⌘O), dosya düzenleyin, yerel komut çalıştırın.
 
@@ -33,15 +33,15 @@ Bu Mac’te Ollama çalışıyorsa yalnızca localhost kullanılır. Ollama yoks
 ## Build the `.pkg` (Mac only)
 
 ```bash
-cd macos/LocalForge
+cd macos/llvadARC
 chmod +x scripts/build-pkg.sh
 ./scripts/build-pkg.sh
 ```
 
-Output: `dist/LocalForge.app` and `dist/LocalForge-1.4.0.pkg`.
+Output: `dist/llvadARC.app` and `dist/llvadARC-1.5.0.pkg`.
 
 ```bash
-sudo installer -pkg dist/LocalForge-1.4.0.pkg -target /
+sudo installer -pkg dist/llvadARC-1.5.0.pkg -target /
 ```
 
 The script **exits with an error on Linux**. The package is unsigned; Gatekeeper may ask you to allow it under System Settings → Privacy & Security.

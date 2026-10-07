@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 40" fill="none" role="img" aria-label="USBANK">
+  <rect x="0" y="6" width="28" height="28" rx="6" fill="#f83b00"/>
+  <path d="M8 26V14h4.2c2.8 0 4.5 1.4 4.5 3.6 0 1.5-.8 2.6-2.2 3.1L17.2 26h-3.1l-2.4-4.6H11.2V26H8zm3.2-7.2h1c1.1 0 1.7-.5 1.7-1.3s-.6-1.3-1.7-1.3h-1v2.6z" fill="#ffffff"/>
+  <text x="38" y="28" font-family="Arial Black, Helvetica, sans-serif" font-size="22" font-weight="900" letter-spacing="1.5" fill="#fff6ed">USBANK</text>
+</svg>

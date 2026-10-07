@@ -1,0 +1,624 @@
+{
+  "host": "7fx.customer.org.tr",
+  "name": "7fx",
+  "files": [
+    {
+      "path": "/",
+      "bytes": 1794,
+      "type": "text/html"
+    },
+    {
+      "path": "/index.html",
+      "bytes": 1794,
+      "type": "text/html"
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "bytes": 716,
+      "type": "application/octet-stream"
+    },
+    {
+      "path": "/sw.js",
+      "bytes": 2418,
+      "type": "application/javascript"
+    },
+    {
+      "path": "/api/mail-config.sample.php",
+      "bytes": 1794,
+      "type": "text/html"
+    },
+    {
+      "path": "/api/mail-config.php",
+      "bytes": 1794,
+      "type": "text/html"
+    },
+    {
+      "path": "/icons/icon-192.png",
+      "bytes": 17224,
+      "type": "image/png"
+    },
+    {
+      "path": "/icons/icon-512.png",
+      "bytes": 66225,
+      "type": "image/png"
+    },
+    {
+      "path": "/icons/apple-touch-icon.png",
+      "bytes": 15641,
+      "type": "image/png"
+    },
+    {
+      "path": "/ubs-logo.png",
+      "bytes": 15959,
+      "type": "image/png"
+    },
+    {
+      "path": "/ubs-logo.svg",
+      "bytes": 1153,
+      "type": "image/svg+xml"
+    },
+    {
+      "path": "/ubs-logo-white.svg",
+      "bytes": 1150,
+      "type": "image/svg+xml"
+    },
+    {
+      "path": "/ubs-logo-original.png",
+      "bytes": 15959,
+      "type": "image/png"
+    },
+    {
+      "path": "/7fx-logo.png",
+      "bytes": 166495,
+      "type": "image/png"
+    },
+    {
+      "path": "/brokerz-logo.webp",
+      "bytes": 20152,
+      "type": "image/webp"
+    },
+    {
+      "path": "/olymptrade-logo.svg",
+      "bytes": 827,
+      "type": "image/svg+xml"
+    },
+    {
+      "path": "/usbank-logo.svg",
+      "bytes": 506,
+      "type": "image/svg+xml"
+    },
+    {
+      "path": "/assets/index-C3I0t2_J.css",
+      "bytes": 100935,
+      "type": "text/css"
+    },
+    {
+      "path": "/assets/index-DaQG1Hym.js",
+      "bytes": 1117114,
+      "type": "application/javascript"
+    },
+    {
+      "path": "/assets/js/swiper-bundle.min.js",
+      "bytes": 143719,
+      "type": "application/javascript"
+    },
+    {
+      "path": "/assets/js/aos.js",
+      "bytes": 14239,
+      "type": "application/javascript"
+    },
+    {
+      "path": "/assets/images/footer/play.png",
+      "bytes": 694,
+      "type": "image/png"
+    },
+    {
+      "path": "/assets/js/purecounter_vanilla.js",
+      "bytes": 5417,
+      "type": "application/javascript"
+    },
+    {
+      "path": "/assets/index.html",
+      "bytes": 1794,
+      "type": "text/html"
+    },
+    {
+      "path": "/assets/images/logo/preloader.png",
+      "bytes": 1639,
+      "type": "image/png"
+    },
+    {
+      "path": "/assets/images/footer/1.png",
+      "bytes": 3357,
+      "type": "image/png"
+    },
+    {
+      "path": "/assets/css/bootstrap.min.css",
+      "bytes": 232919,
+      "type": "text/css"
+    },
+    {
+      "path": "/assets/css/aos.css",
+      "bytes": 26053,
+      "type": "text/css"
+    },
+    {
+      "path": "/olymp-assets/gaspar.CwJEfYwu.mp4",
+      "bytes": 170374,
+      "type": "video/mp4"
+    },
+    {
+      "path": "/assets/images/footer/apple.png",
+      "bytes": 426,
+      "type": "image/png"
+    },
+    {
+      "path": "/assets/js/bootstrap.bundle.min.js",
+      "bytes": 80427,
+      "type": "application/javascript"
+    },
+    {
+      "path": "//www.openstreetmap.org/export/embed.html",
+      "bytes": 1794,
+      "type": "text/html"
+    },
+    {
+      "path": "/assets/images/header/1.png",
+      "bytes": 327705,
+      "type": "image/png"
+    },
+    {
+      "path": "/assets/css/all.min.css",
+      "bytes": 102033,
+      "type": "text/css"
+    },
+    {
+      "path": "/assets/css/swiper-bundle.min.css",
+      "bytes": 16505,
+      "type": "text/css"
+    },
+    {
+      "path": "/assets/css/style.css",
+      "bytes": 259734,
+      "type": "text/css"
+    },
+    {
+      "path": "/assets/css/brokerz-bridge.css",
+      "bytes": 2092,
+      "type": "text/css"
+    },
+    {
+      "path": "/assets/images/header/2.png",
+      "bytes": 132037,
+      "type": "image/png"
+    },
+    {
+      "path": "/olymp-assets/backvideobanner.C2YTF_yx.mp4",
+      "bytes": 407985,
+      "type": "video/mp4"
+    },
+    {
+      "path": "//reactjs.org/docs/error-decoder.html",
+      "bytes": 1794,
+      "type": "text/html"
+    },
+    {
+      "path": "/assets/${Be(a.slug)}.html",
+      "bytes": 1794,
+      "type": "text/html"
+    },
+    {
+      "path": "/olymp-assets/hero.5jSiJh2V_Vf4Tc.webp",
+      "bytes": 153036,
+      "type": "image/webp"
+    },
+    {
+      "path": "/assets/css/style.css.map",
+      "bytes": 53092,
+      "type": "application/octet-stream"
+    }
+  ],
+  "failed": [
+    {
+      "path": "/.htaccess",
+      "status": null,
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/favicon.ico",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/api/send-mail.php",
+      "status": null,
+      "error": "HTTP Error 405: Method Not Allowed"
+    },
+    {
+      "path": "/tickbase-logo.svg",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/ing-logo.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/sw.js.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/index-C3I0t2_J.css.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/fairness.DNLCKdAX_Z26Qp0v.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/yt_preview_2.DdlOLyy9_Z1vMfRj.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/verifymytrade.B-HZriZb_2uy2cH.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/books.FC5gSHox.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/community.Dto8Ky3v.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/gaspar.CwJEfYwu.mp4",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/moon.CjcG5IEH.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/money.Bic8ryUY.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/love.C_skyr8g.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/image.CTF7lwiU_bLD0X.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/bg.L1yfV3aR_Z25XIeN.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/${Be(a.imageUrl)}",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/bg.Bd9RjB8Z_23Dnv0.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/yt_preview_3.C3nr8TnV_q0BEz.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/image.BbfTrYMP_2aCFrt.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/hand_mob.Diu0v2xz_Z7Sao3.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/finacom.NY71UH9K_ZG1qCi.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/shield.BVdy6JFV.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "//images.pexels.com/photos/5833756/pexels-photo-5833756.jpeg",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/regulation_bg_tablet.oJtBSYLo_M9nUP.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/hero.5jSiJh2V_Vf4Tc.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/vanuatu.B3ERRJAg_O9U67.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/yt_preview_1.B0kribA7_Z1lvXFT.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/${Be(e.imageUrl)}",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/backvideobanner.C2YTF_yx.mp4",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/${c}",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/${Be(e.sourceUrl)}",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/image.DFB_RWdL_1JhwiS.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/bg.D9-H_t_b.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/favicon.svg",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "//s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "//images.pexels.com/photos/7433839/pexels-photo-7433839.jpeg",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "//images.pexels.com/photos/6770610/pexels-photo-6770610.jpeg",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/banner.Bq4zFx9X_15mkAG.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/mob_v2.-rubP0wr_Z1HDhcE.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/compensation.BmQqNjLK_ZpfeQE.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/ppl.C7UL-EEl_1sjWFf.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/faq.C8XnOc2i.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/bg.CF-8HQYA_y1oO5.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/finish.D3vlJEYW.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "//assets.mixkit.co/videos/9330/9330-720.mp4",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/image.DmPlMRNV_ZvzkfC.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/${Be(kd(e.ftp.publicUrl))}/",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/.well-known/jwks.js",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/image.xwLxyY5h_Jxs7s.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "//images.pexels.com/photos/8442330/pexels-photo-8442330.jpeg",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "//images.pexels.com/photos/16594725/pexels-photo-16594725.jpeg",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "//images.pexels.com/photos/7267491/pexels-photo-7267491.jpeg",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/desktop_v2.C0bsehbf_2rJOzF.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/image_condenced.CdPcjJqo_Z2tQO06.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/fire.Cm0nrSyK.png",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/hand.B8DUGbiV_ZOFSFU.webp",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/index-DaQG1Hym.js.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/js/swiper-bundle.min.js.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/js/aos.js.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/js/purecounter_vanilla.js.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/css/bootstrap.min.css.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/css/aos.css.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/js/bootstrap.bundle.min.js.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "//popper.js",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/webfonts/fa-v4compatibility.ttf",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/webfonts/fa-brands-400.woff2",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/webfonts/fa-regular-400.ttf",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/webfonts/fa-v4compatibility.woff2",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/webfonts/fa-regular-400.woff2",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/webfonts/fa-solid-900.ttf",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/webfonts/fa-solid-900.woff2",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/webfonts/fa-brands-400.ttf",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/css/all.min.css.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/css/swiper-bundle.min.css.map",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/images/banner/home5/bg.svg",
+      "status": 200,
+      "error": "html-error-page"
+    },
+    {
+      "path": "/assets/css/brokerz-bridge.css.map",
+      "status": 200,
+      "error": "html-error-page"
+    }
+  ],
+  "title": "Brokerz"
+}

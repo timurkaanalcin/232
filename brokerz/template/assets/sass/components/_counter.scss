@@ -1,0 +1,41 @@
+.counter {
+    @extend %p-rel;
+    margin-top: -150px;
+
+    &__item {
+
+        &-inner {
+            @extend %py-40,
+            %px-20,
+            %text-center;
+            @include add-prefix(transition, $transition);
+            border-radius: 16px;
+            background: $wh-color;
+            box-shadow: 0px 24px 64px 0px rgba(6, 73, 54, 0.08);
+
+            @include breakpoint(xl) {
+                padding-block: 54px;
+                padding-inline: 25px;
+            }
+
+            h3 {
+                @extend %text-semibold;
+            }
+
+            img {
+                @extend %mb-40;
+                border-radius: 50%;
+            }
+
+            p {
+                @extend %text-capitalize;
+                opacity: 0.8;
+            }
+
+            &:hover{
+                transform: translateY(-5px);
+            }
+        }
+
+    }
+}

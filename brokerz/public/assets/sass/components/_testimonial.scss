@@ -1,0 +1,287 @@
+.testimonial {
+    @extend %of-hidden;
+
+    &__wrapper {
+        @extend %p-rel;
+    }
+
+    &__slider,
+    &__slider2 {
+        @extend %pb-40;
+    }
+
+    &__item {
+        &-content {
+            p {
+                @extend %pb-30;
+                // trk-rgba 
+                @include add-prefix(transition, $transition);
+                border-bottom: 1px solid #E6EDFB;
+
+                @include breakpoint (xl) {
+                    padding-bottom: 32px;
+                }
+            }
+        }
+
+        &--style1 {
+            .testimonial {
+                &__item {
+                    &-inner {
+                        @extend %p-40;
+                        @include add-prefix(transition, $transition);
+                        background-color: $wh-color;
+                        border: 2px solid transparent;
+                        border-radius: 16px;
+
+                        &:hover {
+                            border: 2px solid $brand-color;
+                        }
+                    }
+                }
+            }
+        }
+
+        &--style2 {
+            .testimonial {
+                &__item {
+                    &-inner {
+                        @extend %p-25;
+                        @include add-prefix(transition, $transition);
+                        border-radius: 16px;
+                        background-color: $wh-color;
+                        border: 2px solid transparent;
+
+                        &:hover {
+                            border: 2px solid $secondary-color;
+                        }
+                    }
+                }
+            }
+        }
+
+        &--style3 {
+            .testimonial {
+                &__item {
+                    &-inner {
+                        @extend %p-30;
+                        @include add-prefix(transition, $transition);
+                        border-radius: 4px;
+                        background: $bg-color-14;
+                        max-width: 507px;
+
+                        @include breakpoint(xl) {
+                            padding: 32px;
+                        }
+                    }
+
+                    &-body {
+                        @extend %d-flex,
+                        %justify-between;
+                    }
+
+                    &-content {
+                        flex: 1;
+                        max-width: 378px;
+
+                        p {
+                            @extend %pb-25;
+                            @include font-size(18px);
+                            color: $title-color;
+                            border-bottom: none !important;
+                            font-style: italic;
+                        }
+                    }
+
+                    &-quote {
+                        span {
+
+                            i,
+                            svg {
+                                @include font-size(40px);
+                                @include add-prefix(transition, $transition);
+                                // color: rgba(5, 0, 26, 0.12);
+                                color: $bg-color-18;
+                            }
+                        }
+                    }
+
+
+                }
+            }
+        }
+
+
+        &--style4 {
+            .testimonial {
+                &__item {
+                    &-inner {
+                        @extend %p-40;
+                        @include add-prefix(transition, $transition);
+                        background-color: $wh-color;
+                        border-radius: 4px;
+
+                    }
+
+                }
+
+                &__quote {
+
+                    i,
+                    svg {
+                        color: $tertiary-color4;
+                    }
+                }
+
+
+            }
+
+            &:hover {
+                .testimonial__item {
+                    &-inner {
+                        &:hover {
+                            background-color: $bg-color-10;
+
+                            p{
+                                border-bottom: 1px solid rgba(20, 24, 33, 0.48);
+                            }
+                        }
+
+
+                    }
+
+                    &-content {
+                        p { 
+                            color: $thm-title-color;
+
+                        }
+                    }
+                }
+
+                .testimonial__quote {
+
+                    i,
+                    svg {
+                        color: $bg-color-11; 
+                    }
+                }
+
+                .testimonial__author {
+                    h6 {
+                        color: $thm-title-color;
+                    }
+                    span{
+                        color: $thm-title-color;
+                    }
+
+                }
+
+            }
+        }
+
+
+        &:hover {
+            .testimonial {
+                &__item {
+                    &-inner {
+                        box-shadow: 0px 16px 40px rgba(153, 161, 172, 0.12);
+                    }
+                }
+
+                &__quote {
+
+                    i,
+                    svg {
+                        opacity: 1;
+                    }
+                }
+            }
+        }
+
+
+
+    }
+
+    &__footer {
+        @extend %d-flex,
+        %align-i-center,
+        %justify-between,
+        %mt-30;
+
+        @include breakpoint(xl) {
+            margin-top: 32px;
+        }
+
+    }
+
+    &__author {
+        @extend %d-flex,
+        %align-i-center;
+        gap: 15px;
+
+        &-thumb {
+            img {
+                border-radius: 99px;
+                max-width: 60px;
+            }
+
+        }
+
+        &-designation {
+            h6 {
+                @extend %mb-0;
+                line-height: 1.1;
+            }
+
+            p {
+                @extend %mb-0,
+                %text-medium;
+                @include font-size(18px);
+                line-height: 1.15;
+                color: $title-color;
+            }
+
+            span {
+                @include font-size(14px);
+                color: $title-color;
+                opacity: 0.8;
+            }
+
+            &--style2 {
+                p {
+                    color: $title-color;
+                }
+
+                span {
+                    color: $text-color;
+                }
+            }
+        }
+    }
+
+    &__quote {
+        span {
+
+            i,
+            svg {
+                @include font-size(40px);
+                @include add-prefix(transition, $transition);
+                color: $brand-color;
+                opacity: 0.5;
+            }
+        }
+
+        &--style2 {
+            span {
+
+                i,
+                svg {
+                    color: $secondary-color;
+                }
+            }
+        }
+
+    }
+
+
+}

@@ -10,6 +10,11 @@ export class ClientApiError extends Error {
   }
 }
 
+/** True when the server has no WebSocket realtime (e.g. Vercel serverless). */
+export function isRealtimeUnavailable(error: unknown): boolean {
+  return error instanceof ClientApiError && error.status === 503 && error.code === "realtime_unavailable";
+}
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     credentials: "include",

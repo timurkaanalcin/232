@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { apiGet } from "@/lib/client-api";
+import { apiGet, isRealtimeUnavailable } from "@/lib/client-api";
 import type { LocationSessionDTO, RealtimeServerEvent } from "@/types";
 
 export interface LiveSession {
@@ -126,7 +126,13 @@ export function useLiveMap(enabled: boolean) {
         reconnectTimerRef.current = setTimeout(() => void connect(), 3_000);
       };
       ws.onerror = () => ws.close();
-    } catch {
+    } catch (error) {
+      // Serverless deployment without a WebSocket server: the 3s snapshot
+      // polling keeps the map current, so treat it as live and stop retrying.
+      if (isRealtimeUnavailable(error)) {
+        setStatus("live");
+        return;
+      }
       setStatus("reconnecting");
       reconnectTimerRef.current = setTimeout(() => void connect(), 5_000);
     }

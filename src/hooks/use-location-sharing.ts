@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { apiGet, apiPost } from "@/lib/client-api";
+import { apiGet, apiPost, isRealtimeUnavailable } from "@/lib/client-api";
 import { geolocationErrorMessage } from "@/lib/geolocation-errors";
 import { isNativeApp, nativeLocation } from "@/lib/native-location";
 import { nativeFixToGeolocationPosition, positionFromGeolocation } from "@/lib/normalize-position";
@@ -131,8 +131,10 @@ export function useLocationSharing(): UseLocationSharingResult {
       });
       if (!opened) setConnectionMode("rest");
       return opened;
-    } catch {
+    } catch (error) {
       setConnectionMode("rest");
+      // Serverless deployment without a WebSocket server: stay on REST for good.
+      if (isRealtimeUnavailable(error)) return false;
       reconnectTimerRef.current = setTimeout(() => {
         if (stateRef.current === "sharing") void connectWebSocket();
       }, 10_000);

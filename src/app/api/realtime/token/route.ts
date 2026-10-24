@@ -1,4 +1,4 @@
-import { apiHandler, badRequest, forbidden, getPermissions, jsonOk, notFound, requireUser } from "@/lib/api";
+import { ApiError, apiHandler, badRequest, forbidden, getPermissions, jsonOk, notFound, requireUser } from "@/lib/api";
 import { createTicket } from "@/lib/ws-ticket";
 import { getActiveSessionForUser } from "@/services/location-sessions";
 
@@ -9,6 +9,11 @@ import { getActiveSessionForUser } from "@/services/location-sessions";
  */
 export const GET = apiHandler(async (request: Request) => {
   const { user, db, env } = await requireUser();
+  if (process.env.LIVETRACK_REALTIME_WS !== "on") {
+    // Serverless deployment (Vercel): no WebSocket server. Clients fall back to
+    // REST location updates and snapshot polling.
+    throw new ApiError(503, "realtime_unavailable", "Realtime WebSocket is not available on this deployment");
+  }
   const scope = new URL(request.url).searchParams.get("scope");
 
   if (scope !== "publish" && scope !== "view") {

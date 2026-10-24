@@ -1,13 +1,5 @@
 import type { NextConfig } from "next";
 
-// Enables access to Cloudflare bindings (D1, Durable Objects) during `next dev`.
-// Only loaded in development so it never runs during `next build`.
-if (process.env.NODE_ENV === "development") {
-  void import("@opennextjs/cloudflare").then(({ initOpenNextCloudflareForDev }) =>
-    initOpenNextCloudflareForDev(),
-  );
-}
-
 /**
  * Content Security Policy.
  * - OpenStreetMap tile servers are allowed for the Leaflet map layers.

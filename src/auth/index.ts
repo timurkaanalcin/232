@@ -2,7 +2,7 @@ import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { headers } from "next/headers";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getEnv } from "@/lib/db";
 import { verifyPassword } from "@/lib/crypto";
 import { loginSchema } from "@/lib/validators";
 import { logAudit } from "@/lib/audit";
@@ -15,7 +15,7 @@ import { logSecurityEvent } from "@/services/security-events";
 import type { RoleId, UserRow } from "@/types";
 
 function getAuthEnv(): CloudflareEnv {
-  return getCloudflareContext().env as CloudflareEnv;
+  return getEnv();
 }
 
 async function getRequestMetaSafe(): Promise<{ ip: string; userAgent: string }> {

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LiveTrack</string>
+    <string name="title_activity_main">LiveTrack</string>
+    <string name="package_name">app.livetrack.mobile</string>
+    <string name="custom_url_scheme">app.livetrack.mobile</string>
+    <string name="sharing_channel_name">Location sharing</string>
+    <string name="sharing_channel_description">Shown the whole time LiveTrack is sharing your location with authorized staff.</string>
+    <string name="sharing_notification_title">LiveTrack is sharing your location</string>
+    <string name="sharing_notification_text">Authorized staff can see your live position. Tap Stop sharing to end it.</string>
+    <string name="sharing_notification_stop">Stop sharing</string>
+</resources>

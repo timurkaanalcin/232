@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { signOut } from "next-auth/react";
 import {
@@ -28,6 +28,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiDelete, apiGet, apiPatch, apiPost, ClientApiError } from "@/lib/client-api";
+import { nativeLocation, useNativeApp } from "@/lib/native-location";
+import { normalizeServerUrl } from "@/lib/server-url";
 import { formatRelative } from "@/lib/utils";
 import type { DeviceSessionDTO, UserDTO } from "@/types";
 
@@ -38,6 +40,7 @@ export function SettingsModule() {
       <p className="mb-6 text-sm text-muted-foreground">
         Manage your profile, security, devices and personal data.
       </p>
+      <MobileServerCard />
       <Tabs defaultValue="profile">
         <TabsList className="mb-4 w-full justify-start overflow-x-auto sm:w-auto">
           <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -333,5 +336,108 @@ function PrivacyTab() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function MobileServerCard() {
+  const native = useNativeApp();
+  const [info, setInfo] = useState<{ url: string; source: string } | null>(null);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (native !== true) return;
+    void nativeLocation.getServerUrl().then(setInfo).catch(() => setInfo(null));
+  }, [native]);
+
+  if (native !== true) return null;
+
+  const save = async () => {
+    const normalized = normalizeServerUrl(value);
+    if (!normalized) {
+      setError("Enter an http(s) server URL without a path, for example https://livetrack.example.com.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await nativeLocation.setServerUrl(normalized);
+    } catch (saveError) {
+      setBusy(false);
+      setError(saveError instanceof Error ? saveError.message : "Could not save that server URL.");
+    }
+  };
+
+  const reset = async () => {
+    setBusy(true);
+    try {
+      await nativeLocation.clearServerUrl();
+    } catch (resetError) {
+      setBusy(false);
+      setError(resetError instanceof Error ? resetError.message : "Could not reset the server URL.");
+    }
+  };
+
+  return (
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle className="text-base">LiveTrack server</CardTitle>
+        <CardDescription>
+          This app is signed in to {info?.url || "the server it opened"}. Changing it reloads LiveTrack and stops
+          sharing first. Location is never requested on that setup screen.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap gap-2">
+        <Button
+          variant="outline"
+          onClick={() => {
+            setValue(info?.url ?? "");
+            setError(null);
+            setOpen(true);
+          }}
+        >
+          Change server
+        </Button>
+        {info?.source === "user" && (
+          <Button variant="ghost" onClick={() => void reset()} disabled={busy}>
+            Use the build default
+          </Button>
+        )}
+      </CardContent>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change LiveTrack server</DialogTitle>
+            <DialogDescription>
+              Enter the origin of a LiveTrack deployment you trust. The app will reload there. If sharing is on, it
+              stops before the switch.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2">
+            <Label htmlFor="mobile-server-url">Server URL</Label>
+            <Input
+              id="mobile-server-url"
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              placeholder="https://livetrack.example.com"
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button onClick={() => void save()} disabled={busy}>
+              {busy ? "Saving…" : "Save and reload"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 }

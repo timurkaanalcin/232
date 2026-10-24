@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>LiveTrack</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="mark">LiveTrack</p>
+      <h1>Connect to your server</h1>
+      <p class="lead">
+        This is the LiveTrack app. It opens the LiveTrack website you already run. Nothing on this screen
+        asks for your location or signs you in.
+      </p>
+
+      <form id="server-form">
+        <label for="server-url">LiveTrack server URL</label>
+        <input
+          id="server-url"
+          name="server-url"
+          type="url"
+          inputmode="url"
+          autocomplete="url"
+          placeholder="https://livetrack.example.com"
+          required
+        />
+        <p class="hint">
+          Use the public address of your LiveTrack deployment. Android emulator to a dev server on this
+          computer: <code>http://10.0.2.2:3000</code>. A phone on the same network uses your computer's LAN
+          address.
+        </p>
+        <button type="submit" id="continue">Continue</button>
+        <p id="form-error" class="error" role="alert" hidden></p>
+      </form>
+
+      <ul>
+        <li>Sign in with your own account. The app never signs in a guest for you.</li>
+        <li>Location is collected only after you opt in on the sharing screen, then the system permission prompt.</li>
+        <li>While sharing is on, Android keeps a notification on screen with a Stop sharing action.</li>
+      </ul>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

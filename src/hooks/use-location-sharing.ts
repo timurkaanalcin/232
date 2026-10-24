@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiPost } from "@/lib/client-api";
 import { geolocationErrorMessage } from "@/lib/geolocation-errors";
-import { positionFromGeolocation } from "@/lib/normalize-position";
-import type { LocationSessionDTO, RealtimeClientMessage } from "@/types";
+import { isNativeApp, nativeLocation } from "@/lib/native-location";
+import { nativeFixToGeolocationPosition, positionFromGeolocation } from "@/lib/normalize-position";
+import type { LocationSessionDTO } from "@/types";
 
 export type SharingState = "idle" | "starting" | "sharing" | "stopping";
 
@@ -47,6 +48,8 @@ export function useLocationSharing(): UseLocationSharingResult {
 
   const wsRef = useRef<WebSocket | null>(null);
   const watchIdRef = useRef<number | null>(null);
+  const nativeUnsubRef = useRef<(() => void) | null>(null);
+  const stopInFlightRef = useRef(false);
   const lastSentAtRef = useRef(0);
   const lastRestSentAtRef = useRef(0);
   const sessionRef = useRef<LocationSessionDTO | null>(null);
@@ -57,7 +60,11 @@ export function useLocationSharing(): UseLocationSharingResult {
   sessionRef.current = session;
 
   const cleanup = useCallback(() => {
-    if (watchIdRef.current !== null) {
+    if (nativeUnsubRef.current) {
+      nativeUnsubRef.current();
+      nativeUnsubRef.current = null;
+    }
+    if (watchIdRef.current !== null && typeof navigator !== "undefined" && navigator.geolocation) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
@@ -184,8 +191,17 @@ export function useLocationSharing(): UseLocationSharingResult {
 
   const stopInternal = useCallback(
     async (reason: string) => {
+      if (stopInFlightRef.current) return;
+      stopInFlightRef.current = true;
       const activeSession = sessionRef.current;
       cleanup();
+      if (isNativeApp()) {
+        try {
+          await nativeLocation.stop();
+        } catch {
+          // The foreground indicator may already have been dismissed.
+        }
+      }
       if (activeSession) {
         try {
           await apiPost(`/api/location/sessions/${activeSession.id}/stop`);
@@ -196,10 +212,36 @@ export function useLocationSharing(): UseLocationSharingResult {
       setSession(null);
       setState("idle");
       if (reason === "permission_denied") {
-        setError("Konum izni reddedildi. Tarayıcı ayarlarından bu siteye izin verin.");
+        setError(
+          isNativeApp()
+            ? "Location permission was denied. LiveTrack only asks after you choose to share. You can allow it in system settings."
+            : "Konum izni reddedildi. Tarayıcı ayarlarından bu siteye izin verin.",
+        );
+      } else if (reason === "notification_unavailable") {
+        setError("LiveTrack could not show the sharing notification, so sharing was not started.");
+      } else if (reason === "location_unavailable") {
+        setError("Location services are turned off. Enable them and try again.");
       }
+      stopInFlightRef.current = false;
     },
     [cleanup],
+  );
+
+  const attachNativeWatch = useCallback(
+    async (sessionId: string) => {
+      const remove = await nativeLocation.listen({
+        onLocation: (fix) => transmit(nativeFixToGeolocationPosition(fix)),
+        onStopped: (reason) => {
+          void stopInternal(reason);
+        },
+      });
+      nativeUnsubRef.current = remove;
+      const alreadyRunning = await nativeLocation.isActive();
+      if (!alreadyRunning) {
+        await nativeLocation.start(sessionId, window.location.origin);
+      }
+    },
+    [stopInternal, transmit],
   );
 
   const start = useCallback(
@@ -207,16 +249,18 @@ export function useLocationSharing(): UseLocationSharingResult {
       setError(null);
       setState("starting");
       try {
-        // 1. Browser geolocation — call from user click when possible (initialPosition).
+        // 1. Device location. On mobile this is the OS prompt, and only after consent.
         const granted =
           initialPosition ??
-          (await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              enableHighAccuracy: true,
-              timeout: 30_000,
-              maximumAge: 0,
-            });
-          }));
+          (isNativeApp()
+            ? nativeFixToGeolocationPosition(await nativeLocation.getCurrentPosition())
+            : await new Promise<GeolocationPosition>((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                  enableHighAccuracy: true,
+                  timeout: 30_000,
+                  maximumAge: 0,
+                });
+              }));
 
         // 2. Create the consented session server-side.
         const { session: created } = await apiPost<{ session: LocationSessionDTO }>(
@@ -230,10 +274,29 @@ export function useLocationSharing(): UseLocationSharingResult {
         await connectWebSocket();
         transmit(granted);
         await publishViaRest(granted, created.id);
-        startWatching();
+        if (isNativeApp()) {
+          await attachNativeWatch(created.id);
+        } else {
+          startWatching();
+        }
         setState("sharing");
       } catch (startError) {
+        const created = sessionRef.current;
         cleanup();
+        if (created && isNativeApp()) {
+          try {
+            await nativeLocation.stop();
+          } catch {
+            // Sharing never became active.
+          }
+          try {
+            await apiPost(`/api/location/sessions/${created.id}/stop`);
+          } catch {
+            // Stale sweep closes the session if this fails.
+          }
+        }
+        setSession(null);
+        sessionRef.current = null;
         setState("idle");
         if (startError instanceof GeolocationPositionError) {
           setError(geolocationErrorMessage(startError));
@@ -242,7 +305,7 @@ export function useLocationSharing(): UseLocationSharingResult {
         }
       }
     },
-    [cleanup, connectWebSocket, publishViaRest, startWatching, transmit],
+    [attachNativeWatch, cleanup, connectWebSocket, publishViaRest, startWatching, transmit],
   );
 
   const stop = useCallback(async () => {
@@ -256,23 +319,44 @@ export function useLocationSharing(): UseLocationSharingResult {
       setSession(activeSession);
       sessionRef.current = activeSession;
       setState("sharing");
-      void connectWebSocket();
-      startWatching();
-      navigator.geolocation.getCurrentPosition(
+      void (async () => {
+        try {
+          await connectWebSocket();
+          if (isNativeApp()) {
+            await attachNativeWatch(activeSession.id);
+            try {
+              const fix = await nativeLocation.getCurrentPosition();
+              const pos = nativeFixToGeolocationPosition(fix);
+              transmit(pos);
+              await publishViaRest(pos, activeSession.id);
+            } catch {
+              // The foreground watch keeps publishing if this extra fix fails.
+            }
+            return;
+          }
+          startWatching();
+          navigator.geolocation.getCurrentPosition(
         (pos) => {
           transmit(pos);
           void publishViaRest(pos, activeSession.id);
         },
         () => {},
-        { enableHighAccuracy: true, maximumAge: 5_000, timeout: 20_000 },
-      );
+            { enableHighAccuracy: true, maximumAge: 5_000, timeout: 20_000 },
+          );
+        } catch (resumeError) {
+          await stopInternal(resumeError instanceof Error && /permission/i.test(resumeError.message) ? "permission_denied" : "location_unavailable");
+          if (resumeError instanceof Error && resumeError.message) {
+            setError(resumeError.message);
+          }
+        }
+      })();
     },
-    [connectWebSocket, publishViaRest, startWatching, transmit],
+    [attachNativeWatch, connectWebSocket, publishViaRest, startWatching, stopInternal, transmit],
   );
 
   // Konum yayını sırasında periyodik REST güncellemesi (admin harita için).
   useEffect(() => {
-    if (state !== "sharing" || !session?.id) return;
+    if (state !== "sharing" || !session?.id || isNativeApp()) return;
     const tick = () => {
       if (!sessionRef.current) return;
       navigator.geolocation.getCurrentPosition(

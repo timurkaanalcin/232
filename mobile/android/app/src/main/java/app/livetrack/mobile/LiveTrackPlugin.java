@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
             alias = "location"
         ),
         @Permission(strings = { Manifest.permission.POST_NOTIFICATIONS }, alias = "notifications"),
+        @Permission(strings = { Manifest.permission.ACCESS_BACKGROUND_LOCATION }, alias = "backgroundLocation"),
     }
 )
 public class LiveTrackPlugin extends Plugin {
@@ -124,6 +125,52 @@ public class LiveTrackPlugin extends Plugin {
     public void isActive(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("active", LocationSharingService.isRunning());
+        call.resolve(ret);
+    }
+
+    /**
+     * Reports whether Android still needs the "Allow all the time" prompt.
+     * This does not show a system dialog.
+     */
+    @PluginMethod
+    public void backgroundAccess(PluginCall call) {
+        JSObject ret = new JSObject();
+        if (Build.VERSION.SDK_INT < 29) {
+            ret.put("status", "not_required");
+        } else if (hasBackgroundLocation()) {
+            ret.put("status", "granted");
+        } else {
+            ret.put("status", "needs_explanation");
+        }
+        call.resolve(ret);
+    }
+
+    /**
+     * Shows the system background-location prompt only after the web app has
+     * shown the in-app explanation and the user has tapped through it.
+     */
+    @PluginMethod
+    public void requestBackgroundAccess(PluginCall call) {
+        if (!Boolean.TRUE.equals(call.getBoolean("explained", false))) {
+            call.reject("LiveTrack only asks for background location after you read the in-app explanation.");
+            return;
+        }
+        if (Build.VERSION.SDK_INT < 29 || hasBackgroundLocation()) {
+            JSObject ret = new JSObject();
+            ret.put("granted", true);
+            call.resolve(ret);
+            return;
+        }
+        requestPermissionForAlias("backgroundLocation", call, "afterBackgroundPermission");
+    }
+
+    @PermissionCallback
+    private void afterBackgroundPermission(PluginCall call) {
+        if (call == null) {
+            return;
+        }
+        JSObject ret = new JSObject();
+        ret.put("granted", hasBackgroundLocation());
         call.resolve(ret);
     }
 
@@ -291,6 +338,16 @@ public class LiveTrackPlugin extends Plugin {
             }
         }
         oneShot = null;
+    }
+
+    private boolean hasBackgroundLocation() {
+        if (Build.VERSION.SDK_INT < 29) {
+            return true;
+        }
+        return (
+            ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+        );
     }
 
     private boolean hasLocationPermission() {

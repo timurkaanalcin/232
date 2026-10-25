@@ -12,6 +12,8 @@ interface LiveTrackBridge {
   start: (options: { sessionId: string; origin: string }) => Promise<void>;
   stop: () => Promise<void>;
   isActive: () => Promise<{ active: boolean }>;
+  backgroundAccess: () => Promise<{ status: "granted" | "not_required" | "needs_explanation" }>;
+  requestBackgroundAccess: (options: { explained: boolean }) => Promise<{ granted: boolean }>;
   getServerUrl: () => Promise<{ url: string; source: string }>;
   setServerUrl: (options: { url: string }) => Promise<void>;
   clearServerUrl: () => Promise<void>;
@@ -75,6 +77,15 @@ export const nativeLocation = {
   async isActive(): Promise<boolean> {
     const result = await bridge().isActive();
     return Boolean(result?.active);
+  },
+  async backgroundAccess(): Promise<"granted" | "not_required" | "needs_explanation"> {
+    const result = await bridge().backgroundAccess();
+    if (result?.status === "granted" || result?.status === "needs_explanation") return result.status;
+    return "not_required";
+  },
+  async requestBackgroundAccess(explained: boolean): Promise<boolean> {
+    const result = await bridge().requestBackgroundAccess({ explained });
+    return Boolean(result?.granted);
   },
   getServerUrl(): Promise<{ url: string; source: string }> {
     return bridge().getServerUrl();

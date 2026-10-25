@@ -61,8 +61,8 @@ export function ConsentDialog({
             title: "Visible while it is on",
             text:
               nativePlatform() === "android"
-                ? "After you confirm, Android asks for location and notification permission. A persistent notification stays up for the whole session, including a Stop sharing action. LiveTrack does not ask for background location and does not start on its own."
-                : "After you confirm, iOS asks for location permission while you are using LiveTrack. The status bar shows the system location indicator. LiveTrack does not ask for always-on background location and does not start on its own.",
+                ? "After you confirm, Android asks for location and notification permission. Sharing continues while the app is in the background or the screen is locked, and a notification stays up with Stop sharing. LiveTrack asks for all-the-time location only after a separate explanation. It does not start on its own."
+                : "After you confirm, iOS asks for location permission. Sharing continues while the app is in the background or the screen is locked, and the blue location indicator stays visible. You can stop at any time. LiveTrack does not start on its own.",
           },
         ]
       : CONSENT_POINTS;

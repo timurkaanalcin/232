@@ -7,6 +7,6 @@
     <string name="sharing_channel_name">Location sharing</string>
     <string name="sharing_channel_description">Shown the whole time LiveTrack is sharing your location with authorized staff.</string>
     <string name="sharing_notification_title">LiveTrack is sharing your location</string>
-    <string name="sharing_notification_text">Authorized staff can see your live position. Tap Stop sharing to end it.</string>
+    <string name="sharing_notification_text">Authorized staff can see your live position, including while the screen is locked. Tap Stop sharing to end it.</string>
     <string name="sharing_notification_stop">Stop sharing</string>
 </resources>

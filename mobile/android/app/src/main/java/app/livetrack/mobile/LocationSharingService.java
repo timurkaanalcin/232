@@ -13,6 +13,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
@@ -22,12 +23,14 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import org.json.JSONObject;
 
 /**
- * Visible location indicator while the signed-in user has an active sharing session.
- * This is a foreground service with a persistent notification and a Stop action.
- * It is not sticky, does not start on boot, and does not request background-location permission.
+ * Visible location indicator while the signed-in user has started a sharing session.
+ * A foreground service of type location keeps updates going when the app is
+ * backgrounded or the screen is locked. The notification stays up, with Stop sharing.
+ * The service is not sticky and is never started on boot or without a user action.
  */
 public class LocationSharingService extends Service {
     public static final String ACTION_START = "app.livetrack.mobile.START_SHARING";
@@ -52,24 +55,62 @@ public class LocationSharingService extends Service {
     private static final String TAG = "LiveTrack";
     private static final String CHANNEL_ID = "livetrack_location_sharing";
     private static final int NOTIFICATION_ID = 7041;
-    private static final long BROADCAST_INTERVAL_MS = 1_000L;
-    private static final long REST_INTERVAL_MS = 4_000L;
+    private static final long BROADCAST_INTERVAL_MS = 2_000L;
+    static final long UPDATE_INTERVAL_MS = 5_000L;
+    static final float MIN_DISTANCE_METERS = 15f;
+    static final long HEARTBEAT_MS = 45_000L;
+    private static final long REST_MIN_INTERVAL_MS = 15_000L;
+    private static final long PUMP_INTERVAL_MS = 5_000L;
+    private static final long REFRESH_INTERVAL_MS = 60_000L;
     private static final int PENDING_FLAGS = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
     private static final String SHARING_PREFS = "livetrack_sharing";
     private static final String KEY_SESSION = "session_id";
     private static final String KEY_ORIGIN = "origin";
+    private static final long[] RETRY_DELAYS_MS = { 5_000L, 15_000L, 30_000L, 60_000L };
 
     private static volatile boolean running;
 
     private final ExecutorService http = Executors.newSingleThreadExecutor();
+    private final Handler main = new Handler(Looper.getMainLooper());
     private LocationManager locationManager;
     private LocationListener listener;
     private String sessionId;
     private String origin;
     private long lastBroadcastAt;
     private long lastRestAt;
+    private long lastRefreshRequestAt;
     private boolean stopping;
+    private boolean wasForeground = true;
+    private boolean postInFlight;
+    private int generation;
+    private int retryAttempt;
     private int latestStartId;
+    private Location lastLocation;
+    private Location lastPostedLocation;
+    private String pendingJson;
+    private String pendingOrigin;
+    private Runnable retryTask;
+
+    private final Runnable pump = new Runnable() {
+        @Override
+        public void run() {
+            if (stopping || !running) {
+                return;
+            }
+            boolean foreground = LiveTrackVisibility.inForeground();
+            long now = System.currentTimeMillis();
+            if (wasForeground && !foreground && lastLocation != null) {
+                postUpdate(lastLocation);
+            }
+            wasForeground = foreground;
+            if (!foreground && lastLocation != null && now - lastRestAt >= HEARTBEAT_MS) {
+                postUpdate(lastLocation);
+            } else if (!foreground && (lastLocation == null || now - lastLocation.getTime() > 90_000L)) {
+                requestSingleRefresh();
+            }
+            main.postDelayed(this, PUMP_INTERVAL_MS);
+        }
+    };
 
     public static boolean isRunning() {
         return running;
@@ -120,6 +161,11 @@ public class LocationSharingService extends Service {
             return START_NOT_STICKY;
         }
         stopping = false;
+        generation++;
+        retryAttempt = 0;
+        pendingJson = null;
+        postInFlight = false;
+        wasForeground = true;
         sessionId = nextSession;
         origin = nextOrigin;
         persistSession();
@@ -140,6 +186,8 @@ public class LocationSharingService extends Service {
 
         running = true;
         beginUpdates();
+        main.removeCallbacks(pump);
+        main.post(pump);
         return START_NOT_STICKY;
     }
 
@@ -153,6 +201,11 @@ public class LocationSharingService extends Service {
     @Override
     public void onDestroy() {
         running = false;
+        main.removeCallbacks(pump);
+        if (retryTask != null) {
+            main.removeCallbacks(retryTask);
+            retryTask = null;
+        }
         removeUpdates();
         http.shutdown();
         super.onDestroy();
@@ -193,7 +246,13 @@ public class LocationSharingService extends Service {
             if (!locationManager.isProviderEnabled(provider)) {
                 return false;
             }
-            locationManager.requestLocationUpdates(provider, 2_000L, 0f, listener, Looper.getMainLooper());
+            locationManager.requestLocationUpdates(
+                provider,
+                UPDATE_INTERVAL_MS,
+                MIN_DISTANCE_METERS,
+                listener,
+                Looper.getMainLooper()
+            );
             return true;
         } catch (SecurityException ex) {
             Log.w(TAG, "Location permission revoked while sharing");
@@ -204,20 +263,71 @@ public class LocationSharingService extends Service {
         }
     }
 
-    private void handleLocation(Location location) {
-        if (stopping || sessionId == null || origin == null) {
+    @SuppressLint("MissingPermission")
+    @SuppressWarnings("deprecation")
+    private void requestSingleRefresh() {
+        if (locationManager == null || stopping) {
             return;
         }
+        long now = System.currentTimeMillis();
+        if (now - lastRefreshRequestAt < REFRESH_INTERVAL_MS) {
+            return;
+        }
+        lastRefreshRequestAt = now;
+        String provider = null;
+        try {
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                provider = LocationManager.GPS_PROVIDER;
+            } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                provider = LocationManager.NETWORK_PROVIDER;
+            }
+        } catch (Exception ex) {
+            return;
+        }
+        if (provider == null) {
+            return;
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                locationManager.getCurrentLocation(
+                    provider,
+                    null,
+                    command -> main.post(command),
+                    location -> {
+                        if (location != null) {
+                            handleLocation(location);
+                        }
+                    }
+                );
+            } else if (listener != null) {
+                locationManager.requestSingleUpdate(provider, listener, Looper.getMainLooper());
+            }
+        } catch (SecurityException ex) {
+            stopSharing("permission_denied");
+        } catch (Exception ex) {
+            Log.w(TAG, "Could not request a location refresh");
+        }
+    }
+
+    private void handleLocation(Location location) {
+        if (stopping || sessionId == null || origin == null || location == null) {
+            return;
+        }
+        lastLocation = location;
         long now = System.currentTimeMillis();
         if (now - lastBroadcastAt >= BROADCAST_INTERVAL_MS) {
             lastBroadcastAt = now;
             broadcastFix(location);
         }
         // The web view publishes while the app is open. Native REST covers the time
-        // the web view is frozen in the background, still under the visible notification.
-        if (!LiveTrackVisibility.inForeground() && now - lastRestAt >= REST_INTERVAL_MS) {
-            lastRestAt = now;
-            postUpdate(location);
+        // the web view is frozen, still under the visible notification.
+        if (!LiveTrackVisibility.inForeground()) {
+            boolean moved = lastPostedLocation == null || location.distanceTo(lastPostedLocation) >= MIN_DISTANCE_METERS;
+            boolean due = now - lastRestAt >= REST_MIN_INTERVAL_MS;
+            if ((moved && due) || now - lastRestAt >= HEARTBEAT_MS) {
+                lastPostedLocation = location;
+                postUpdate(location);
+            }
         }
     }
 
@@ -247,36 +357,108 @@ public class LocationSharingService extends Service {
     private void postUpdate(Location location) {
         final String activeSession = sessionId;
         final String activeOrigin = origin;
-        if (activeSession == null || activeOrigin == null) {
+        if (stopping || activeSession == null || activeOrigin == null || location == null) {
             return;
         }
-        final String cookie = readCookie(activeOrigin);
         final String json;
         try {
             JSONObject position = new JSONObject();
             position.put("lat", location.getLatitude());
             position.put("lng", location.getLongitude());
             float accuracy = location.hasAccuracy() ? Math.min(Math.max(location.getAccuracy(), 0f), 100_000f) : 0f;
-            position.put("acc", accuracy);
+            position.put("acc", (double) accuracy);
             position.put("ts", location.getTime() > 0 ? location.getTime() : System.currentTimeMillis());
             if (location.hasAltitude()) {
                 position.put("alt", location.getAltitude());
             }
             if (location.hasSpeed() && location.getSpeed() >= 0f && location.getSpeed() <= 600f) {
-                position.put("spd", location.getSpeed());
+                position.put("spd", (double) location.getSpeed());
             }
             if (location.hasBearing() && location.getBearing() >= 0f && location.getBearing() <= 360f) {
-                position.put("hdg", location.getBearing());
+                position.put("hdg", (double) location.getBearing());
             }
             JSONObject body = new JSONObject();
             body.put("sessionId", activeSession);
             body.put("position", position);
             json = body.toString();
         } catch (Exception ex) {
-            Log.w(TAG, "Could not encode a location update", ex);
+            Log.w(TAG, "Could not encode a location update");
             return;
         }
-        http.execute(() -> LiveTrackHttp.postJson(activeOrigin + "/api/location/update", activeOrigin, cookie, json));
+        pendingJson = json;
+        pendingOrigin = activeOrigin;
+        if (!postInFlight && retryTask == null) {
+            sendPending();
+        }
+    }
+
+    private void sendPending() {
+        if (stopping || pendingJson == null || pendingOrigin == null) {
+            return;
+        }
+        final int gen = generation;
+        final String body = pendingJson;
+        final String activeOrigin = pendingOrigin;
+        final String cookie = readCookie(activeOrigin);
+        postInFlight = true;
+        try {
+            http.execute(() -> {
+                int code = LiveTrackHttp.postJson(activeOrigin + "/api/location/update", activeOrigin, cookie, body);
+                main.post(() -> finishPost(gen, body, code));
+            });
+        } catch (RejectedExecutionException ex) {
+            postInFlight = false;
+        }
+    }
+
+    private void finishPost(int gen, String body, int code) {
+        if (gen != generation || stopping) {
+            postInFlight = false;
+            return;
+        }
+        postInFlight = false;
+        if (code >= 200 && code < 300) {
+            retryAttempt = 0;
+            lastRestAt = System.currentTimeMillis();
+            if (body.equals(pendingJson)) {
+                pendingJson = null;
+            }
+            if (pendingJson != null) {
+                sendPending();
+            }
+            return;
+        }
+        if (code == 401 || code == 403 || code == 404) {
+            pendingJson = null;
+            stopSharing("session_ended");
+            return;
+        }
+        if (code == 400) {
+            if (body.equals(pendingJson)) {
+                pendingJson = null;
+            }
+            retryAttempt = 0;
+            return;
+        }
+        scheduleRetry(gen);
+    }
+
+    private void scheduleRetry(int gen) {
+        if (stopping || gen != generation) {
+            return;
+        }
+        retryAttempt++;
+        if (retryTask != null) {
+            main.removeCallbacks(retryTask);
+        }
+        long delay = RETRY_DELAYS_MS[Math.min(retryAttempt - 1, RETRY_DELAYS_MS.length - 1)];
+        retryTask = () -> {
+            retryTask = null;
+            if (!stopping && generation == gen) {
+                sendPending();
+            }
+        };
+        main.postDelayed(retryTask, delay);
     }
 
     private void postStop() {
@@ -286,14 +468,40 @@ public class LocationSharingService extends Service {
             return;
         }
         final String cookie = readCookie(activeOrigin);
-        http.execute(() ->
-            LiveTrackHttp.postJson(
-                activeOrigin + "/api/location/sessions/" + activeSession + "/stop",
-                activeOrigin,
-                cookie,
-                "{}"
-            )
+        final int gen = generation;
+        try {
+            http.execute(() -> sendStop(gen, activeOrigin, activeSession, cookie, 1));
+        } catch (RejectedExecutionException ex) {
+            Log.w(TAG, "Could not queue the stop request");
+        }
+    }
+
+    private void sendStop(int gen, String activeOrigin, String activeSession, String cookie, int attempt) {
+        if (gen != generation) {
+            return;
+        }
+        int code = LiveTrackHttp.postJson(
+            activeOrigin + "/api/location/sessions/" + activeSession + "/stop",
+            activeOrigin,
+            cookie,
+            "{}"
         );
+        boolean ok = code >= 200 && code < 300;
+        boolean gone = code == 401 || code == 403 || code == 404;
+        if (ok || gone || attempt >= RETRY_DELAYS_MS.length) {
+            return;
+        }
+        long delay = RETRY_DELAYS_MS[Math.min(attempt - 1, RETRY_DELAYS_MS.length - 1)];
+        main.postDelayed(() -> {
+            if (gen != generation) {
+                return;
+            }
+            try {
+                http.execute(() -> sendStop(gen, activeOrigin, activeSession, cookie, attempt + 1));
+            } catch (RejectedExecutionException ex) {
+                Log.w(TAG, "Could not retry the stop request");
+            }
+        }, delay);
     }
 
     private String readCookie(String activeOrigin) {
@@ -302,7 +510,7 @@ public class LocationSharingService extends Service {
             manager.flush();
             return manager.getCookie(activeOrigin);
         } catch (Exception ex) {
-            Log.w(TAG, "Could not read the session cookie", ex);
+            Log.w(TAG, "Could not read the session cookie");
             return null;
         }
     }
@@ -312,7 +520,15 @@ public class LocationSharingService extends Service {
             return;
         }
         stopping = true;
+        generation++;
         running = false;
+        postInFlight = false;
+        pendingJson = null;
+        main.removeCallbacks(pump);
+        if (retryTask != null) {
+            main.removeCallbacks(retryTask);
+            retryTask = null;
+        }
         removeUpdates();
         if ("user".equals(reason) || "permission_denied".equals(reason) || "process_restart".equals(reason)) {
             postStop();
@@ -343,6 +559,8 @@ public class LocationSharingService extends Service {
     private void clearSession() {
         sessionId = null;
         origin = null;
+        lastLocation = null;
+        lastPostedLocation = null;
         getSharedPreferences(SHARING_PREFS, MODE_PRIVATE).edit().clear().apply();
     }
 

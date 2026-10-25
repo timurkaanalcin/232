@@ -19,6 +19,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
+import { NativeSharingBanner } from "@/components/native/sharing-banner";
 import { NotificationCenter } from "@/components/layout/notification-center";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -210,6 +211,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: ReactN
             <UserMenu user={user} />
           </div>
         </header>
+        <NativeSharingBanner />
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
     </div>

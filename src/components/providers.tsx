@@ -1,12 +1,19 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { isNativeApp } from "@/lib/native-location";
 import { SessionProvider } from "next-auth/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 
 export function Providers({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    document.documentElement.classList.add("native-app");
+    return () => document.documentElement.classList.remove("native-app");
+  }, []);
+
   const [queryClient] = useState(
     () =>
       new QueryClient({

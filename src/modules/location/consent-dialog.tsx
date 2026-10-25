@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { nativePlatform, useNativeApp } from "@/lib/native-location";
 import { EyeIcon, MapPinIcon, ShieldCheckIcon, TimerIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +51,21 @@ export function ConsentDialog({
 }) {
   const [accepted, setAccepted] = useState(false);
   const [label, setLabel] = useState("");
+  const native = useNativeApp();
+  const points =
+    native === true
+      ? [
+          ...CONSENT_POINTS,
+          {
+            icon: ShieldCheckIcon,
+            title: "Visible while it is on",
+            text:
+              nativePlatform() === "android"
+                ? "After you confirm, Android asks for location and notification permission. A persistent notification stays up for the whole session, including a Stop sharing action. LiveTrack does not ask for background location and does not start on its own."
+                : "After you confirm, iOS asks for location permission while you are using LiveTrack. The status bar shows the system location indicator. LiveTrack does not ask for always-on background location and does not start on its own.",
+          },
+        ]
+      : CONSENT_POINTS;
 
   const handleOpenChange = (next: boolean) => {
     if (!next) setAccepted(false);
@@ -68,7 +84,7 @@ export function ConsentDialog({
         </DialogHeader>
 
         <ul className="grid gap-3">
-          {CONSENT_POINTS.map((point) => (
+          {points.map((point) => (
             <li key={point.title} className="flex gap-3 rounded-lg border p-3">
               <point.icon className="mt-0.5 size-4 shrink-0 text-primary" />
               <div>

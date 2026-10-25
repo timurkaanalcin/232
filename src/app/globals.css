@@ -3,6 +3,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+html.native-app body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 :root {
   --background: oklch(0.985 0.002 247.8);
   --foreground: oklch(0.16 0.01 261.7);

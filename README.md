@@ -2,7 +2,7 @@
 
 LiveTrack is an enterprise-grade platform for sharing live location **only with explicit user consent**, with full audit trails, role-based administration, and GDPR/KVKK-compliant data handling. It runs entirely on Cloudflare's free tier.
 
-> **Privacy by design.** Nothing is ever transmitted until a user grants their browser's geolocation permission *and* accepts an in-app consent screen. There is no silent, hidden, or background tracking. Users can stop sharing at any moment, export all of their data, and permanently delete their account.
+> **Privacy by design.** Nothing is ever transmitted until a signed-in user accepts an in-app consent screen and then the platform location prompt (the browser prompt on the web, the system prompt in the mobile app). There is no silent, hidden, or background tracking, and no guest auto sign-in. Users can stop sharing at any moment, export all of their data, and permanently delete their account. The Android app keeps a persistent notification on screen for the whole session.
 
 ---
 
@@ -98,6 +98,78 @@ See [INSTALLATION.md](./INSTALLATION.md) for the detailed walk-through, [INFRAST
 ### Optional: Telegram admin alerts
 
 When a user **explicitly starts** location sharing, admins can receive a Telegram message with a Google Maps link. Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ADMIN_CHAT_ID` in `.dev.vars` / `wrangler secret put`. This only fires on consented session start — never on page visit or silent tracking.
+
+## Mobile app
+
+The `mobile/` directory is a Capacitor shell around this same web app. It does not reimplement auth, the dashboard, history, or the API. The WebView loads your LiveTrack server. Native code adds the OS location prompt and, on Android, a foreground-service notification with a **Stop sharing** action.
+
+Location collection still starts only after the signed-in user accepts the consent screen. The app does not request “always” / background location, does not start on boot, and has no hidden or disguised mode.
+
+### What you need to provide
+
+| Need | Why |
+|------|-----|
+| LiveTrack server URL | The app has no bundled backend. Use the HTTPS origin of your deployment. |
+| Android signing keystore | Only for a **release** build you ship yourself. Debug APKs use the automatic debug keystore. |
+| Apple Developer account | Required to install the iOS app on a physical device or ship it. A Mac with Xcode is required to build iOS. |
+| Google sign-in | Optional. Email and password work in the app. Google blocks OAuth inside embedded WebViews, so Google sign-in may fail in the app even when it works in a browser. |
+
+### Point the app at the backend
+
+Either bake the URL in at build time:
+
+```bash
+cd mobile
+npm ci
+LIVETRACK_SERVER_URL=https://your-host.example npm run sync
+```
+
+Or leave it unset. The first screen then asks for the server URL. You can change it later in **Settings → LiveTrack server**. That screen does not ask for location.
+
+Examples for a dev server on your computer:
+
+- Android emulator: `http://10.0.2.2:3000` (`npm run dev`) or `http://10.0.2.2:8787` (`npm run preview`)
+- A phone on the same network: `http://<your-LAN-ip>:3000` (the dev server must listen on `0.0.0.0`)
+
+Debug Android builds allow plain HTTP so those local servers work. Release Android builds allow HTTPS only. iOS allows HTTP to the local network and HTTPS everywhere else. Production should be HTTPS.
+
+The URL must be an origin with no path, query, or password (`https://host` or `http://host:port`).
+
+### Android
+
+Prerequisites: JDK 21, Android SDK 36 (Android Studio is the easiest way to install it).
+
+```bash
+cd mobile
+npm ci
+LIVETRACK_SERVER_URL=https://your-host.example npm run sync:android
+npm run apk:debug
+```
+
+The debug APK is written to `mobile/android/app/build/outputs/apk/debug/app-debug.apk`.
+
+```bash
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Open the project in Android Studio with `npm run open:android` from `mobile/`.
+
+CI (`.github/workflows/android.yml`) uploads that debug APK as `livetrack-debug-apk` on pull requests. Set the repository variable `LIVETRACK_SERVER_URL` to bake the origin into that artifact. If the variable is empty, install the APK and enter the URL on first launch.
+
+While sharing is on, Android shows an ongoing notification: **LiveTrack is sharing your location**. Stop sharing from that notification or from the app. If the device lets you dismiss the notification, that stops sharing too. The service is not sticky and is not started on boot.
+
+### iOS
+
+Prerequisites: a Mac with Xcode, CocoaPods not required (the project uses Swift Package Manager), and an Apple Developer account for a physical device.
+
+```bash
+cd mobile
+npm ci
+LIVETRACK_SERVER_URL=https://your-host.example npm run sync:ios
+npm run open:ios
+```
+
+Run the **App** scheme from Xcode on a simulator or a signed device. The project requests when-in-use location only. iOS shows the system location indicator while LiveTrack is open and sharing. Leaving the app pauses updates; the server ends the session after 5 minutes without a position. There is no always-on background mode.
 
 ## Documentation
 

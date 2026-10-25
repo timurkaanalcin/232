@@ -1,0 +1,49 @@
+name: Android debug APK
+
+# Builds an installable debug APK. It does not sign a release build.
+# Set the repository variable LIVETRACK_SERVER_URL to bake a server origin into the APK.
+# When that variable is empty, the app asks for the server URL on first launch.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Sync the Android project
+        working-directory: mobile
+        run: npm run sync:android
+        env:
+          LIVETRACK_SERVER_URL: ${{ vars.LIVETRACK_SERVER_URL }}
+
+      - name: Assemble the debug APK
+        working-directory: mobile/android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: livetrack-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

@@ -22,7 +22,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocationSharing } from "@/hooks/use-location-sharing";
 import { ConsentDialog } from "@/modules/location/consent-dialog";
-import { apiGet } from "@/lib/client-api";
+import { apiGet, apiPost } from "@/lib/client-api";
+import { nativeLocation, nativePlatform, useNativeApp } from "@/lib/native-location";
 import { formatAccuracy, formatCoord, formatDateTime, formatDuration } from "@/lib/utils";
 import type { LocationSessionDTO, Paginated } from "@/types";
 
@@ -39,7 +40,9 @@ interface SessionsResponse {
 export function DashboardModule() {
   const queryClient = useQueryClient();
   const sharing = useLocationSharing();
+  const native = useNativeApp();
   const [consentOpen, setConsentOpen] = useState(false);
+  const [pendingResume, setPendingResume] = useState<LocationSessionDTO | null>(null);
   const [, forceTick] = useState(0);
   const resumedRef = useRef(false);
 
@@ -48,14 +51,26 @@ export function DashboardModule() {
     queryFn: () => apiGet<SessionsResponse>("/api/location/sessions?page=1&pageSize=5"),
   });
 
-  // Resume an active session after a reload (consent is still in force).
+  // Web reloads resume a session the user already consented to.
+  // The mobile app does not start the GPS indicator again until they tap Continue.
   useEffect(() => {
+    if (native === null) return;
     const active = sessionsQuery.data?.active;
-    if (active && !resumedRef.current && sharing.state === "idle" && !sharing.error) {
-      resumedRef.current = true;
+    if (!active || resumedRef.current || sharing.state !== "idle" || sharing.error) return;
+    resumedRef.current = true;
+    if (!native) {
       sharing.resume(active);
+      return;
     }
-  }, [sessionsQuery.data, sharing]);
+    void nativeLocation.isActive().then(
+      (activeOnDevice) => {
+        if (sharing.state !== "idle") return;
+        if (activeOnDevice) sharing.resume(active);
+        else setPendingResume(active);
+      },
+      () => setPendingResume(active),
+    );
+  }, [native, sessionsQuery.data, sharing]);
 
   // Live duration ticker while sharing.
   useEffect(() => {
@@ -74,8 +89,25 @@ export function DashboardModule() {
 
   const handleStop = async () => {
     await sharing.stop();
+    setPendingResume(null);
     toast.success("Location sharing stopped", {
       description: "Transmission ended and the session was closed.",
+    });
+    refreshSessions();
+  };
+
+  const handleContinue = () => {
+    if (!pendingResume) return;
+    sharing.resume(pendingResume);
+    setPendingResume(null);
+  };
+
+  const handleStopPending = async () => {
+    if (!pendingResume) return;
+    await apiPost(`/api/location/sessions/${pendingResume.id}/stop`);
+    setPendingResume(null);
+    toast.success("Location sharing stopped", {
+      description: "The session was closed without sending a new position.",
     });
     refreshSessions();
   };
@@ -157,6 +189,23 @@ export function DashboardModule() {
                   <CircleStopIcon /> Stop sharing now
                 </Button>
               </>
+            ) : pendingResume ? (
+              <div className="grid gap-3">
+                <Alert>
+                  <AlertTitle>A sharing session is still open</AlertTitle>
+                  <AlertDescription>
+                    You already consented to this session, but this device is not sending your position. Continue
+                    only if authorized staff should see your live location again. Doing nothing ends the session
+                    after a few minutes without updates.
+                  </AlertDescription>
+                </Alert>
+                <Button size="lg" className="w-full" onClick={handleContinue} disabled={busy}>
+                  <RadioIcon /> Continue sharing
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => void handleStopPending()} disabled={busy}>
+                  <CircleStopIcon /> Stop this session
+                </Button>
+              </div>
             ) : (
               <Button size="lg" className="w-full" onClick={() => setConsentOpen(true)} disabled={busy}>
                 <RadioIcon /> {busy ? "Working…" : "Start sharing"}
@@ -164,8 +213,11 @@ export function DashboardModule() {
             )}
 
             <p className="text-xs text-muted-foreground">
-              Sharing requires your explicit consent and your browser&apos;s location permission. You can stop
-              at any moment — transmission halts immediately, server-side too.
+              {native
+                ? nativePlatform() === "android"
+                  ? "Sharing starts only after you accept the consent screen. Android then shows the system location prompt and keeps a notification on screen, with Stop sharing, until you end it."
+                  : "Sharing starts only after you accept the consent screen. iOS then shows the system location prompt and the status-bar location indicator while LiveTrack is open."
+                : "Sharing requires your explicit consent and your browser's location permission. You can stop at any moment — transmission halts immediately, server-side too."}
             </p>
           </CardContent>
         </Card>

@@ -75,8 +75,8 @@ export function NativeSharingBanner() {
         <span className="font-medium">Location sharing is on.</span>{" "}
         <span className="text-muted-foreground">
           {nativePlatform() === "android"
-            ? "Authorized staff can see your live position. The notification stays until you stop."
-            : "Authorized staff can see your live position while LiveTrack is open."}
+            ? "Authorized staff can see your live position, including while the screen is locked. The notification stays until you stop."
+            : "Authorized staff can see your live position, including while the screen is locked. The blue location indicator stays on until you stop."}
         </span>
       </p>
       <Button size="sm" variant="destructive" onClick={() => void stop()} disabled={stopping}>

@@ -61,23 +61,45 @@ describe("positionFromNativeFix", () => {
 
 describe("mobile shell privacy boundaries", () => {
   const androidManifest = readFileSync("mobile/android/app/src/main/AndroidManifest.xml", "utf8");
+  const androidPlugin = readFileSync(
+    "mobile/android/app/src/main/java/app/livetrack/mobile/LiveTrackPlugin.java",
+    "utf8",
+  );
+  const androidService = readFileSync(
+    "mobile/android/app/src/main/java/app/livetrack/mobile/LocationSharingService.java",
+    "utf8",
+  );
   const iosPlist = readFileSync("mobile/ios/App/App/Info.plist", "utf8");
+  const iosPlugin = readFileSync("mobile/ios/App/App/LiveTrackPlugin.swift", "utf8");
 
-  it("asks Android for a visible location foreground service and not background location", () => {
+  it("keeps Android sharing visible and asks for background location only after an explanation", () => {
     expect(androidManifest).toContain("android.permission.FOREGROUND_SERVICE_LOCATION");
+    expect(androidManifest).toContain('android:foregroundServiceType="location"');
     expect(androidManifest).toContain("android.permission.ACCESS_FINE_LOCATION");
+    expect(androidManifest).toContain("android.permission.ACCESS_BACKGROUND_LOCATION");
     expect(androidManifest).toContain("android.permission.POST_NOTIFICATIONS");
     expect(androidManifest).toContain("LocationSharingService");
     expect(androidManifest).toContain("StopSharingReceiver");
-    expect(androidManifest).not.toContain("ACCESS_BACKGROUND_LOCATION");
     expect(androidManifest).not.toContain("RECEIVE_BOOT_COMPLETED");
     expect(androidManifest).not.toContain("REQUEST_IGNORE_BATTERY_OPTIMIZATIONS");
+    expect(androidPlugin).toContain("in-app explanation");
+    expect(androidPlugin).toContain('call.getBoolean("explained", false)');
+    expect(androidService).toContain("MIN_DISTANCE_METERS");
+    expect(androidService).toContain("HEARTBEAT_MS");
+    expect(androidService).toContain("START_NOT_STICKY");
+    expect(androidService).not.toContain("RECEIVE_BOOT_COMPLETED");
   });
 
-  it("asks iOS for when-in-use location and not always-on location", () => {
+  it("keeps iOS background sharing visible and does not request Always", () => {
     expect(iosPlist).toContain("NSLocationWhenInUseUsageDescription");
-    expect(iosPlist).not.toContain("NSLocationAlwaysAndWhenInUseUsageDescription");
+    expect(iosPlist).toContain("NSLocationAlwaysAndWhenInUseUsageDescription");
+    expect(iosPlist).toContain("UIBackgroundModes");
+    expect(iosPlist).toContain("<string>location</string>");
     expect(iosPlist).not.toContain("NSLocationAlwaysUsageDescription");
-    expect(iosPlist).not.toContain("UIBackgroundModes");
+    expect(iosPlugin).toContain("showsBackgroundLocationIndicator = true");
+    expect(iosPlugin).toContain("allowsBackgroundLocationUpdates = true");
+    expect(iosPlugin).toContain("requestWhenInUseAuthorization");
+    expect(iosPlugin).not.toContain("requestAlwaysAuthorization");
+    expect(iosPlugin).toContain("sharingDistanceFilter");
   });
 });

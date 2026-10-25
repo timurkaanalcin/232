@@ -67,9 +67,15 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>LiveTrack uses your location only after you start a sharing session, and only to show it to authorized staff on your LiveTrack server. You can stop sharing at any time. LiveTrack does not request always-on background location.</string>
+	<string>LiveTrack shares your location with people you invited on your LiveTrack server, and only after you tap Start sharing. Sharing can continue while the app is in the background or the screen is locked, and the blue location indicator stays visible. You can stop sharing at any time.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>LiveTrack shares your location with people you invited on your LiveTrack server, and only after you tap Start sharing. If iOS asks for Always, it is so sharing can continue while the app is in the background or the screen is locked. The blue location indicator stays visible the whole time. You can stop sharing at any time. LiveTrack does not start sharing by itself.</string>
 	<key>NSLocationUsageDescription</key>
-	<string>LiveTrack uses your location only after you start a sharing session, and only to show it to authorized staff on your LiveTrack server. You can stop sharing at any time.</string>
+	<string>LiveTrack shares your location with people you invited on your LiveTrack server, and only after you tap Start sharing. You can stop sharing at any time.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

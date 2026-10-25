@@ -2,7 +2,7 @@
   "name": "livetrack-mobile",
   "version": "1.0.0",
   "private": true,
-  "description": "LiveTrack Capacitor shell. Loads the existing web app and adds OS location prompts plus an Android foreground-service indicator.",
+  "description": "LiveTrack Capacitor shell. Loads the existing web app. Background sharing stays visible and starts only after the user taps Start sharing.",
   "scripts": {
     "sync": "cap sync && node scripts/apply-server-url.mjs",
     "sync:android": "cap sync android && node scripts/apply-server-url.mjs",

@@ -101,9 +101,16 @@ When a user **explicitly starts** location sharing, admins can receive a Telegra
 
 ## Mobile app
 
-The `mobile/` directory is a Capacitor shell around this same web app. It does not reimplement auth, the dashboard, history, or the API. The WebView loads your LiveTrack server. Native code adds the OS location prompt and, on Android, a foreground-service notification with a **Stop sharing** action.
+The `mobile/` directory is a Capacitor shell around this same web app. It does not reimplement auth, the dashboard, history, or the API. The WebView loads your LiveTrack server. Native code adds the OS location prompt and keeps sending positions while the app is in the background or the screen is locked.
 
-Location collection still starts only after the signed-in user accepts the consent screen. The app does not request “always” / background location, does not start on boot, and has no hidden or disguised mode.
+Location collection still starts only after the signed-in user taps **Start sharing** and accepts the consent screen. Nothing starts on launch, on boot, or from a remote message. There is no hidden or disguised mode, and the app icon stays LiveTrack.
+
+While a session is on:
+
+- **Android** shows a persistent notification, “LiveTrack is sharing your location”, with **Stop sharing**. The location foreground service keeps updates going when the screen is locked. After a separate in-app explanation, Android may ask for “Allow all the time”. Choosing **Not now** still starts sharing with the notification; some phones then pause updates when the screen locks until that permission is allowed.
+- **iOS** uses when-in-use location permission plus the blue status-bar location indicator (`showsBackgroundLocationIndicator`). Updates continue in the background and while the screen is locked. LiveTrack does not ask for Always, because that would let iOS relaunch tracking after a force-quit. Force-quitting the app stops updates until you open LiveTrack and tap **Start sharing** or **Continue sharing** again. The server ends a session after 5 minutes without a position.
+
+Stop sharing in the app, or from the Android notification, halts updates immediately and ends the server session. If the server cannot be reached, the app keeps the latest fix and retries (about 5s, then 15s, 30s, and 60s) until sharing is stopped or the request succeeds. Updates are distance-filtered (about 15 meters) with a heartbeat so a stationary phone does not drain the battery or let the session go stale.
 
 ### What you need to provide
 
@@ -121,7 +128,7 @@ Either bake the URL in at build time:
 ```bash
 cd mobile
 npm ci
-LIVETRACK_SERVER_URL=https://your-host.example npm run sync
+LIVETRACK_SERVER_URL=https://track.llvad.com npm run sync
 ```
 
 Or leave it unset. The first screen then asks for the server URL. You can change it later in **Settings → LiveTrack server**. That screen does not ask for location.
@@ -156,20 +163,34 @@ Open the project in Android Studio with `npm run open:android` from `mobile/`.
 
 CI (`.github/workflows/android.yml`) uploads that debug APK as `livetrack-debug-apk` on pull requests. Set the repository variable `LIVETRACK_SERVER_URL` to bake the origin into that artifact. If the variable is empty, install the APK and enter the URL on first launch.
 
-While sharing is on, Android shows an ongoing notification: **LiveTrack is sharing your location**. Stop sharing from that notification or from the app. If the device lets you dismiss the notification, that stops sharing too. The service is not sticky and is not started on boot.
+While sharing is on, Android shows an ongoing notification: **LiveTrack is sharing your location**. Stop sharing from that notification or from the app. If the device lets you dismiss the notification, that stops sharing too. The service is not sticky and is not started on boot. Swiping the app away leaves the notification and the updates running. A force-stop or process death does not resume tracking.
 
 ### iOS
 
-Prerequisites: a Mac with Xcode, CocoaPods not required (the project uses Swift Package Manager), and an Apple Developer account for a physical device.
+Prerequisites: a Mac with Xcode. CocoaPods is not required (the project uses Swift Package Manager). Signing is automatic. The committed team is `B467MD5D86`. The bundle id stays `app.livetrack.mobile` unless you override it at build time to `com.llvad.livetrack`.
+
+On the Mac, from a checkout of this branch:
 
 ```bash
-cd mobile
+cd ~/livetrack/mobile
+git pull
 npm ci
-LIVETRACK_SERVER_URL=https://your-host.example npm run sync:ios
+LIVETRACK_SERVER_URL=https://track.llvad.com npm run sync:ios
 npm run open:ios
 ```
 
-Run the **App** scheme from Xcode on a simulator or a signed device. The project requests when-in-use location only. iOS shows the system location indicator while LiveTrack is open and sharing. Leaving the app pauses updates; the server ends the session after 5 minutes without a position. There is no always-on background mode.
+Run the **App** scheme from Xcode on a simulator or a signed device. If the App ID on that team is `com.llvad.livetrack`, set the bundle identifier in Signing & Capabilities before you run, or build with:
+
+```bash
+cd ios/App
+xcodebuild -project App.xcodeproj -scheme App -destination 'generic/platform=iOS' \
+  -allowProvisioningUpdates \
+  CODE_SIGN_STYLE=Automatic \
+  DEVELOPMENT_TEAM=B467MD5D86 \
+  PRODUCT_BUNDLE_IDENTIFIER=com.llvad.livetrack
+```
+
+Background updates use when-in-use permission and the blue status-bar indicator. They continue while the app is backgrounded or the screen is locked, and they stop if the app is force-quit. Open LiveTrack and tap **Continue sharing** to start again. There is no Always prompt and no relaunch-on-boot.
 
 ## Documentation
 

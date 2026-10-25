@@ -3,11 +3,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiPost } from "@/lib/client-api";
 import { geolocationErrorMessage } from "@/lib/geolocation-errors";
-import { isNativeApp, nativeLocation } from "@/lib/native-location";
+import { isNativeApp, nativeLocation, nativePlatform } from "@/lib/native-location";
 import { nativeFixToGeolocationPosition, positionFromGeolocation } from "@/lib/normalize-position";
 import type { LocationSessionDTO } from "@/types";
 
 export type SharingState = "idle" | "starting" | "sharing" | "stopping";
+
+export interface ShareOptions {
+  /** The user tapped through the in-app background-location explanation. */
+  backgroundExplained?: boolean;
+  /** Do not open Android's "Allow all the time" prompt. The notification still stays up. */
+  skipBackgroundPrompt?: boolean;
+}
+
+/** Thrown before any background-location system prompt, so the UI can explain it first. */
+export class BackgroundExplanationRequired extends Error {
+  constructor() {
+    super("Background location needs an in-app explanation before the system prompt.");
+    this.name = "BackgroundExplanationRequired";
+  }
+}
 
 export interface CurrentPosition {
   lat: number;
@@ -24,10 +39,38 @@ interface UseLocationSharingResult {
   position: CurrentPosition | null;
   error: string | null;
   connectionMode: "websocket" | "rest" | null;
-  start: (label?: string, initialPosition?: GeolocationPosition) => Promise<void>;
+  start: (label?: string, initialPosition?: GeolocationPosition, options?: ShareOptions) => Promise<void>;
   stop: () => Promise<void>;
   /** Adopt an already-active session (e.g. after a page reload). */
-  resume: (session: LocationSessionDTO) => void;
+  resume: (session: LocationSessionDTO, options?: ShareOptions) => Promise<void>;
+}
+
+/**
+ * Returns whether to show Android's "Allow all the time" prompt.
+ * The prompt itself must run only after foreground location is granted.
+ * iOS keeps background updates with when-in-use permission and the blue indicator.
+ */
+async function androidNeedsBackgroundPrompt(options?: ShareOptions): Promise<boolean> {
+  if (!isNativeApp() || nativePlatform() !== "android") return false;
+  let access: "granted" | "not_required" | "needs_explanation" = "not_required";
+  try {
+    access = await nativeLocation.backgroundAccess();
+  } catch {
+    return false;
+  }
+  if (access !== "needs_explanation") return false;
+  if (!options?.backgroundExplained) {
+    throw new BackgroundExplanationRequired();
+  }
+  return !options.skipBackgroundPrompt;
+}
+
+async function requestAndroidBackgroundAccess(): Promise<void> {
+  try {
+    await nativeLocation.requestBackgroundAccess(true);
+  } catch {
+    // The foreground-service notification still keeps updates going.
+  }
 }
 
 const SEND_INTERVAL_MS = 2_000;
@@ -245,10 +288,11 @@ export function useLocationSharing(): UseLocationSharingResult {
   );
 
   const start = useCallback(
-    async (label?: string, initialPosition?: GeolocationPosition) => {
+    async (label?: string, initialPosition?: GeolocationPosition, options?: ShareOptions) => {
       setError(null);
       setState("starting");
       try {
+        const askBackground = await androidNeedsBackgroundPrompt(options);
         // 1. Device location. On mobile this is the OS prompt, and only after consent.
         const granted =
           initialPosition ??
@@ -261,6 +305,9 @@ export function useLocationSharing(): UseLocationSharingResult {
                   maximumAge: 0,
                 });
               }));
+        if (askBackground) {
+          await requestAndroidBackgroundAccess();
+        }
 
         // 2. Create the consented session server-side.
         const { session: created } = await apiPost<{ session: LocationSessionDTO }>(
@@ -281,6 +328,10 @@ export function useLocationSharing(): UseLocationSharingResult {
         }
         setState("sharing");
       } catch (startError) {
+        if (startError instanceof BackgroundExplanationRequired) {
+          setState("idle");
+          throw startError;
+        }
         const created = sessionRef.current;
         cleanup();
         if (created && isNativeApp()) {
@@ -314,13 +365,25 @@ export function useLocationSharing(): UseLocationSharingResult {
   }, [stopInternal]);
 
   const resume = useCallback(
-    (activeSession: LocationSessionDTO) => {
+    async (activeSession: LocationSessionDTO, options?: ShareOptions) => {
+      if (stateRef.current !== "idle") return;
+      const alreadyRunning = isNativeApp() ? await nativeLocation.isActive().catch(() => false) : false;
+      const askBackground = alreadyRunning ? false : await androidNeedsBackgroundPrompt(options);
+      if (askBackground) {
+        try {
+          await nativeLocation.getCurrentPosition();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Location permission was denied.";
+          setError(message);
+          throw error instanceof Error ? error : new Error(message);
+        }
+        await requestAndroidBackgroundAccess();
+      }
       if (stateRef.current !== "idle") return;
       setSession(activeSession);
       sessionRef.current = activeSession;
       setState("sharing");
-      void (async () => {
-        try {
+      try {
           await connectWebSocket();
           if (isNativeApp()) {
             await attachNativeWatch(activeSession.id);
@@ -343,13 +406,14 @@ export function useLocationSharing(): UseLocationSharingResult {
         () => {},
             { enableHighAccuracy: true, maximumAge: 5_000, timeout: 20_000 },
           );
-        } catch (resumeError) {
-          await stopInternal(resumeError instanceof Error && /permission/i.test(resumeError.message) ? "permission_denied" : "location_unavailable");
-          if (resumeError instanceof Error && resumeError.message) {
-            setError(resumeError.message);
-          }
+      } catch (resumeError) {
+        await stopInternal(
+          resumeError instanceof Error && /permission/i.test(resumeError.message) ? "permission_denied" : "location_unavailable",
+        );
+        if (resumeError instanceof Error && resumeError.message) {
+          setError(resumeError.message);
         }
-      })();
+      }
     },
     [attachNativeWatch, connectWebSocket, publishViaRest, startWatching, stopInternal, transmit],
   );

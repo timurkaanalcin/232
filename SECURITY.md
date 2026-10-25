@@ -8,7 +8,7 @@ LiveTrack never records location without:
 2. **In-app consent** (`POST /api/location/sessions` with `consent: true`)
 3. An **active `location_sessions` row** with `consent_granted_at` timestamp
 
-Stopping sharing ends the session server-side, closes the publisher WebSocket, and writes audit + notification entries. There is no background or hidden tracking path.
+Stopping sharing ends the session server-side, closes the publisher WebSocket, and writes audit + notification entries. The mobile app can keep sending updates while it is backgrounded or the screen is locked, but only after the signed-in user taps Start sharing. Android shows a persistent notification with Stop sharing and asks for all-the-time location only after a separate in-app explanation. iOS uses when-in-use permission with the blue status-bar location indicator. Sharing never starts on launch, boot, or from a remote message, and there is no hidden tracking path.
 
 ## Authentication
 

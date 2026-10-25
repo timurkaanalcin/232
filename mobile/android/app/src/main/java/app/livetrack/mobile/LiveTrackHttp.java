@@ -6,18 +6,22 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-/** Posts consented location updates with the WebView session cookie. */
+/** Posts consented location updates with the WebView session cookie. Never logs coordinates. */
 final class LiveTrackHttp {
     private static final String TAG = "LiveTrack";
 
     private LiveTrackHttp() {}
 
-    static void postJson(String url, String origin, String cookie, String json) {
+    /**
+     * @return HTTP status, or -1 when the server could not be reached.
+     */
+    static int postJson(String url, String origin, String cookie, String json) {
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setConnectTimeout(10_000);
-            connection.setReadTimeout(15_000);
+            connection.setReadTimeout(20_000);
+            connection.setInstanceFollowRedirects(false);
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/json");
@@ -33,10 +37,12 @@ final class LiveTrackHttp {
             }
             int code = connection.getResponseCode();
             if (code >= 400) {
-                Log.w(TAG, "Request to " + url + " failed with HTTP " + code);
+                Log.w(TAG, "Request failed with HTTP " + code);
             }
+            return code;
         } catch (Exception ex) {
-            Log.w(TAG, "Request to " + url + " failed", ex);
+            Log.w(TAG, "Request failed: server unreachable");
+            return -1;
         } finally {
             if (connection != null) {
                 connection.disconnect();

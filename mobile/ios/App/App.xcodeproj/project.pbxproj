@@ -19,6 +19,7 @@
 		A1B2C3D41FED796500168502 /* LiveTrackPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41FED796500168501 /* LiveTrackPlugin.swift */; };
 		A1B2C3D41FED796500168504 /* LiveTrackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41FED796500168503 /* LiveTrackViewController.swift */; };
 		A1B2C3D41FED796500168506 /* LiveTrackServerUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41FED796500168505 /* LiveTrackServerUrl.swift */; };
+		A1B2C3D41FED79650016850A /* LiveTrackUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41FED796500168509 /* LiveTrackUploader.swift */; };
 		A1B2C3D41FED796500168508 /* livetrack_server_url.txt in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41FED796500168507 /* livetrack_server_url.txt */; };
 /* End PBXBuildFile section */
 
@@ -36,6 +37,7 @@
 		A1B2C3D41FED796500168501 /* LiveTrackPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTrackPlugin.swift; sourceTree = "<group>"; };
 		A1B2C3D41FED796500168503 /* LiveTrackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTrackViewController.swift; sourceTree = "<group>"; };
 		A1B2C3D41FED796500168505 /* LiveTrackServerUrl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTrackServerUrl.swift; sourceTree = "<group>"; };
+		A1B2C3D41FED796500168509 /* LiveTrackUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTrackUploader.swift; sourceTree = "<group>"; };
 		A1B2C3D41FED796500168507 /* livetrack_server_url.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = livetrack_server_url.txt; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -78,6 +80,7 @@
 				A1B2C3D41FED796500168501 /* LiveTrackPlugin.swift */,
 				A1B2C3D41FED796500168503 /* LiveTrackViewController.swift */,
 				A1B2C3D41FED796500168505 /* LiveTrackServerUrl.swift */,
+				A1B2C3D41FED796500168509 /* LiveTrackUploader.swift */,
 				A1B2C3D41FED796500168507 /* livetrack_server_url.txt */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
@@ -176,6 +179,7 @@
 				A1B2C3D41FED796500168502 /* LiveTrackPlugin.swift in Sources */,
 				A1B2C3D41FED796500168504 /* LiveTrackViewController.swift in Sources */,
 				A1B2C3D41FED796500168506 /* LiveTrackServerUrl.swift in Sources */,
+				A1B2C3D41FED79650016850A /* LiveTrackUploader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,6 +321,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B467MD5D86;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -339,6 +344,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B467MD5D86;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (

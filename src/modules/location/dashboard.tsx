@@ -20,7 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useLocationSharing } from "@/hooks/use-location-sharing";
+import { BackgroundExplanationRequired, useLocationSharing } from "@/hooks/use-location-sharing";
+import { BackgroundExplanationDialog } from "@/modules/location/background-explanation-dialog";
 import { ConsentDialog } from "@/modules/location/consent-dialog";
 import { apiGet, apiPost } from "@/lib/client-api";
 import { nativeLocation, nativePlatform, useNativeApp } from "@/lib/native-location";
@@ -42,6 +43,9 @@ export function DashboardModule() {
   const sharing = useLocationSharing();
   const native = useNativeApp();
   const [consentOpen, setConsentOpen] = useState(false);
+  const [backgroundOpen, setBackgroundOpen] = useState(false);
+  const [pendingLabel, setPendingLabel] = useState("");
+  const [backgroundMode, setBackgroundMode] = useState<"start" | "resume">("start");
   const [pendingResume, setPendingResume] = useState<LocationSessionDTO | null>(null);
   const [, forceTick] = useState(0);
   const resumedRef = useRef(false);
@@ -65,8 +69,11 @@ export function DashboardModule() {
     void nativeLocation.isActive().then(
       (activeOnDevice) => {
         if (sharing.state !== "idle") return;
-        if (activeOnDevice) sharing.resume(active);
-        else setPendingResume(active);
+        if (activeOnDevice) {
+          void sharing.resume(active).catch((error: unknown) => {
+            if (error instanceof BackgroundExplanationRequired) setPendingResume(active);
+          });
+        } else setPendingResume(active);
       },
       () => setPendingResume(active),
     );
@@ -82,8 +89,43 @@ export function DashboardModule() {
   const refreshSessions = () => void queryClient.invalidateQueries({ queryKey: ["location-sessions"] });
 
   const handleStart = async (label: string) => {
-    await sharing.start(label);
+    try {
+      await sharing.start(label);
+    } catch (error) {
+      if (error instanceof BackgroundExplanationRequired) {
+        setPendingLabel(label);
+        setBackgroundMode("start");
+        setConsentOpen(false);
+        setBackgroundOpen(true);
+        return;
+      }
+    }
     setConsentOpen(false);
+    refreshSessions();
+  };
+
+  const beginAfterBackgroundExplanation = async (skipBackgroundPrompt: boolean) => {
+    setBackgroundOpen(false);
+    const options = { backgroundExplained: true, skipBackgroundPrompt };
+    if (backgroundMode === "resume" && pendingResume) {
+      try {
+        await sharing.resume(pendingResume, options);
+        setPendingResume(null);
+      } catch (error) {
+        if (error instanceof BackgroundExplanationRequired) {
+          setBackgroundOpen(true);
+        }
+      }
+    } else {
+      try {
+        await sharing.start(pendingLabel, undefined, options);
+      } catch (error) {
+        if (error instanceof BackgroundExplanationRequired) {
+          setBackgroundOpen(true);
+          return;
+        }
+      }
+    }
     refreshSessions();
   };
 
@@ -96,10 +138,17 @@ export function DashboardModule() {
     refreshSessions();
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!pendingResume) return;
-    sharing.resume(pendingResume);
-    setPendingResume(null);
+    try {
+      await sharing.resume(pendingResume);
+      setPendingResume(null);
+    } catch (error) {
+      if (error instanceof BackgroundExplanationRequired) {
+        setBackgroundMode("resume");
+        setBackgroundOpen(true);
+      }
+    }
   };
 
   const handleStopPending = async () => {
@@ -199,7 +248,7 @@ export function DashboardModule() {
                     after a few minutes without updates.
                   </AlertDescription>
                 </Alert>
-                <Button size="lg" className="w-full" onClick={handleContinue} disabled={busy}>
+                <Button size="lg" className="w-full" onClick={() => void handleContinue()} disabled={busy}>
                   <RadioIcon /> Continue sharing
                 </Button>
                 <Button variant="outline" className="w-full" onClick={() => void handleStopPending()} disabled={busy}>
@@ -215,8 +264,8 @@ export function DashboardModule() {
             <p className="text-xs text-muted-foreground">
               {native
                 ? nativePlatform() === "android"
-                  ? "Sharing starts only after you accept the consent screen. Android then shows the system location prompt and keeps a notification on screen, with Stop sharing, until you end it."
-                  : "Sharing starts only after you accept the consent screen. iOS then shows the system location prompt and the status-bar location indicator while LiveTrack is open."
+                  ? "Sharing starts only after you accept the consent screen. Android keeps a notification on screen, with Stop sharing, including while the screen is locked. It asks for all-the-time location only after a separate explanation."
+                  : "Sharing starts only after you accept the consent screen. iOS keeps the blue location indicator on, including while the screen is locked. Stop sharing ends it immediately."
                 : "Sharing requires your explicit consent and your browser's location permission. You can stop at any moment — transmission halts immediately, server-side too."}
             </p>
           </CardContent>
@@ -292,6 +341,13 @@ export function DashboardModule() {
         open={consentOpen}
         onOpenChange={setConsentOpen}
         onConfirm={(label) => void handleStart(label)}
+        busy={sharing.state === "starting"}
+      />
+      <BackgroundExplanationDialog
+        open={backgroundOpen}
+        onOpenChange={setBackgroundOpen}
+        onAllow={() => void beginAfterBackgroundExplanation(false)}
+        onSkip={() => void beginAfterBackgroundExplanation(true)}
         busy={sharing.state === "starting"}
       />
     </div>
